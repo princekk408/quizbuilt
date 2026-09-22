@@ -26,12 +26,12 @@
   --shadow:0 14px 44px rgba(0,0,6,.55);--grain:.05;
 }
 [data-theme=light]{
-  --bg:#F7F8FC;--s1:#FFFFFF;--s2:#F3F4F8;--s3:#E8EAF2;
-  --line:rgba(36,39,82,.10);--line2:rgba(36,39,82,.18);
-  --tx:#17182B;--mut:#66687B;--dim:#9496A8;
-  --brass:#302A91;--brass2:#25216F;--onb:#FFFFFF;
-  --ok:#218653;--bad:#D04444;--warn:#A46B12;--info:#315FA8;
-  --shadow:0 12px 34px rgba(37,40,84,.12);--grain:.008;
+  --bg:#F7F2E7;--s1:#FFFFFF;--s2:#F1EADA;--s3:#E7DCC2;
+  --line:rgba(43,32,10,.12);--line2:rgba(43,32,10,.22);
+  --tx:#241C0D;--mut:#6B5F45;--dim:#8B7F63;
+  --brass:#8F6A1B;--brass2:#6E4F0E;--onb:#FFF8E6;
+  --ok:#0E8F5C;--bad:#C1362B;--warn:#A9660A;--info:#2A5FA8;
+  --shadow:0 14px 36px rgba(43,32,10,.14);--grain:.035;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
@@ -75,7 +75,6 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:14px 0}
 .nav a.on{color:var(--brass)}
 .nav a.mk{background:var(--brass);color:var(--onb);width:54px;height:54px;min-width:54px;border-radius:18px;justify-content:center;margin-top:-22px;box-shadow:0 8px 22px rgba(0,0,0,.35)}
 body.taking .top,body.taking .nav{display:none}
-body.taking .mk-in{display:none!important}
 
 /* surfaces */
 .card{background:var(--s1);border:1px solid var(--line);border-radius:16px;padding:16px}
@@ -170,14 +169,6 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xm
 .sheet .grab{width:40px;height:4px;border-radius:4px;background:var(--line2);margin:-8px auto 14px}
 @keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
 @media(min-width:640px){.ovl{align-items:center}.sheet{border-radius:24px}}
-.sheet.full{max-width:900px;height:100vh;max-height:100vh;border-radius:0;padding:18px 16px calc(24px + env(safe-area-inset-bottom));}
-@media(min-width:640px){.sheet.full{height:min(92vh,900px);max-height:92vh;border-radius:24px}}
-.attempt-row{display:flex;align-items:center;gap:12px;padding:12px 10px;border:1px solid var(--line);border-radius:14px;background:var(--s1);margin-bottom:8px}
-.cmt-like{color:var(--dim);font-size:12px;font-weight:700}.cmt-like.on{color:var(--bad)}
-.prize-card{border:1px solid color-mix(in srgb,var(--brass) 35%,var(--line));background:color-mix(in srgb,var(--brass) 7%,var(--s1));border-radius:16px;padding:14px}
-.challenge-card{border-color:color-mix(in srgb,var(--brass) 30%,var(--line));background:linear-gradient(135deg,color-mix(in srgb,var(--brass) 8%,var(--s1)),var(--s1))}
-.mk-in{display:flex;align-items:center;gap:5px;flex:none;padding:3px 7px;border:1px solid color-mix(in srgb,var(--brass) 38%,var(--line2));border-radius:10px;background:color-mix(in srgb,var(--brass) 8%,var(--s2));color:var(--tx);font-size:11px;font-weight:800}.mk-in input{width:58px;min-height:34px;padding:5px 7px;border:1px solid color-mix(in srgb,var(--brass) 42%,var(--line2));border-radius:7px;background:var(--s1);color:var(--tx);font-weight:900;text-align:center;outline:none}.mk-in input:focus{border-color:var(--brass);box-shadow:0 0 0 2px color-mix(in srgb,var(--brass) 18%,transparent)}
-
 #toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;width:min(420px,calc(100% - 24px));pointer-events:none}
 .toast{background:var(--s3);border:1px solid var(--line2);padding:12px 16px;border-radius:12px;font-weight:600;font-size:14px;box-shadow:var(--shadow);animation:up .2s}
 .toast.bad{border-color:var(--bad);color:var(--bad)}.toast.ok{border-color:var(--ok);color:var(--ok)}
@@ -340,8 +331,6 @@ select.inp option{background:var(--s1);color:var(--tx)}
 .lbrow2 .rk{width:26px;flex:none;font-family:var(--serif);font-size:16px;color:var(--mut);text-align:center;padding-top:2px}
 .lbrow2 .agg{font-family:var(--serif);color:var(--brass);font-size:19px;text-align:right;line-height:1.1;flex:none;padding-left:10px}
 .lbrow2 .agg small{display:block;font-family:var(--sans);font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
-.lb-screen{max-width:980px;margin:0 auto}.lb-head{padding:8px 0 14px}.lb-title{font-family:var(--serif);font-size:27px}.lb-top3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}.lb-top-card{position:relative;background:linear-gradient(180deg,var(--s1),color-mix(in srgb,var(--info) 4%,var(--s1)));border:1px solid var(--line);border-radius:22px;padding:18px 14px;text-align:center;box-shadow:0 10px 28px rgba(20,25,70,.08);overflow:hidden}.lb-top-card .place{display:inline-flex;align-items:center;justify-content:center;min-width:48px;height:26px;padding:0 10px;border-radius:999px;background:color-mix(in srgb,var(--brass) 14%,var(--s1));font-size:11px;font-weight:900;color:var(--brass);text-transform:uppercase;letter-spacing:.08em}.lb-top-card .name{font-size:15px;font-weight:850;margin-top:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lb-top-card .score{font-family:var(--serif);font-size:25px;color:var(--brass);margin-top:8px}.lb-top-card.me{border:2px solid var(--brass);box-shadow:0 12px 30px color-mix(in srgb,var(--brass) 18%,transparent)}.lb-top-card .rank-icon{font-size:26px;margin-bottom:3px}.lb-top-card .subline{font-size:11px;color:var(--mut);margin-top:4px}.lb-subscore{font-size:12px;color:var(--mut);margin-top:3px}.attempt-row .status{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.attempt-row.ongoing{border-color:color-mix(in srgb,var(--info) 28%,var(--line));background:color-mix(in srgb,var(--info) 5%,var(--s1))}.attempt-row.done{background:var(--s1)}
-@media(max-width:520px){.lb-top3{grid-template-columns:1fr}.lb-top-card{display:grid;grid-template-columns:52px 1fr auto;align-items:center;text-align:left;gap:8px}.lb-top-card .place{grid-row:1/3}.lb-top-card .name{margin:0}.lb-top-card .score{margin:0;text-align:right}}
 .lbgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;margin-top:9px;padding-top:9px;border-top:1px dashed var(--line2)}
 .lbgrid div{display:flex;justify-content:space-between;font-size:13px;gap:8px}
 .lbgrid b{color:var(--tx);font-weight:700}
@@ -357,10 +346,6 @@ select.inp option{background:var(--s1);color:var(--tx)}
 /* ---- editor: live-quiz notice, bigger delete target ---- */
 .livebar{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--info);background:color-mix(in srgb,var(--info) 12%,var(--s1));border:1px solid color-mix(in srgb,var(--info) 30%,var(--line));border-radius:12px;padding:9px 12px;margin-top:12px}
 .qdel{width:40px;height:40px;flex:none;margin-left:2px}
-
-/* ---- anti-cheat voice level cards ---- */
-.voice-levels{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:10px}.voice-level{position:relative;border:1px solid var(--line);border-radius:16px;background:var(--s1);padding:12px 10px;text-align:left;cursor:pointer}.voice-level:hover{border-color:var(--info)}.voice-level.on{border:2px solid var(--info);background:color-mix(in srgb,var(--info) 8%,var(--s1));box-shadow:0 8px 22px color-mix(in srgb,var(--info) 10%,transparent)}.voice-level .radio{width:18px;height:18px;border:2px solid var(--line2);border-radius:50%;display:grid;place-items:center;float:right}.voice-level.on .radio{border-color:var(--info)}.voice-level.on .radio:after{content:'';width:8px;height:8px;border-radius:50%;background:var(--info)}.voice-level b{display:block;font-size:13px;line-height:1.25;padding-right:24px}.voice-level small{display:block;color:var(--mut);font-size:11px;line-height:1.4;margin-top:6px}.voice-current{margin-top:8px;padding:9px 11px;border-radius:11px;background:color-mix(in srgb,var(--info) 7%,var(--s1));border:1px solid color-mix(in srgb,var(--info) 20%,var(--line));font-size:12px;color:var(--mut)}
-@media(max-width:650px){.voice-levels{grid-template-columns:1fr}.voice-level{min-height:74px}}
 
 /* ---- calmer, premium motion ---- */
 *{scroll-behavior:smooth}
@@ -388,13 +373,6 @@ const SUPABASE_KEY = 'sb_publishable_52dmXGyGlmgzsshRhFupPg_r8QwHbVU';
 
 /* Anti-cheat settings (change here if you want it softer or harder) */
 const AC = { GRACE_SEC: 5, MAX_STRIKES: 3, IDLE_MIN: 10 };
-const AC_MODES = {
-  aggressive: { label: 'Very aggressive', grace: 5, window: 20, hits: 8, multiplier: 3, floor: 0.020, help: 'Strict detection. About 0.6 seconds of sustained sound can trigger a warning.' },
-  balanced: { label: 'Less aggressive', grace: 8, window: 45, hits: 18, multiplier: 3.2, floor: 0.024, help: 'Needs about 1.4 seconds of sustained sound before warning. Better for normal background noise.' },
-  gentle: { label: 'Lesser aggressive', grace: 10, window: 70, hits: 28, multiplier: 3.5, floor: 0.028, help: 'Needs about 2.2 seconds of sustained sound. Best when other people may be talking nearby.' }
-};
-const acVoiceMode = q => AC_MODES[q && q.anticheat_voice_mode] ? q.anticheat_voice_mode : 'aggressive';
-const acVoiceCfg = q => AC_MODES[acVoiceMode(q)];
 
 const CATEGORIES = [
   ['general', 'General'], ['jamb', 'JAMB'], ['post-utme', 'Post-UTME'], ['waec', 'WAEC'], ['neco', 'NECO'],
@@ -539,7 +517,7 @@ function toast(msg, kind = '') {
 }
 function openSheet(html, opts = {}) {
   const m = $('#modal'); m._onClose = opts.onClose || null; m._lock = !!opts.lock;
-  m.innerHTML = `<div class="ovl" data-ovl><div class="sheet ${opts.full ? 'full' : ''}"><div class="grab"></div>${html}</div></div>`;
+  m.innerHTML = `<div class="ovl" data-ovl><div class="sheet"><div class="grab"></div>${html}</div></div>`;
   document.body.classList.add('noscroll');
   return m.firstElementChild;
 }
@@ -1242,7 +1220,7 @@ const E = { rev: 0, quiz: null, sets: [], qs: [], active: null, deleted: [], del
 const DEF = {
   title: '', description: '', instructions: '', category: 'general', is_challenge: false, duration_min: 30, pass_mark: 50,
   shuffle_questions: false, shuffle_options: false, allow_multiple_attempts: true, max_attempts: null, allow_resume: true,
-  anticheat: false, anticheat_voice: false, anticheat_voice_mode: 'aggressive', require_login: true, allow_guest: false, show_answers: true, show_results: true,
+  anticheat: false, anticheat_voice: false, require_login: true, allow_guest: false, show_answers: true, show_results: true,
   release_mode: 'immediate', release_at: null, calculator: 'none', score_quotes: [], allow_likes: true, allow_comments: true,
   allow_sharing: true, leaderboard_enabled: true, schedule_enabled: false, starts_at: null, ends_at: null, fifty_fifty: false,
   fifty_count: 2, auto_advance: false, intake_form: [], show_percentage: true, visibility: 'public'
@@ -1315,19 +1293,6 @@ function edRenderDetails() {
     <div class="row"><div class="grow"><label class="lbl" for="d-dur">Duration (minutes)</label><input class="inp" id="d-dur" type="number" min="1" max="600" value="${q.duration_min}"></div>
     <div class="grow"><label class="lbl" for="d-pass">Pass mark (%)</label><input class="inp" id="d-pass" type="number" min="0" max="100" value="${q.pass_mark}"></div></div>
     <div class="hint">Duration is how long the quiz stays open once someone starts it.</div>`)}
-  ${accSec('trophy', 'Challenge, prizes and payments', `
-    ${swRow('d-prize', 'Enable a prize/award', 'Show prize information and let eligible winners submit payout details.', q.prize_enabled)}
-    <div class="sub" id="sub-prize" ${q.prize_enabled ? '' : 'hidden'}>
-      <label class="lbl" for="d-prize-mode">Who qualifies?</label><select class="inp" id="d-prize-mode"><option value="top3" ${q.prize_mode==='top3'?'selected':''}>Top 3 leaderboard positions</option><option value="passmark" ${q.prize_mode==='passmark'?'selected':''}>Everyone who meets the cut-off mark</option></select>
-      <label class="lbl" for="d-prize-text">Prize details</label><textarea class="inp" id="d-prize-text" maxlength=1000 placeholder="e.g. 1st: ₦10,000 · 2nd: ₦5,000 · 3rd: ₦3,000">${esc(typeof q.prize_text === 'string' ? q.prize_text : (q.prize_text && q.prize_text.text) || '')}</textarea>
-      <div class="hint">For payout claims, the winner will be asked for account name, bank and account number. Do not put private bank details in the prize description.</div>
-    </div>
-    ${swRow('d-paid', 'Make this a paid quiz', 'Require a successful Paystack payment before a signed-in participant can start.', q.is_paid, { reveal: 'sub-paid' })}
-    <div class="sub" id="sub-paid" ${q.is_paid ? '' : 'hidden'}>
-      <div class="row"><div class="grow"><label class="lbl" for="d-price">Price</label><input class="inp" id="d-price" type="number" min="0" step="0.01" value="${q.price_amount || ''}" placeholder="e.g. 500"></div><div class="grow"><label class="lbl" for="d-currency">Currency</label><input class="inp" id="d-currency" value="${esc(q.price_currency || 'NGN')}"></div></div>
-      <label class="lbl" for="d-paykey">Paystack public key</label><input class="inp" id="d-paykey" value="${esc(q.paystack_public_key || '')}" placeholder="pk_test_… or pk_live_…"><div class="hint">Only the public key belongs here. Never paste a Paystack secret key into this page.</div>
-    </div>
-  `, !!q.is_challenge || !!q.prize_enabled)}
   ${accSec('refresh', 'Attempts and behaviour', `
     ${swRow('d-shq', 'Shuffle questions', 'Every person gets a different order.', q.shuffle_questions)}
     ${swRow('d-sho', 'Shuffle answer options', 'Options are mixed for each person.', q.shuffle_options)}
@@ -1350,8 +1315,7 @@ function edRenderDetails() {
         • ${AC.IDLE_MIN} minutes with no touch or typing submits the quiz.<br>
         • Copy, paste, screenshots keys and text selection are blocked. Fullscreen is requested.<br>
         • Resuming an unfinished attempt is turned off.</div>
-      ${swRow('d-voice', 'Also listen for voices (microphone)', 'Voice detection can be tuned below. A longer window reduces false triggers from brief noises.', q.anticheat_voice)}
-      <div class="sub" id="voice-mode-box" ${q.anticheat && q.anticheat_voice ? '' : 'hidden'}><label class="lbl">Voice detection level</label><div class="voice-levels" id="voice-levels">${[['aggressive','1','Very aggressive','Strictest detection'],['balanced','2','Less aggressive','Longer sound required'],['gentle','3','Lesser aggressive','Longest sound required']].map(x=>`<button type="button" class="voice-level ${acVoiceMode(q)===x[0]?'on':''}" data-act="voice-mode" data-mode="${x[0]}"><span class="radio"></span><b>${x[1]}. ${x[2]}</b><small>${x[3]}</small></button>`).join('')}</div><input type="hidden" id="d-voice-mode" value="${acVoiceMode(q)}"><div class="voice-current" id="voice-mode-help">${esc(acVoiceCfg(q).help)}</div></div>
+      ${swRow('d-voice', 'Also listen for voices (microphone)', 'Detects someone talking or saying a wake word out loud. Needs microphone permission, and a noisy room can trigger it.', q.anticheat_voice)}
     </div>`)}
   ${accSec('globe', 'Access and sharing', `
     <div class="b" style="font-size:14.5px">Who can see this quiz?</div>
@@ -1379,8 +1343,7 @@ function edRenderDetails() {
   ${E.quiz ? '' : '<div class="hint center gap0">Next you will add questions. You can come back and change any of this later.</div>'}
   ${E.quiz ? `<button class="btn danger block gap2" data-act="ed-delete">${ic('trash', 16)} Delete this quiz</button>` : `<button class="btn ghost block gap" data-act="ed-discard">Discard and go back</button>`}`;
 }
-ACT['voice-mode'] = el => { const mode = el.dataset.mode; const input = $('#d-voice-mode'); if (input) input.value = mode; $$('#voice-levels .voice-level').forEach(b => b.classList.toggle('on', b.dataset.mode === mode)); const help = $('#voice-mode-help'); if (help) help.textContent = AC_MODES[mode].help; };
-CHG.reveal = el => { const t = $('#' + el.dataset.target); if (t) t.hidden = !el.checked; if (el.id === 'd-ac') CHG.acsync(el); if (el.id === 'd-voice') { const b=$('#voice-mode-box'); if(b) b.hidden=!el.checked; } if (el.id === 'd-prize') { const b=$('#sub-prize'); if(b) b.hidden=!el.checked; } };
+CHG.reveal = el => { const t = $('#' + el.dataset.target); if (t) t.hidden = !el.checked; if (el.id === 'd-ac') CHG.acsync(el); };
 CHG.acsync = el => { const r = $('#d-resume'); if (r) { r.disabled = el.checked; if (el.checked) r.checked = false; } };
 CHG.relmode = el => { $('#rel-at').hidden = el.value !== 'scheduled'; };
 ACT.vis = el => {
@@ -1417,9 +1380,7 @@ function edReadDetails() {
     title, description: v('d-desc').trim(), instructions: v('d-inst').trim(), category: v('d-cat'), is_challenge: c('d-chal'),
     duration_min: dur, pass_mark: pass, shuffle_questions: c('d-shq'), shuffle_options: c('d-sho'),
     allow_multiple_attempts: c('d-multi'), max_attempts: c('d-multi') ? (parseInt(v('d-maxatt'), 10) || null) : null,
-    allow_resume: ac ? false : c('d-resume'), anticheat: ac, anticheat_voice: ac && c('d-voice'), anticheat_voice_mode: v('d-voice-mode') || 'aggressive',
-    is_paid: c('d-paid'), price_amount: c('d-paid') ? (parseFloat(v('d-price')) || 0) : null, price_currency: (v('d-currency') || 'NGN').trim().toUpperCase(), paystack_public_key: c('d-paid') ? v('d-paykey').trim() : null,
-    prize_enabled: c('d-prize'), prize_mode: c('d-prize') ? v('d-prize-mode') : 'top3', prize_text: c('d-prize') ? { text: v('d-prize-text').trim() } : {},
+    allow_resume: ac ? false : c('d-resume'), anticheat: ac, anticheat_voice: ac && c('d-voice'),
     require_login: c('d-login'), allow_guest: c('d-guest'), show_answers: c('d-showans'), show_results: c('d-showres'),
     release_mode: rel, release_at: rel === 'scheduled' ? fromLocalInput(v('d-relat')) : null,
     calculator: c('d-calc') ? v('d-calctype') : 'none', score_quotes: quotes, allow_likes: c('d-likes'), allow_comments: c('d-comm'),
@@ -1887,7 +1848,7 @@ function drawQuiz() {
   ].map(x => `<div class="stat"><b>${esc(x[0])}</b><span>${x[1]}</span></div>`).join('');
   const feats = [
     q.anticheat ? `<span class="badge bad">${ic('shield', 12)} Anti-cheat on</span>` : '', q.calculator !== 'none' ? `<span class="badge">${ic('calc', 12)} ${q.calculator} calculator</span>` : '',
-    q.fifty_fifty ? `<span class="badge">50:50 lifeline</span>` : '', q.is_paid ? `<span class="badge gold">${ic('lock',12)} Paid · ${esc(q.price_currency||'NGN')} ${num(q.price_amount||0)}</span>` : '', q.prize_enabled ? `<span class="badge gold">${ic('trophy',12)} Prize</span>` : '', q.shuffle_questions ? '<span class="badge">Shuffled</span>' : '', q.allow_multiple_attempts ? (q.max_attempts ? `<span class="badge">${q.max_attempts} attempts</span>` : '<span class="badge">Unlimited attempts</span>') : '<span class="badge">One attempt</span>',
+    q.fifty_fifty ? `<span class="badge">50:50 lifeline</span>` : '', q.shuffle_questions ? '<span class="badge">Shuffled</span>' : '', q.allow_multiple_attempts ? (q.max_attempts ? `<span class="badge">${q.max_attempts} attempts</span>` : '<span class="badge">Unlimited attempts</span>') : '<span class="badge">One attempt</span>',
     q.schedule_enabled && q.starts_at ? `<span class="badge">${ic('calendar', 12)} ${fmtDT(q.starts_at)}${q.ends_at ? ' to ' + fmtDT(q.ends_at) : ''}</span>` : ''
   ].filter(Boolean).join(' ');
   let startBtn = '';
@@ -1900,7 +1861,6 @@ function drawQuiz() {
     ${q.allow_sharing || mgr ? `<button class="btn sm" data-act="q-share">${ic('share', 16)} Share</button>` : ''}
     <span class="mut sm" style="margin-left:auto">${ic('users', 14)} ${q.attempts_count || 0} attempt${q.attempts_count === 1 ? '' : 's'}</span></div>`;
   const lbOn = q.leaderboard_enabled || q.is_challenge;
-  const challengeCard = q.is_challenge || q.prize_enabled ? `<div class="card challenge-card gap"><div class="row between"><div class="b">${ic('trophy',17)} ${q.is_challenge ? 'Challenge' : 'Prize challenge'}</div>${q.is_paid ? `<span class="badge gold">Paid</span>` : ''}</div><div class="row wrapf gap0" style="gap:6px;margin-top:7px"><span class="badge">Cut-off ${q.pass_mark}%</span>${q.prize_enabled ? `<span class="badge gold">${q.prize_mode==='top3'?'Top 3 prizes':'Pass-mark prize'}</span>`:''}</div>${q.prize_enabled ? `<div class="sm mut" style="margin-top:8px;white-space:pre-wrap">${esc((q.prize_text&&q.prize_text.text)||'Prize details will be announced by the creator.')}</div>` : ''}</div>` : '';
   const tools = mgr ? `<div class="card gap"><div class="b">${ic('gear' in ICONS ? 'gear' : 'edit', 16)} Manage this quiz</div><div class="tiles gap0">
       <a class="tile" href="#/edit/${q.id}/details">${ic('edit', 20)}Edit</a><a class="tile" href="#/results/${q.id}">${ic('chart', 20)}Results & export</a>
       <button class="tile" data-act="q-exportq">${ic('download', 20)}Export questions</button><button class="tile" data-act="q-dup">${ic('copy', 20)}Duplicate</button>
@@ -1915,20 +1875,19 @@ function drawQuiz() {
       <div class="row gap0" style="gap:8px"><span class="xs mut">Quiz key</span>${keyChip(q.share_code)}<span class="xs dim">Share it so others can open this quiz</span></div>
       ${q.description ? `<p class="gap" style="line-height:1.6">${nl2br(q.description)}</p>` : ''}
       ${Q.sets.length > 1 ? `<div class="row wrapf gap0" style="gap:6px">${Q.sets.map(s => `<span class="badge">${esc(s.name)}</span>`).join('')}</div>` : ''}</div>
-    <div class="stats gap">${facts}</div>${feats ? `<div class="row wrapf gap0" style="gap:6px">${feats}</div>` : ''}${challengeCard}
+    <div class="stats gap">${facts}</div>${feats ? `<div class="row wrapf gap0" style="gap:6px">${feats}</div>` : ''}
     <div class="gap">${startBtn}</div>${engage}${tools}
-    ${lbOn ? `<button class="btn block gap" data-act="q-leaderboard">${ic('trophy', 18)} Open full-screen leaderboard</button>` : ''}
-    <button class="btn block gap" data-act="q-attempts">${ic('users', 18)} View all attempts</button>
+    ${lbOn ? `<details class="acc gap" id="lb-acc"><summary>${ic('trophy', 20)}<span>Leaderboard</span><span class="chev">${ic('down', 18)}</span></summary><div class="accb" id="lb-body"><div class="spin"></div></div></details>` : ''}
     ${q.allow_comments ? `<details class="acc" id="cm-acc"><summary>${ic('msg', 20)}<span>Comments (${q.comments_count || 0})</span><span class="chev">${ic('down', 18)}</span></summary><div class="accb" id="cm-body"><div class="spin"></div></div></details>` : ''}
     ${S.me && Q.attempts.length ? `<details class="acc" id="at-acc"><summary>${ic('clock', 20)}<span>Your attempts (${Q.attempts.length})</span><span class="chev">${ic('down', 18)}</span></summary><div class="accb">${Q.attempts.map(a => {
       const rs = Array.isArray(a.attempt_results) ? a.attempt_results[0] : a.attempt_results;
       return `<a class="person" href="#/${a.status === 'ongoing' ? 'take' : 'result'}/${a.id}"><div class="grow"><div class="b">Attempt ${a.attempt_no}</div><div class="xs mut">${fmtDT(a.started_at)}</div></div>${rs ? `<span class="badge ${rs.passed ? 'ok' : 'bad'}">${num(rs.percentage, 1)}%</span>` : `<span class="badge">${a.status === 'ongoing' ? 'In progress' : 'Submitted'}</span>`}${ic('right', 16)}</a>`;
     }).join('')}</div></details>` : ''}
   </div>`);
+  const lb = $('#lb-acc'); if (lb) lb.addEventListener('toggle', () => { if (lb.open && !lb.dataset.done) { lb.dataset.done = 1; lbLoad(); } });
   const cm = $('#cm-acc'); if (cm) cm.addEventListener('toggle', () => { if (cm.open && !cm.dataset.done) { cm.dataset.done = 1; cmLoad(); } });
+  if (Q.quiz.is_challenge && lb) { lb.open = true; }
 }
-ACT['q-leaderboard'] = async () => { openSheet(`<div class="row between"><div><h2 class="h2">Leaderboard</h2><div class="xs mut">Top 3 are shown first. Everyone below is ranked after them.</div></div><button class="iconbtn" data-act="close">${ic('x',18)}</button></div><div id="lb-body" class="gap"><div class="spin"></div></div>`, {full:true}); await lbLoad(Q.quiz); };
-ACT['q-attempts'] = async () => { openSheet(`<div class="row between"><div><h2 class="h2">Attempts</h2><div class="xs mut">Every attempt appears here — ongoing, completed and auto-submitted.</div></div><button class="iconbtn" data-act="close">${ic('x',18)}</button></div><div id="attempt-feed" class="gap"><div class="spin"></div></div>`, {full:true}); await attemptFeedLoad(Q.quiz); };
 ACT['q-share'] = () => shareQuiz(Q.quiz);
 ACT['q-jump-c'] = () => { const c = $('#cm-acc'); if (c) { c.open = true; c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } };
 ACT['q-like'] = async () => {
@@ -1942,7 +1901,6 @@ ACT['q-like'] = async () => {
 /* ---------- start flow ---------- */
 ACT['q-start'] = () => {
   const q = Q.quiz;
-  if (q.is_paid && !loggedIn()) return needLogin('Paid quizzes require an account before payment.');
   if (S.me) { if (S.me.anon && !Q.guestName) return guestSheet(q); return preStart(q); }
   S.returnTo = '/q/' + q.share_code;
   openSheet(`<h3 class="h2">${q.allow_guest ? 'How do you want to take this quiz?' : 'Sign in to take this quiz'}</h3>
@@ -1952,7 +1910,7 @@ ACT['q-start'] = () => {
 };
 ACT['guest-open'] = () => guestSheet(Q.quiz);
 function guestSheet(q) {
-  openSheet(`<h3 class="h2">Continue without an account</h3><p class="mut sm gap0">Pick a display name. Guest mode is limited to one attempt on this device for this quiz.</p>
+  openSheet(`<h3 class="h2">Continue without an account</h3><p class="mut sm gap0">Pick a name for the leaderboard, or stay anonymous.</p>
     <label class="lbl" for="g-name">Display name</label><input class="inp" id="g-name" maxlength="24" placeholder="e.g. Chidi" value="${esc(Q.guestName)}">
     ${swRow('g-anon', 'Stay anonymous', 'Your name shows as "Anonymous".', false)}
     <div class="err" id="g-err"></div><button class="btn brass block gap" id="g-go" data-act="guest-go">Continue</button>`);
@@ -1974,24 +1932,20 @@ function intakeField(f) {
   else inp = `<input class="inp" id="${id}" ${f.type === 'number' ? 'type="number" inputmode="decimal"' : ''} maxlength="200">`;
   return `<label class="lbl" for="${id}">${esc(f.label)}${req}</label>${inp}`;
 }
-async function preStart(q) {
+function preStart(q) {
   const rules = [`You have <b>${q.duration_min} minute${q.duration_min === 1 ? '' : 's'}</b> once you start.`, `Pass mark is <b>${q.pass_mark}%</b>.`];
   if (q.anticheat) rules.push(`<b class="bad">Anti-cheat is ON.</b> Leaving this screen, switching apps, or the screen turning off gives a ${AC.GRACE_SEC}-second warning and then submits your quiz. ${AC.MAX_STRIKES} warnings submit it at once. Do not touch anything else while you take it.`);
   if (q.anticheat_voice) rules.push('Your <b>microphone</b> will be used to detect talking. Stay quiet during the quiz.');
   if (!q.anticheat && q.allow_resume) rules.push('If you leave, you can come back and continue while time has not run out.');
   if (q.calculator !== 'none') rules.push(`A ${q.calculator} calculator is available.`);
   const intake = (q.intake_form || []);
-  const paid = q.is_paid ? (loggedIn() && (q.owner_id === S.me.id || isAdmin() || await hasPaid(q))) : true;
-  const payBox = q.is_paid ? `<div class="prize-card gap0"><div class="row between"><div><b>Paid quiz</b><div class="sm mut">${esc(q.price_currency || 'NGN')} ${num(q.price_amount || 0)}</div></div>${paid ? '<span class="badge ok">Paid</span>' : '<button class="btn brass sm" data-act="q-pay">Pay now</button>'}</div></div>` : '';
   openSheet(`<h3 class="h2">${esc(q.title)}</h3>
     ${q.instructions ? `<div class="card tight gap0" style="line-height:1.6">${nl2br(q.instructions)}</div>` : ''}
     <ul class="sm gap0" style="padding-left:18px;line-height:1.7">${rules.map(r => `<li>${r}</li>`).join('')}</ul>
     ${q.anticheat && q.anticheat_voice ? `<div class="card tight gap0"><button class="btn sm" data-act="mic-test">${ic('mic', 14)} Test my microphone</button><div id="mic-test-out" class="hint" style="margin-top:8px">Tap to check your microphone works before you start.</div></div>` : ''}
-    ${payBox}
-    ${q.prize_enabled ? `<div class="prize-card gap0"><b>${ic('trophy',15)} Prize challenge</b><div class="sm mut" style="margin-top:4px">${esc((q.prize_text && q.prize_text.text) || 'Prize details are provided by the creator.')}</div></div>` : ''}
     ${intake.length ? `<div class="b gap">Before you start</div>${intake.map(intakeField).join('')}` : ''}
     <div class="err" id="ps-err"></div>
-    <div class="row gap"><button class="btn grow ghost" data-act="close">Cancel</button><button class="btn grow brass" id="ps-go" data-act="q-go" ${q.is_paid && !paid ? 'disabled' : ''}>${ic('play', 18)} Start exam</button></div>`);
+    <div class="row gap"><button class="btn grow ghost" data-act="close">Cancel</button><button class="btn grow brass" id="ps-go" data-act="q-go">${ic('play', 18)} Start exam</button></div>`);
 }
 ACT['mic-test'] = async btn => {
   const out = $('#mic-test-out'); busy(btn, true); out.className = 'hint'; out.textContent = 'Listening for 3 seconds — say something out loud…';
@@ -2015,12 +1969,6 @@ ACT['mic-test'] = async btn => {
     if (stream) stream.getTracks().forEach(t => t.stop()); if (ctx) ctx.close().catch(() => {}); busy(btn, false);
   }
 };
-function guestDeviceId(){ let id=''; try { id=localStorage.getItem('qb_guest_device'); if(!id){ id=uid(); localStorage.setItem('qb_guest_device',id); } } catch(e){ id=uid(); } return id; }
-async function loadPaystack(){ if(window.PaystackPop) return; await new Promise((resolve,reject)=>{ const sc=document.createElement('script'); sc.src='https://js.paystack.co/v2/inline.js'; sc.onload=resolve; sc.onerror=()=>reject(new Error('Could not load Paystack. Check your internet connection.')); document.head.appendChild(sc); }); }
-async function hasPaid(q){ if(!q.is_paid || !loggedIn()) return false; try { return !!(await rpc('has_paid',{p_quiz_id:q.id})); } catch(e){ return false; } }
-async function payForQuiz(q){ if(!loggedIn()) return needLogin('Sign in to pay for this quiz'); if(!q.paystack_public_key) throw new Error('The quiz owner has not configured Paystack yet.'); await loadPaystack(); return new Promise((resolve,reject)=>{ const ref='QB_'+Date.now()+'_'+Math.random().toString(36).slice(2,8).toUpperCase(); try { const popup=new PaystackPop(); popup.newTransaction({key:q.paystack_public_key,email:S.me.email,amount:Math.round((+q.price_amount||0)*100),currency:q.price_currency||'NGN',reference:ref,onSuccess:async response=>{ try{ await rpc('record_paystack_payment',{p_quiz_id:q.id,p_reference:response.reference}); toast('Payment recorded. You can start now.','ok'); resolve(true); }catch(e){ reject(e); } },onCancel:()=>resolve(false),onError:e=>reject(new Error((e&&e.message)||'Paystack payment failed'))}); } catch(e){ reject(e); } }); }
-
-ACT['q-pay'] = async btn => { busy(btn,true); try { const ok=await payForQuiz(Q.quiz); if(ok){ closeSheet(); await preStart(Q.quiz); } } catch(e){ const er=$('#ps-err'); if(er) er.textContent=cleanErr(e); else toast(cleanErr(e),'bad'); } finally { busy(btn,false); } };
 ACT['q-go'] = async btn => {
   const q = Q.quiz, intake = {};
   for (const f of (q.intake_form || [])) {
@@ -2032,8 +1980,7 @@ ACT['q-go'] = async btn => {
   try {
     if (q.anticheat && q.anticheat_voice) { try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach(t => t.stop()); } catch (e) { throw new Error('This quiz needs microphone permission. Allow the microphone for this site, then tap Start again.'); } }
     if (q.anticheat) { const de = document.documentElement; try { (de.requestFullscreen || de.webkitRequestFullscreen || (() => { })).call(de); } catch (e) { } }
-    if (q.is_paid && !S.me.anon && q.owner_id !== S.me.id && !isAdmin() && !(await hasPaid(q))) { throw new Error('Please complete payment before starting this quiz.'); }
-    const res = await rpc('start_attempt', { p_quiz_id: q.id, p_guest_name: S.me && S.me.anon ? (Q.guestName || 'Anonymous') : null, p_intake: intake, p_guest_device_id: S.me && S.me.anon ? guestDeviceId() : null });
+    const res = await rpc('start_attempt', { p_quiz_id: q.id, p_guest_name: S.me && S.me.anon ? (Q.guestName || 'Anonymous') : null, p_intake: intake });
     LIVE.add(res.attempt.id);
     closeSheet(); nav('/take/' + res.attempt.id);
   } catch (e) { busy(btn, false); $('#ps-err').textContent = cleanErr(e); }
@@ -2078,38 +2025,33 @@ async function duplicateQuiz(src) {
   for (let i = 0; i < kk.length; i += 100) await db(sb.from('question_keys').insert(kk.slice(i, i + 100)));
   return copy.id;
 }
-/* ---------- comments: unlimited replies + likes ---------- */
+/* ---------- comments (with one level of replies) ---------- */
 async function cmLoad() {
   const q = Q.quiz, box = $('#cm-body'); if (!box) return;
-  const rows = await db(sb.from('comments').select('id,user_id,display_name,body,created_at,parent_id').eq('quiz_id', q.id).order('created_at', { ascending: true }).limit(500));
-  let likes = [], mine = new Set();
-  try { likes = await db(sb.from('comment_likes').select('comment_id,user_id').in('comment_id', rows.map(x=>x.id))); mine = new Set(likes.filter(x=>S.me && x.user_id===S.me.id).map(x=>x.comment_id)); } catch(e) {}
-  const count = {}; likes.forEach(x => count[x.comment_id]=(count[x.comment_id]||0)+1);
-  const kids = {}; rows.forEach(c => { if(c.parent_id) (kids[c.parent_id] ||= []).push(c); });
-  const top = rows.filter(c => !c.parent_id).reverse();
-  box.innerHTML = (loggedIn() && !S.me.banned ? `<div class="row"><input class="inp" id="cm-in" maxlength="1000" placeholder="Write a comment…"><button class="btn brass" data-act="cm-post">Post</button></div>` : `<div class="hint">${S.me && S.me.banned ? 'Your account is suspended.' : '<a class="link" href="#/auth/login">Sign in</a> to comment.'}</div>`) + `<div id="cm-list" class="gap">${cmRows(top, kids, count, mine)}</div>`;
+  const rows = await db(sb.from('comments').select('id,user_id,display_name,body,created_at,parent_id').eq('quiz_id', q.id).order('created_at', { ascending: true }).limit(300));
+  const top = rows.filter(c => !c.parent_id).reverse(), kids = {};
+  rows.filter(c => c.parent_id).forEach(c => (kids[c.parent_id] = kids[c.parent_id] || []).push(c));
+  box.innerHTML = (loggedIn() && !S.me.banned ? `<div class="row"><input class="inp" id="cm-in" maxlength="1000" placeholder="Write a comment…"><button class="btn brass" data-act="cm-post">Post</button></div>` : `<div class="hint">${S.me && S.me.banned ? 'Your account is suspended.' : '<a class="link" href="#/auth/login">Sign in</a> to comment.'}</div>`)
+    + `<div id="cm-list" class="gap">${cmRows(top, kids)}</div>`;
 }
-const cmOne = (c, kids, count, mine, depth=0) => `<div class="person cmt${depth ? ' reply' : ''}" style="align-items:flex-start;margin-left:${Math.min(depth,5)*28}px" data-cid="${c.id}"><span class="avatar${depth ? ' sm' : ''}">${esc(initial(c.display_name))}</span><div class="grow" style="min-width:0"><div class="row" style="gap:8px"><b class="sm">@${esc(c.display_name || 'user')}</b><span class="xs dim">${ago(c.created_at)}</span></div><div style="word-break:break-word;line-height:1.5">${nl2br(c.body)}</div><div class="row gap0" style="gap:14px;margin-top:4px"><button class="cmt-like ${mine.has(c.id)?'on':''}" data-act="cm-like" data-id="${c.id}">${ic('heart',12)} ${count[c.id]||0}</button>${loggedIn()&&!S.me.banned ? `<button class="link xs" data-act="cm-showreply" data-id="${c.id}">Reply</button>`:''}${S.me && (c.user_id===S.me.id || Q.isMgr) ? `<button class="link xs bad" data-act="cm-del" data-id="${c.id}">Delete</button>`:''}</div><div id="rf-${c.id}" hidden></div>${(kids[c.id]||[]).map(k=>cmOne(k,kids,count,mine,depth+1)).join('')}</div></div>`;
-const cmRows = (top, kids, count, mine) => top.length ? top.map(c=>cmOne(c,kids,count,mine)).join('') : '<div class="hint">No comments yet. Be the first.</div>';
-ACT['cm-post'] = async btn => { const v=$('#cm-in').value.trim(); if(!v)return; busy(btn,true); try{await db(sb.from('comments').insert({quiz_id:Q.quiz.id,user_id:S.me.id,body:v})); Q.quiz.comments_count++; await cmLoad();}finally{busy(btn,false);} };
-ACT['cm-del'] = async el => { await db(sb.from('comments').delete().eq('id',el.dataset.id)); Q.quiz.comments_count=Math.max(0,Q.quiz.comments_count-1); await cmLoad(); };
-ACT['cm-showreply'] = el => { const box=$('#rf-'+el.dataset.id); if(!box)return; box.hidden=false; box.innerHTML=`<div class="row gap0" style="margin-top:8px"><input class="inp" id="ri-${el.dataset.id}" maxlength="1000" placeholder="Write a reply…"><button class="btn sm brass" data-act="cm-reply" data-id="${el.dataset.id}">Reply</button></div>`; setTimeout(()=>$('#ri-'+el.dataset.id)?.focus(),30); };
-ACT['cm-reply'] = async el => { const pid=el.dataset.id, i=$('#ri-'+pid), v=i.value.trim(); if(!v)return; busy(el,true); try{await db(sb.from('comments').insert({quiz_id:Q.quiz.id,user_id:S.me.id,body:v,parent_id:pid})); Q.quiz.comments_count++; await cmLoad();}finally{busy(el,false);} };
-ACT['cm-like'] = async el => { if(!loggedIn()) return needLogin('Sign in to like comments'); const id=el.dataset.id; const liked=el.classList.contains('on'); try{ if(liked) await db(sb.from('comment_likes').delete().eq('comment_id',id).eq('user_id',S.me.id)); else await db(sb.from('comment_likes').insert({comment_id:id,user_id:S.me.id})); await cmLoad(); }catch(e){toast(cleanErr(e),'bad');} };
-
-/* ---------- public attempt activity ---------- */
-async function attemptFeedLoad(q){
-  const box=$('#attempt-feed'); if(!box)return;
-  try{
-    const d=await rpc('get_attempt_feed',{p_quiz_id:q.id}); const rows=d.rows||[];
-    const label=r=>r.status==='ongoing'?'Ongoing':r.status==='auto_submitted'?'Auto-submitted':r.status==='cancelled'?'Cancelled':(r.passed?'Passed':'Completed');
-    box.innerHTML=rows.length?rows.map(r=>{
-      const ongoing=r.status==='ongoing', done=r.score!=null;
-      const sub=(r.subjects||[]).map(s=>`${esc(s.name)} ${num(s.score)}/${num(s.total)} (${num(s.total?100*s.score/s.total:0,0)}%)`).join(' · ');
-      return `<div class="attempt-row ${ongoing?'ongoing':'done'}"><span class="avatar">${esc(initial(r.name))}</span><div class="grow"><div class="b">${esc(r.name)}${r.guest?' <span class="badge">guest</span>':''}</div><div class="xs mut">${fmtDT(r.started_at)}${r.submitted_at?' · submitted '+fmtDT(r.submitted_at):''}${r.time!=null?' · '+fmtDur(r.time):''}</div>${sub?`<div class="xs mut" style="margin-top:4px;line-height:1.45">${sub}</div>`:''}</div><div style="text-align:right;min-width:68px"><div class="status ${ongoing?'info':r.passed?'ok':'bad'}">${label(r)}</div>${done?`<b class="${r.passed?'ok':'bad'}" style="font-size:18px">${num(r.percentage,1)}%</b>`:'<span class="xs mut">No score yet</span>'}</div></div>`;
-    }).join(''):'<div class="empty">No attempts yet.</div>';
-  }catch(e){box.innerHTML=`<div class="hint bad">${esc(cleanErr(e))}</div>`;}
-}
+const cmOne = (c, isReply) => `<div class="person cmt${isReply ? ' reply' : ''}" style="align-items:flex-start" data-cid="${c.id}"><span class="avatar${isReply ? ' sm' : ''}">${esc(initial(c.display_name))}</span><div class="grow" style="min-width:0"><div class="row" style="gap:8px"><b class="sm">@${esc(c.display_name || 'user')}</b><span class="xs dim">${ago(c.created_at)}</span></div><div style="word-break:break-word;line-height:1.5">${nl2br(c.body)}</div>
+  <div class="row gap0" style="gap:14px;margin-top:2px">${!isReply && loggedIn() && !S.me.banned ? `<button class="link xs" data-act="cm-showreply" data-id="${c.id}">Reply</button>` : ''}${S.me && (c.user_id === S.me.id || Q.isMgr) ? `<button class="link xs bad" data-act="cm-del" data-id="${c.id}">Delete</button>` : ''}</div>
+  <div id="rf-${c.id}" hidden></div></div></div>`;
+const cmRows = (top, kids) => top.length ? top.map(c => cmOne(c, false) + (kids[c.id] || []).map(k => cmOne(k, true)).join('')).join('') : '<div class="hint">No comments yet. Be the first.</div>';
+ACT['cm-post'] = async btn => {
+  const v = $('#cm-in').value.trim(); if (!v) return; busy(btn, true);
+  try { await db(sb.from('comments').insert({ quiz_id: Q.quiz.id, user_id: S.me.id, body: v })); Q.quiz.comments_count++; await cmLoad(); } finally { busy(btn, false); }
+};
+ACT['cm-del'] = async el => { await db(sb.from('comments').delete().eq('id', el.dataset.id)); Q.quiz.comments_count = Math.max(0, Q.quiz.comments_count - 1); await cmLoad(); };
+ACT['cm-showreply'] = el => {
+  const box = $('#rf-' + el.dataset.id); if (!box) return;
+  box.hidden = false; box.innerHTML = `<div class="row gap0" style="margin-top:8px"><input class="inp" id="ri-${el.dataset.id}" maxlength="1000" placeholder="Write a reply…"><button class="btn sm brass" data-act="cm-reply" data-id="${el.dataset.id}">Reply</button></div>`;
+  setTimeout(() => { const i = $('#ri-' + el.dataset.id); if (i) i.focus(); }, 30);
+};
+ACT['cm-reply'] = async (el, ev) => {
+  const pid = el.dataset.id, i = $('#ri-' + pid), v = i.value.trim(); if (!v) return; busy(el, true);
+  try { await db(sb.from('comments').insert({ quiz_id: Q.quiz.id, user_id: S.me.id, body: v, parent_id: pid })); Q.quiz.comments_count++; await cmLoad(); } finally { busy(el, false); }
+};
 
 /* ---------- leaderboard ---------- */
 const LB = { data: null, mode: 'all', quiz: null, view: 'score' };
@@ -2127,9 +2069,9 @@ function lbRender() {
   const d = LB.data, q = LB.quiz, pctView = LB.view === 'pct';
   if (!d.enabled) return '<div class="hint">The creator turned the leaderboard off.</div>';
   if (!d.visible) return `<div class="hint">${ic('lock', 14)} The leaderboard opens when the creator releases the results.</div>`;
-  if (!d.rows.length) return `<div class="lb-screen"><div class="empty">${ic('trophy',34)}<h3 class="h2">No qualified participants yet</h3><p class="gap0">Only first attempts that meet the ${esc(String(d.pass_mark ?? q.pass_mark))}% cut-off appear here.</p></div></div>`;
+  if (!d.rows.length) return '<div class="hint">No completed attempts yet. Be the first on the board.</div>';
   const subs = []; d.rows.forEach(r => (r.subjects || []).forEach(s => { if (!subs.find(x => x.set_id === s.set_id)) subs.push({ set_id: s.set_id, name: s.name }); }));
-  const fig = (score, total) => pctView ? num(total > 0 ? score / total * 100 : 0, 1) + '%' : `${num(score)}/${num(total)}`;
+  const fig = (score, total) => pctView ? num(total > 0 ? score / total * 100 : 0, 1) + '%' : num(score);
   let rows;
   if (LB.mode === 'all') {
     rows = d.rows.map(r => ({ rank: r.rank, name: r.name, score: r.score, total: r.total, pct: r.percentage, me: r.me, time: r.time, sub: r.subjects || [], pass: r.passed }));
@@ -2138,10 +2080,20 @@ function lbRender() {
       .sort((a, b) => b.score - a.score || (a.time || 1e9) - (b.time || 1e9)).map((r, i, arr) => Object.assign(r, { rank: 1 + arr.filter(x => x.score > r.score).length }));
   }
   const tabs = subs.length > 1 ? `<div class="chips"><button class="chip ${LB.mode === 'all' ? 'on' : ''}" data-act="lb-mode" data-m="all">Overall</button>${subs.map(s => `<button class="chip ${LB.mode === s.set_id ? 'on' : ''}" data-act="lb-mode" data-m="${s.set_id}">${esc(s.name)}</button>`).join('')}</div>` : '';
-  const top = rows.filter(r => r.rank <= 3).slice(0,3).map(r => `<div class="lb-top-card ${r.me?'me':''}"><div class="rank-icon">${r.rank===1?'🥇':r.rank===2?'🥈':'🥉'}</div><div class="place">${r.rank===1?'1st':r.rank===2?'2nd':'3rd'}</div><div class="name">${esc(r.name)}${r.me?' · You':''}</div><div class="score">${fig(r.score,r.total)}</div><div class="subline">${num(r.pct,1)}%${r.time ? ' · '+fmtDur(r.time) : ''}</div></div>`).join('');
-  const toggle = `<div class="row between gap0" style="align-items:center;margin-top:12px"><span class="xs dim">First qualifying attempt · pass mark ${esc(String(d.pass_mark ?? q.pass_mark))}%</span><div class="seg sm" id="lb-view"><button class="${pctView ? '' : 'on'}" data-act="lb-view" data-v="score">Score</button><button class="${pctView ? 'on' : ''}" data-act="lb-view" data-v="pct">%</button></div></div>`;
-  const list = rows.map(r => `<div class="lbrow2 ${r.me ? 'me' : ''}"><div class="rk">${r.rank}</div><div class="grow" style="min-width:0"><div class="row between"><div class="b trunc">${esc(r.name)}${r.me ? ' <span class="badge gold">You</span>' : ''}</div><div class="agg">${fig(r.score,r.total)}<small>${num(r.pct,1)}%</small></div></div>${LB.mode === 'all' && r.sub.length ? `<div class="lbgrid">${r.sub.map(s => `<div><span class="mut">${esc(s.name)}</span><b>${num(s.score)}/${num(s.total)} <span class="xs mut">(${num(s.total?100*s.score/s.total:0,1)}%)</span></b></div>`).join('')}</div>` : ''}${r.time ? `<div class="xs dim" style="margin-top:6px">${ic('clock',11)} ${fmtDur(r.time)}</div>` : ''}</div></div>`).join('');
-  return `<div class="lb-screen"><div class="lb-head"><div class="row between"><div><div class="lb-title">Leaderboard</div><div class="sm mut">First qualifying attempt only · pass mark ${esc(String(d.pass_mark ?? q.pass_mark))}%</div></div><span class="badge">${rows.length} qualified</span></div></div>${top?`<div class="lb-top3">${top}</div>`:''}${tabs}${toggle}<div class="card tight gap" style="margin:12px 0"><div class="b">How rankings work</div><div class="xs mut" style="margin-top:4px">Your first completed attempt is used. Only a first attempt that reaches the cut-off appears here.</div></div><div>${list}</div></div>`;
+  const toggle = `<div class="row between gap0" style="align-items:center;margin-top:10px"><span class="xs dim">Ranked by each person's first attempt</span><div class="seg sm" id="lb-view"><button class="${pctView ? '' : 'on'}" data-act="lb-view" data-v="score">Score</button><button class="${pctView ? 'on' : ''}" data-act="lb-view" data-v="pct">%</button></div></div>`;
+  const pod = rows.slice(0, 3);
+  const podium = pod.length >= 3 ? `<div class="podium">${[1, 0, 2].map(i => { const r = pod[i]; return `<div class="pod ${i === 0 ? 'p1' : ''}"><div class="medal">${r.rank}</div><div class="nm trunc">${esc(r.name)}</div><div class="sc">${fig(r.score, r.total)}</div></div>`; }).join('')}</div>` : '';
+  const list = (pod.length >= 3 ? rows.slice(3) : rows).map(r => `<div class="lbrow2 ${r.me ? 'me' : ''}">
+      <div class="rk">${r.rank}</div>
+      <div class="grow" style="min-width:0">
+        <div class="row between">
+          <div class="b trunc">${esc(r.name)}${r.me ? ' <span class="badge gold">You</span>' : ''}</div>
+          <div class="agg">${fig(r.score, r.total)}<small>${LB.mode === 'all' ? 'Aggregate' : 'Score'}</small></div>
+        </div>
+        ${LB.mode === 'all' && r.sub.length > 0 ? `<div class="lbgrid">${r.sub.map(s => `<div><span class="mut">${esc(s.name)}</span><b>${fig(s.score, s.total)}</b></div>`).join('')}</div>` : ''}
+        ${r.time ? `<div class="xs dim" style="margin-top:6px">${ic('clock', 11)} ${fmtDur(r.time)}</div>` : ''}
+      </div></div>`).join('');
+  return tabs + toggle + podium + `<div class="gap0">${list}</div>`;
 }
 ACT['lb-mode'] = el => { LB.mode = el.dataset.m; $('#lb-body').innerHTML = lbRender(); };
 ACT['lb-view'] = el => { LB.view = el.dataset.v; $('#lb-body').innerHTML = lbRender(); };
@@ -2283,7 +2235,7 @@ function tkShow() {
   const setName = (T.sets.find(s => s.id === it.set_id) || {}).name;
   const sets = T.sets.slice().sort((x, y) => x.position - y.position).filter(s => T.items.some(z => z.set_id === s.id));
   $('#tk-sets').innerHTML = sets.length > 1 ? sets.map(s => `<button class="${s.id === it.set_id ? 'on' : ''}" data-act="tk-set" data-id="${s.id}">${esc(s.name)}</button>`).join('') : '';
-  let body = `<div class="row between"><div class="b">Question ${T.idx + 1} <span class="mut" style="font-weight:500">of ${n}</span></div><div class="row" style="gap:6px">${T.flags[it.id] ? `<span class="badge bad">${ic('flag', 12)} Flagged</span>` : ''}</div></div>`;
+  let body = `<div class="row between"><div class="b">Question ${T.idx + 1} <span class="mut" style="font-weight:500">of ${n}</span></div><div class="row" style="gap:6px">${T.flags[it.id] ? `<span class="badge bad">${ic('flag', 12)} Flagged</span>` : ''}<span class="badge">${num(it.marks)} mark${+it.marks === 1 ? '' : 's'}</span></div></div>`;
   if (sets.length > 1 && setName) body += `<div class="xs mut" style="margin-top:2px">${esc(setName)}</div>`;
   if (passage) body += `<div class="pcard gap"><div class="xs mut" style="margin-bottom:4px">Read the passage</div><div class="qbody" style="font-size:15.5px;margin:0">${clean(passage.body)}</div></div>`;
   body += `<div class="qbody">${clean(it.body)}</div>`;
@@ -2407,11 +2359,10 @@ const setMic = (txt, lvl, cls) => { const t = $('#mic-txt'), l = $('#mic-lvl'); 
 async function tkMicStart() {
   const t = T;
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } });
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } });
     const Ctx = window.AudioContext || window.webkitAudioContext; const ctx = new Ctx();
     const an = ctx.createAnalyser(); an.fftSize = 2048; an.smoothingTimeConstant = 0.2; ctx.createMediaStreamSource(stream).connect(an);
-    const vc = acVoiceCfg(t.quiz);
-    t.mic = { stream, ctx, an, buf: new Float32Array(an.fftSize), cal: [], calUntil: Date.now() + 4000, base: 0.004, th: vc.floor, hist: [], ready: false, cfg: vc };
+    t.mic = { stream, ctx, an, buf: new Float32Array(an.fftSize), cal: [], calUntil: Date.now() + 3000, base: 0.004, th: 0.02, hist: [], ready: false };
     const wake = () => { if (t.mic && ctx.state !== 'running') ctx.resume().catch(() => { }); };
     wake(); document.addEventListener('pointerdown', wake, true); t.G.push(() => document.removeEventListener('pointerdown', wake, true));
     t.micId = setInterval(() => tkMicTick(t), 80);
@@ -2426,14 +2377,11 @@ function tkMicTick(t) {
   m.an.getFloatTimeDomainData(m.buf);
   let s = 0; for (let i = 0; i < m.buf.length; i++) s += m.buf[i] * m.buf[i]; const rms = Math.sqrt(s / m.buf.length);
   if (Date.now() < m.calUntil) { m.cal.push(rms); setMic('Listening to the room… stay quiet', rms * 900); return; }
-  if (!m.ready) { const sorted = m.cal.slice().sort((a, b) => a - b); m.base = sorted[Math.floor(sorted.length / 2)] || 0.003; m.th = Math.max(m.cfg.floor, m.base * m.cfg.multiplier); m.ready = true; }
-  if (rms < m.th * 0.55) { m.base = m.base * 0.985 + rms * 0.015; m.th = Math.max(m.cfg.floor, m.base * m.cfg.multiplier); }
-  const hot = rms > m.th;
-  m.hist.push(hot ? 1 : 0); if (m.hist.length > m.cfg.window) m.hist.shift();
-  m.streak = hot ? (m.streak || 0) + 1 : 0;
-  setMic(`${m.cfg.label || 'Voice detection'} · listening`, rms / (m.th * 2) * 100, hot ? 'warnc' : 'ok');
-  const density = m.hist.reduce((a, b) => a + b, 0);
-  if (m.streak >= m.cfg.hits || (density >= m.cfg.hits && m.streak >= Math.ceil(m.cfg.hits * 0.55))) { m.hist = []; m.streak = 0; tkViolation('sustained voice or loud sound was heard'); }
+  if (!m.ready) { const sorted = m.cal.slice().sort((a, b) => a - b); m.base = sorted[Math.floor(sorted.length / 2)] || 0.003; m.th = Math.max(0.018, m.base * 3); m.ready = true; }
+  if (rms < m.th * 0.6) { m.base = m.base * 0.97 + rms * 0.03; m.th = Math.max(0.018, m.base * 3); }
+  m.hist.push(rms > m.th ? 1 : 0); if (m.hist.length > 14) m.hist.shift();
+  setMic('Microphone is listening', rms / (m.th * 2) * 100, 'ok');
+  if (m.hist.reduce((a, b) => a + b, 0) >= 5) { m.hist = []; tkViolation('voice or loud sound was heard'); }
 }
 function tkViolation(reason) {
   const t = T; if (!t || t.done || t.submitting || t.vio || t.preview || Date.now() < (t.armedAt || 0)) return;
@@ -2543,7 +2491,6 @@ function resultScreen(d) {
     ${r.pending_review ? `<div class="card gap" style="border-color:var(--warn)"><b class="warnc">Essay answers waiting</b><div class="sm mut">Your essay marks will be added when the quiz creator marks them.</div></div>` : ''}
     <div class="stats gap"><div class="stat"><b>${r.time_taken_sec != null ? fmtDur(r.time_taken_sec) : '-'}</b><span>Time used</span></div><div class="stat"><b>${num(r.score)}</b><span>Marks</span></div><div class="stat"><b>${num(r.total)}</b><span>Total</span></div></div>
     ${subs.length > 1 ? `<div class="card gap"><div class="b">By subject</div>${subs.map(x => { const p = x.total > 0 ? x.score / x.total * 100 : 0; return `<div class="gap0"><div class="row between sm"><span>${esc(x.name)}</span><span class="b">${num(x.score)} / ${num(x.total)}${q.show_percentage ? ` (${num(p, 0)}%)` : ''}</span></div><div class="bar" style="margin-top:5px"><i style="width:${p}%"></i></div></div>`; }).join('')}<div class="row between gap0 b" style="border-top:1px solid var(--line);padding-top:10px"><span>Aggregate</span><span class="brass">${num(r.score)} / ${num(r.total)}</span></div></div>` : ''}
-    ${!d.preview && q.prize_enabled && r.passed ? `<div class="prize-card gap"><div class="row between"><b>${ic('trophy',16)} Prize / award</b><span class="badge ok">${q.prize_mode==='top3'?'Top 3 prize':'Prize eligible'}</span></div><div class="sm mut" style="margin-top:5px">${esc((q.prize_text && q.prize_text.text) || 'The creator has enabled a prize for qualifying participants.')}</div><button class="btn block gap0" data-act="prize-claim">Submit payout details</button><div class="hint">${q.prize_mode==='top3'?'Only the current top 3 qualifying first attempts can claim.':'Anyone who meets the cut-off can claim.'} Use the bank account that should receive the prize.</div></div>` : ''}
     <div class="col gap">
       ${canRev ? `<button class="btn block" data-act="${d.preview ? 'pv-review' : 'res-review'}" data-id="${esc(att.id)}">${ic('eye', 18)} Review answers</button>` : ''}
       ${!d.preview && (q.leaderboard_enabled || q.is_challenge) ? `<a class="btn block" href="#/quiz/${esc(q.share_code)}">${ic('trophy', 18)} See the leaderboard</a>` : ''}
@@ -2555,8 +2502,6 @@ function resultScreen(d) {
   if (d.preview && r.passed) setTimeout(confetti, 250);
 }
 const RES = { d: null };
-ACT['prize-claim'] = async btn => { const d=RES.d, q=d.quiz, r=d.summary.result, aid=d.aid || d.summary.attempt.id; if(!loggedIn()) return needLogin('Sign in to submit payout details'); if(q.prize_mode==='top3'){ try { const lb=await rpc('get_leaderboard',{p_quiz_id:q.id}); const me=(lb.rows||[]).find(x=>x.me); if(!me || me.attempt_id!==aid || me.rank>3) return toast('This attempt is not currently in the top 3 prize positions.','bad'); } catch(e){ return toast(cleanErr(e),'bad'); } } openSheet(`<h3 class="h2">Prize payout details</h3><p class="mut sm gap0">${esc((q.prize_text&&q.prize_text.text)||'Enter the account that should receive the prize.')}</p><label class="lbl">Account name</label><input class="inp" id="pc-name" maxlength="120"><label class="lbl">Bank name</label><input class="inp" id="pc-bank" maxlength="120"><label class="lbl">Account number</label><input class="inp" id="pc-num" inputmode="numeric" maxlength="20"><div class="err" id="pc-err"></div><button class="btn brass block gap" id="pc-save" data-act="prize-save" data-aid="${esc(aid)}">Submit claim</button>`); };
-ACT['prize-save'] = async btn => { const name=$('#pc-name').value.trim(), bank=$('#pc-bank').value.trim(), numv=$('#pc-num').value.trim(); if(name.length<2||bank.length<2||!/^\d{6,20}$/.test(numv)) return $('#pc-err').textContent='Enter a valid account name, bank name and account number.'; busy(btn,true); try{await rpc('submit_prize_claim',{p_attempt_id:btn.dataset.aid,p_account_name:name,p_bank_name:bank,p_account_number:numv}); closeSheet(); toast('Prize claim submitted','ok');}catch(e){$('#pc-err').textContent=cleanErr(e);}finally{busy(btn,false);} };
 ACT['pv-back'] = () => nav(`/edit/${RES.d.quiz.id}/publish`);
 ACT['res-share'] = async () => {
   const d = RES.d, r = d.summary.result, q = d.quiz;
