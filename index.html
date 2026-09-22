@@ -340,7 +340,7 @@ select.inp option{background:var(--s1);color:var(--tx)}
 .lbrow2 .rk{width:26px;flex:none;font-family:var(--serif);font-size:16px;color:var(--mut);text-align:center;padding-top:2px}
 .lbrow2 .agg{font-family:var(--serif);color:var(--brass);font-size:19px;text-align:right;line-height:1.1;flex:none;padding-left:10px}
 .lbrow2 .agg small{display:block;font-family:var(--sans);font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
-.lb-screen{max-width:980px;margin:0 auto}.lb-head{padding:8px 0 14px}.lb-title{font-family:var(--serif);font-size:27px}.lb-top3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}.lb-top-card{background:var(--s1);border:1px solid var(--line);border-radius:18px;padding:16px 10px;text-align:center;box-shadow:0 6px 18px rgba(20,25,70,.06)}.lb-top-card .place{font-size:12px;font-weight:800;color:var(--brass);text-transform:uppercase;letter-spacing:.08em}.lb-top-card .name{font-weight:800;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lb-top-card .score{font-family:var(--serif);font-size:22px;color:var(--brass);margin-top:4px}.lb-top-card.me{border:2px solid var(--brass)}.lb-subscore{font-size:12px;color:var(--mut);margin-top:3px}.attempt-row .status{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.attempt-row.ongoing{border-color:color-mix(in srgb,var(--info) 28%,var(--line));background:color-mix(in srgb,var(--info) 5%,var(--s1))}.attempt-row.done{background:var(--s1)}
+.lb-screen{max-width:980px;margin:0 auto}.lb-head{padding:8px 0 14px}.lb-title{font-family:var(--serif);font-size:27px}.lb-top3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}.lb-top-card{position:relative;background:linear-gradient(180deg,var(--s1),color-mix(in srgb,var(--info) 4%,var(--s1)));border:1px solid var(--line);border-radius:22px;padding:18px 14px;text-align:center;box-shadow:0 10px 28px rgba(20,25,70,.08);overflow:hidden}.lb-top-card .place{display:inline-flex;align-items:center;justify-content:center;min-width:48px;height:26px;padding:0 10px;border-radius:999px;background:color-mix(in srgb,var(--brass) 14%,var(--s1));font-size:11px;font-weight:900;color:var(--brass);text-transform:uppercase;letter-spacing:.08em}.lb-top-card .name{font-size:15px;font-weight:850;margin-top:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lb-top-card .score{font-family:var(--serif);font-size:25px;color:var(--brass);margin-top:8px}.lb-top-card.me{border:2px solid var(--brass);box-shadow:0 12px 30px color-mix(in srgb,var(--brass) 18%,transparent)}.lb-top-card .rank-icon{font-size:26px;margin-bottom:3px}.lb-top-card .subline{font-size:11px;color:var(--mut);margin-top:4px}.lb-subscore{font-size:12px;color:var(--mut);margin-top:3px}.attempt-row .status{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.attempt-row.ongoing{border-color:color-mix(in srgb,var(--info) 28%,var(--line));background:color-mix(in srgb,var(--info) 5%,var(--s1))}.attempt-row.done{background:var(--s1)}
 @media(max-width:520px){.lb-top3{grid-template-columns:1fr}.lb-top-card{display:grid;grid-template-columns:52px 1fr auto;align-items:center;text-align:left;gap:8px}.lb-top-card .place{grid-row:1/3}.lb-top-card .name{margin:0}.lb-top-card .score{margin:0;text-align:right}}
 .lbgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;margin-top:9px;padding-top:9px;border-top:1px dashed var(--line2)}
 .lbgrid div{display:flex;justify-content:space-between;font-size:13px;gap:8px}
@@ -357,6 +357,10 @@ select.inp option{background:var(--s1);color:var(--tx)}
 /* ---- editor: live-quiz notice, bigger delete target ---- */
 .livebar{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--info);background:color-mix(in srgb,var(--info) 12%,var(--s1));border:1px solid color-mix(in srgb,var(--info) 30%,var(--line));border-radius:12px;padding:9px 12px;margin-top:12px}
 .qdel{width:40px;height:40px;flex:none;margin-left:2px}
+
+/* ---- anti-cheat voice level cards ---- */
+.voice-levels{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:10px}.voice-level{position:relative;border:1px solid var(--line);border-radius:16px;background:var(--s1);padding:12px 10px;text-align:left;cursor:pointer}.voice-level:hover{border-color:var(--info)}.voice-level.on{border:2px solid var(--info);background:color-mix(in srgb,var(--info) 8%,var(--s1));box-shadow:0 8px 22px color-mix(in srgb,var(--info) 10%,transparent)}.voice-level .radio{width:18px;height:18px;border:2px solid var(--line2);border-radius:50%;display:grid;place-items:center;float:right}.voice-level.on .radio{border-color:var(--info)}.voice-level.on .radio:after{content:'';width:8px;height:8px;border-radius:50%;background:var(--info)}.voice-level b{display:block;font-size:13px;line-height:1.25;padding-right:24px}.voice-level small{display:block;color:var(--mut);font-size:11px;line-height:1.4;margin-top:6px}.voice-current{margin-top:8px;padding:9px 11px;border-radius:11px;background:color-mix(in srgb,var(--info) 7%,var(--s1));border:1px solid color-mix(in srgb,var(--info) 20%,var(--line));font-size:12px;color:var(--mut)}
+@media(max-width:650px){.voice-levels{grid-template-columns:1fr}.voice-level{min-height:74px}}
 
 /* ---- calmer, premium motion ---- */
 *{scroll-behavior:smooth}
@@ -385,9 +389,9 @@ const SUPABASE_KEY = 'sb_publishable_52dmXGyGlmgzsshRhFupPg_r8QwHbVU';
 /* Anti-cheat settings (change here if you want it softer or harder) */
 const AC = { GRACE_SEC: 5, MAX_STRIKES: 3, IDLE_MIN: 10 };
 const AC_MODES = {
-  aggressive: { label: 'Very aggressive', grace: 5, window: 14, hits: 5, multiplier: 3, floor: 0.018, help: 'Current strict voice detection. Short bursts can trigger a warning.' },
-  balanced: { label: 'Less aggressive', grace: 8, window: 30, hits: 12, multiplier: 3.2, floor: 0.022, help: 'Needs a longer continuous sound before warning.' },
-  gentle: { label: 'Lesser aggressive', grace: 10, window: 50, hits: 22, multiplier: 3.5, floor: 0.026, help: 'Best for noisy rooms. Requires much more sustained sound.' }
+  aggressive: { label: 'Very aggressive', grace: 5, window: 20, hits: 8, multiplier: 3, floor: 0.020, help: 'Strict detection. About 0.6 seconds of sustained sound can trigger a warning.' },
+  balanced: { label: 'Less aggressive', grace: 8, window: 45, hits: 18, multiplier: 3.2, floor: 0.024, help: 'Needs about 1.4 seconds of sustained sound before warning. Better for normal background noise.' },
+  gentle: { label: 'Lesser aggressive', grace: 10, window: 70, hits: 28, multiplier: 3.5, floor: 0.028, help: 'Needs about 2.2 seconds of sustained sound. Best when other people may be talking nearby.' }
 };
 const acVoiceMode = q => AC_MODES[q && q.anticheat_voice_mode] ? q.anticheat_voice_mode : 'aggressive';
 const acVoiceCfg = q => AC_MODES[acVoiceMode(q)];
@@ -1347,7 +1351,7 @@ function edRenderDetails() {
         • Copy, paste, screenshots keys and text selection are blocked. Fullscreen is requested.<br>
         • Resuming an unfinished attempt is turned off.</div>
       ${swRow('d-voice', 'Also listen for voices (microphone)', 'Voice detection can be tuned below. A longer window reduces false triggers from brief noises.', q.anticheat_voice)}
-      <div class="sub" id="voice-mode-box" ${q.anticheat && q.anticheat_voice ? '' : 'hidden'}><label class="lbl" for="d-voice-mode">Voice anti-cheat sensitivity</label><select class="inp" id="d-voice-mode"><option value="aggressive" ${acVoiceMode(q)==='aggressive'?'selected':''}>1. Very aggressive — current</option><option value="balanced" ${acVoiceMode(q)==='balanced'?'selected':''}>2. Less aggressive — longer sound window</option><option value="gentle" ${acVoiceMode(q)==='gentle'?'selected':''}>3. Lesser aggressive — much longer sound window</option></select><div class="hint" id="voice-mode-help">${esc(acVoiceCfg(q).help)}</div></div>
+      <div class="sub" id="voice-mode-box" ${q.anticheat && q.anticheat_voice ? '' : 'hidden'}><label class="lbl">Voice detection level</label><div class="voice-levels" id="voice-levels">${[['aggressive','1','Very aggressive','Strictest detection'],['balanced','2','Less aggressive','Longer sound required'],['gentle','3','Lesser aggressive','Longest sound required']].map(x=>`<button type="button" class="voice-level ${acVoiceMode(q)===x[0]?'on':''}" data-act="voice-mode" data-mode="${x[0]}"><span class="radio"></span><b>${x[1]}. ${x[2]}</b><small>${x[3]}</small></button>`).join('')}</div><input type="hidden" id="d-voice-mode" value="${acVoiceMode(q)}"><div class="voice-current" id="voice-mode-help">${esc(acVoiceCfg(q).help)}</div></div>
     </div>`)}
   ${accSec('globe', 'Access and sharing', `
     <div class="b" style="font-size:14.5px">Who can see this quiz?</div>
@@ -1375,6 +1379,7 @@ function edRenderDetails() {
   ${E.quiz ? '' : '<div class="hint center gap0">Next you will add questions. You can come back and change any of this later.</div>'}
   ${E.quiz ? `<button class="btn danger block gap2" data-act="ed-delete">${ic('trash', 16)} Delete this quiz</button>` : `<button class="btn ghost block gap" data-act="ed-discard">Discard and go back</button>`}`;
 }
+ACT['voice-mode'] = el => { const mode = el.dataset.mode; const input = $('#d-voice-mode'); if (input) input.value = mode; $$('#voice-levels .voice-level').forEach(b => b.classList.toggle('on', b.dataset.mode === mode)); const help = $('#voice-mode-help'); if (help) help.textContent = AC_MODES[mode].help; };
 CHG.reveal = el => { const t = $('#' + el.dataset.target); if (t) t.hidden = !el.checked; if (el.id === 'd-ac') CHG.acsync(el); if (el.id === 'd-voice') { const b=$('#voice-mode-box'); if(b) b.hidden=!el.checked; } if (el.id === 'd-prize') { const b=$('#sub-prize'); if(b) b.hidden=!el.checked; } };
 CHG.acsync = el => { const r = $('#d-resume'); if (r) { r.disabled = el.checked; if (el.checked) r.checked = false; } };
 CHG.relmode = el => { $('#rel-at').hidden = el.value !== 'scheduled'; };
@@ -2133,10 +2138,10 @@ function lbRender() {
       .sort((a, b) => b.score - a.score || (a.time || 1e9) - (b.time || 1e9)).map((r, i, arr) => Object.assign(r, { rank: 1 + arr.filter(x => x.score > r.score).length }));
   }
   const tabs = subs.length > 1 ? `<div class="chips"><button class="chip ${LB.mode === 'all' ? 'on' : ''}" data-act="lb-mode" data-m="all">Overall</button>${subs.map(s => `<button class="chip ${LB.mode === s.set_id ? 'on' : ''}" data-act="lb-mode" data-m="${s.set_id}">${esc(s.name)}</button>`).join('')}</div>` : '';
-  const top = rows.filter(r => r.rank <= 3).slice(0,3).map(r => `<div class="lb-top-card ${r.me?'me':''}"><div class="place">#${r.rank}</div><div class="name">${esc(r.name)}${r.me?' · You':''}</div><div><div class="score">${fig(r.score,r.total)}</div><div class="lb-subscore">${num(r.pct,1)}%</div></div></div>`).join('');
+  const top = rows.filter(r => r.rank <= 3).slice(0,3).map(r => `<div class="lb-top-card ${r.me?'me':''}"><div class="rank-icon">${r.rank===1?'🥇':r.rank===2?'🥈':'🥉'}</div><div class="place">${r.rank===1?'1st':r.rank===2?'2nd':'3rd'}</div><div class="name">${esc(r.name)}${r.me?' · You':''}</div><div class="score">${fig(r.score,r.total)}</div><div class="subline">${num(r.pct,1)}%${r.time ? ' · '+fmtDur(r.time) : ''}</div></div>`).join('');
   const toggle = `<div class="row between gap0" style="align-items:center;margin-top:12px"><span class="xs dim">First qualifying attempt · pass mark ${esc(String(d.pass_mark ?? q.pass_mark))}%</span><div class="seg sm" id="lb-view"><button class="${pctView ? '' : 'on'}" data-act="lb-view" data-v="score">Score</button><button class="${pctView ? 'on' : ''}" data-act="lb-view" data-v="pct">%</button></div></div>`;
   const list = rows.map(r => `<div class="lbrow2 ${r.me ? 'me' : ''}"><div class="rk">${r.rank}</div><div class="grow" style="min-width:0"><div class="row between"><div class="b trunc">${esc(r.name)}${r.me ? ' <span class="badge gold">You</span>' : ''}</div><div class="agg">${fig(r.score,r.total)}<small>${num(r.pct,1)}%</small></div></div>${LB.mode === 'all' && r.sub.length ? `<div class="lbgrid">${r.sub.map(s => `<div><span class="mut">${esc(s.name)}</span><b>${num(s.score)}/${num(s.total)} <span class="xs mut">(${num(s.total?100*s.score/s.total:0,1)}%)</span></b></div>`).join('')}</div>` : ''}${r.time ? `<div class="xs dim" style="margin-top:6px">${ic('clock',11)} ${fmtDur(r.time)}</div>` : ''}</div></div>`).join('');
-  return `<div class="lb-screen"><div class="lb-head"><div class="lb-title">Leaderboard</div><div class="sm mut">Only participants whose first completed attempt passed the cut-off are ranked.</div></div>${top?`<div class="lb-top3">${top}</div>`:''}${tabs}${toggle}<div class="hint" style="margin:10px 0">${rows.length} qualified participant${rows.length===1?'':'s'}</div><div>${list}</div></div>`;
+  return `<div class="lb-screen"><div class="lb-head"><div class="row between"><div><div class="lb-title">Leaderboard</div><div class="sm mut">First qualifying attempt only · pass mark ${esc(String(d.pass_mark ?? q.pass_mark))}%</div></div><span class="badge">${rows.length} qualified</span></div></div>${top?`<div class="lb-top3">${top}</div>`:''}${tabs}${toggle}<div class="card tight gap" style="margin:12px 0"><div class="b">How rankings work</div><div class="xs mut" style="margin-top:4px">Your first completed attempt is used. Only a first attempt that reaches the cut-off appears here.</div></div><div>${list}</div></div>`;
 }
 ACT['lb-mode'] = el => { LB.mode = el.dataset.m; $('#lb-body').innerHTML = lbRender(); };
 ACT['lb-view'] = el => { LB.view = el.dataset.v; $('#lb-body').innerHTML = lbRender(); };
@@ -2402,7 +2407,7 @@ const setMic = (txt, lvl, cls) => { const t = $('#mic-txt'), l = $('#mic-lvl'); 
 async function tkMicStart() {
   const t = T;
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } });
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } });
     const Ctx = window.AudioContext || window.webkitAudioContext; const ctx = new Ctx();
     const an = ctx.createAnalyser(); an.fftSize = 2048; an.smoothingTimeConstant = 0.2; ctx.createMediaStreamSource(stream).connect(an);
     const vc = acVoiceCfg(t.quiz);
@@ -2423,9 +2428,12 @@ function tkMicTick(t) {
   if (Date.now() < m.calUntil) { m.cal.push(rms); setMic('Listening to the room… stay quiet', rms * 900); return; }
   if (!m.ready) { const sorted = m.cal.slice().sort((a, b) => a - b); m.base = sorted[Math.floor(sorted.length / 2)] || 0.003; m.th = Math.max(m.cfg.floor, m.base * m.cfg.multiplier); m.ready = true; }
   if (rms < m.th * 0.55) { m.base = m.base * 0.985 + rms * 0.015; m.th = Math.max(m.cfg.floor, m.base * m.cfg.multiplier); }
-  m.hist.push(rms > m.th ? 1 : 0); if (m.hist.length > m.cfg.window) m.hist.shift();
-  setMic(`${m.cfg.label || 'Voice detection'} · listening`, rms / (m.th * 2) * 100, 'ok');
-  if (m.hist.reduce((a, b) => a + b, 0) >= m.cfg.hits) { m.hist = []; tkViolation('sustained voice or loud sound was heard'); }
+  const hot = rms > m.th;
+  m.hist.push(hot ? 1 : 0); if (m.hist.length > m.cfg.window) m.hist.shift();
+  m.streak = hot ? (m.streak || 0) + 1 : 0;
+  setMic(`${m.cfg.label || 'Voice detection'} · listening`, rms / (m.th * 2) * 100, hot ? 'warnc' : 'ok');
+  const density = m.hist.reduce((a, b) => a + b, 0);
+  if (m.streak >= m.cfg.hits || (density >= m.cfg.hits && m.streak >= Math.ceil(m.cfg.hits * 0.55))) { m.hist = []; m.streak = 0; tkViolation('sustained voice or loud sound was heard'); }
 }
 function tkViolation(reason) {
   const t = T; if (!t || t.done || t.submitting || t.vio || t.preview || Date.now() < (t.armedAt || 0)) return;
