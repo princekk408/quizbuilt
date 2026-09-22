@@ -7,6 +7,8 @@
 <title>QuizBuilt</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://xjepnbxlbjyxgpxavwtt.supabase.co">
+<link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Young+Serif&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Young+Serif&display=swap"></noscript>
 <style>
@@ -16,20 +18,20 @@
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 [data-theme=dark]{
-  --bg:#06120E;--s1:#0B1B15;--s2:#10261D;--s3:#173428;
-  --line:rgba(226,236,229,.10);--line2:rgba(226,236,229,.2);
-  --tx:#EEF1E6;--mut:#98AC9F;--dim:#6F8578;
-  --brass:#D5B15E;--brass2:#B8933F;--onb:#231A05;
-  --ok:#4FD49B;--bad:#F27D72;--warn:#F0B255;--info:#7FB4E8;
-  --shadow:0 12px 40px rgba(0,0,0,.5);--grain:.05;
+  --bg:#0A0C18;--s1:#12152A;--s2:#171B34;--s3:#202544;
+  --line:rgba(228,231,246,.10);--line2:rgba(228,231,246,.20);
+  --tx:#EDEEF8;--mut:#9EA2C4;--dim:#6E729A;
+  --brass:#DDB868;--brass2:#BD9646;--onb:#221604;
+  --ok:#4FD4A8;--bad:#F2837A;--warn:#F0B255;--info:#8DB4F0;
+  --shadow:0 14px 44px rgba(0,0,6,.55);--grain:.05;
 }
 [data-theme=light]{
-  --bg:#EDF2EE;--s1:#FFFFFF;--s2:#F4F7F4;--s3:#E3EBE5;
-  --line:rgba(15,36,25,.12);--line2:rgba(15,36,25,.22);
-  --tx:#0F2419;--mut:#526A5C;--dim:#7F9487;
-  --brass:#8F6A1B;--brass2:#75540F;--onb:#FFF8E6;
-  --ok:#0F9564;--bad:#C93C32;--warn:#B06D0B;--info:#2C6FB5;
-  --shadow:0 12px 34px rgba(15,36,25,.12);--grain:.04;
+  --bg:#F7F2E7;--s1:#FFFFFF;--s2:#F1EADA;--s3:#E7DCC2;
+  --line:rgba(43,32,10,.12);--line2:rgba(43,32,10,.22);
+  --tx:#241C0D;--mut:#6B5F45;--dim:#8B7F63;
+  --brass:#8F6A1B;--brass2:#6E4F0E;--onb:#FFF8E6;
+  --ok:#0E8F5C;--bad:#C1362B;--warn:#A9660A;--info:#2A5FA8;
+  --shadow:0 14px 36px rgba(43,32,10,.14);--grain:.035;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
@@ -319,6 +321,40 @@ select.inp option{background:var(--s1);color:var(--tx)}
 .violate{background:#6a0b0b!important}
 #subm{background:#06120e!important}
 
+.microw{display:flex;align-items:center;gap:8px;margin-top:6px}.mic-ic{color:var(--ok);display:inline-flex}
+.micbar{width:70px;height:6px;border-radius:6px;background:var(--s3);overflow:hidden;flex:none}.micbar i{display:block;height:100%;width:0;background:var(--ok);transition:width .08s linear}
+
+/* ---- leaderboard report-card rows ---- */
+.lbrow2{padding:13px 12px;border-radius:14px;border:1px solid var(--line);margin-bottom:8px;background:var(--s1)}
+.lbrow2.me{border-color:var(--brass);background:color-mix(in srgb,var(--brass) 10%,var(--s1))}
+.lbrow2{display:flex;gap:12px;align-items:flex-start}
+.lbrow2 .rk{width:26px;flex:none;font-family:var(--serif);font-size:16px;color:var(--mut);text-align:center;padding-top:2px}
+.lbrow2 .agg{font-family:var(--serif);color:var(--brass);font-size:19px;text-align:right;line-height:1.1;flex:none;padding-left:10px}
+.lbrow2 .agg small{display:block;font-family:var(--sans);font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
+.lbgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;margin-top:9px;padding-top:9px;border-top:1px dashed var(--line2)}
+.lbgrid div{display:flex;justify-content:space-between;font-size:13px;gap:8px}
+.lbgrid b{color:var(--tx);font-weight:700}
+.seg.sm{padding:2px;border-radius:9px}
+.seg.sm button{padding:5px 10px;font-size:12px;border-radius:7px}
+
+/* ---- comment replies ---- */
+.cmt.reply{margin-left:38px;padding-top:8px}
+.avatar.sm{width:24px;height:24px;font-size:11px}
+.link.xs{font-size:12px;font-weight:700}
+.link.xs.bad{color:var(--bad)}
+
+/* ---- editor: live-quiz notice, bigger delete target ---- */
+.livebar{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--info);background:color-mix(in srgb,var(--info) 12%,var(--s1));border:1px solid color-mix(in srgb,var(--info) 30%,var(--line));border-radius:12px;padding:9px 12px;margin-top:12px}
+.qdel{width:40px;height:40px;flex:none;margin-left:2px}
+
+/* ---- calmer, premium motion ---- */
+*{scroll-behavior:smooth}
+.btn,.chip,.tab,.iconbtn,.opt,.tile,.card,.slip,.sw i,.sw i:before{transition:background-color .16s ease,border-color .16s ease,color .16s ease,transform .12s ease,box-shadow .16s ease}
+.btn:active,.chip:active,.tile:active,.opt:active{transform:scale(.97)}
+#view{animation:viewin .22s cubic-bezier(.22,.8,.36,1)}
+@keyframes viewin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
 </style>
 </head>
 <body>
@@ -426,7 +462,9 @@ const ICONS = {
   chart: '<path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>',
   ban: '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>',
   layers: '<path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5"/>',
-  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/>'
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/>',
+  palette: '<path d="M12 3a9 9 0 100 18c1.2 0 2-.8 2-1.8 0-1-.8-1.4-.8-2.3 0-.9.7-1.6 1.7-1.6H17a4 4 0 004-4c0-4.4-4-8.3-9-8.3z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10" cy="7.5" r="1"/><circle cx="14.5" cy="7.5" r="1"/>'
 };
 const ic = (n, s = 20) => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
 const LOGO = `<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="2" y="2" width="36" height="36" rx="11" fill="var(--brass)"/><circle cx="19" cy="19" r="8.5" fill="none" stroke="var(--onb)" stroke-width="3"/><path d="M23 23l6 6" stroke="var(--onb)" stroke-width="3.2" stroke-linecap="round"/><path d="M15.2 19.2l2.6 2.6 4.6-5" fill="none" stroke="var(--onb)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
@@ -622,9 +660,10 @@ function parseQuestions(text, opt = {}) {
     src = src.split(/\n\s*\n/).map((b, i) => b.trim() ? `${i + 1}. ${b.trim()}` : '').filter(Boolean).join('\n');
   }
   const OPT = /^\s*(\*?)\s*\(?([A-Ha-h])[\.\)]\s+(.*)$/, ANS = /^\s*(?:ans(?:wer)?|correct(?:\s*answer)?|key)\s*[:=\-]\s*(.+)$/i,
-    EXP = /^\s*(?:explanation|solution|reason|rationale|working)\s*[:\-]\s*(.*)$/i, MRK = /^\s*(?:marks?|score|points?)\s*[:=]\s*(\d+(?:\.\d+)?)\s*$/i,
+    EXP = /^\s*(?:explanation|solution|reason|rationale|working)\s*[:\-]\s*(.*)$/i, MRK = /^\s*[\[\(]?\s*(?:marks?|score|points?)\s*[:=]\s*(\d+(?:\.\d+)?)\s*(?:marks?)?\s*[\]\)]?\s*$/i, MRK2 = /^\s*[\[\(]\s*(\d+(?:\.\d+)?)\s*(?:marks?|mks?|pts?|points?)\s*[\]\)]\s*$/i, INL = /[\[\(]\s*(\d+(?:\.\d+)?)\s*(?:marks?|mks?|pts?|points?)\s*[\]\)]/i, MEACH = /^\s*(?:marks?\s+each|default\s+marks?|each\s+question(?:\s+carries)?)\s*[:=\-]?\s*(\d+(?:\.\d+)?)\s*(?:marks?)?\s*$/i,
     SEC = /^\s*(?:\[section\s*:\s*(.+?)\]|#{1,3}\s+(.+))\s*$/i, PAS = /^\s*(?:\[passage\]|passage\s*:)\s*(.*)$/i, PASEND = /^\s*(?:\[\/passage\]|\[end passage\]|end passage)\s*$/i;
-  const out = []; let cur = null, section = null, passage = null, inPassage = false, mode = 'body';
+  const out = []; let cur = null, section = null, passage = null, inPassage = false, mode = 'body', ctxMarks = 0;
+  const takeMarks = (s, c) => { const mm = s.match(INL); if (mm) { c.marks = +mm[1]; return s.replace(INL, '').replace(/\s{2,}/g, ' ').trim(); } return s; };
   const finish = () => {
     if (!cur) return;
     const o = cur.options.filter(x => x.raw.trim());
@@ -651,7 +690,7 @@ function parseQuestions(text, opt = {}) {
     else type = 'essay';
     out.push({
       section: cur.section, _p: cur.pid, type, body: T(cur.body).replace(/\n/g, '<br>'), options, correct, multi,
-      explanation: T(cur.exp).replace(/\n/g, '<br>'), marks: cur.marks || defMarks
+      explanation: T(cur.exp).replace(/\n/g, '<br>'), marks: cur.marks || cur.ctx || defMarks
     });
     cur = null; mode = 'body';
   };
@@ -660,17 +699,18 @@ function parseQuestions(text, opt = {}) {
   src.split('\n').forEach(line => {
     let m;
     if (!line.trim()) { if (cur && mode === 'exp') cur.exp += '\n'; else if (passage && inPassage) passage.body += '\n'; return; }
-    if ((m = line.match(SEC))) { finish(); if (inPassage) { flushPassage(); inPassage = false; } passage = null; section = (m[1] || m[2]).trim(); return; }
+    if ((m = line.match(SEC))) { finish(); if (inPassage) { flushPassage(); inPassage = false; } passage = null; const sp = (m[1] || m[2]).trim().split('|'); section = sp[0].trim(); if (sp[1]) { const mm = sp[1].match(/(\d+(?:\.\d+)?)/); if (mm) ctxMarks = +mm[1]; } return; }
+    if ((m = line.match(MEACH))) { finish(); ctxMarks = +m[1]; return; }
     if (PASEND.test(line)) { finish(); if (inPassage) { flushPassage(); inPassage = false; } passage = null; return; }
     if ((m = line.match(PAS))) { finish(); if (inPassage) flushPassage(); passage = { id: 'p' + (++pcount), body: m[1] || '', section }; inPassage = true; return; }
     if ((m = line.match(NUMQ))) {
       finish();
       if (inPassage) { flushPassage(); inPassage = false; }
-      cur = { section, pid: passage ? passage.id : null, body: m[2], options: [], exp: '', answer: '', marks: 0 }; mode = 'body'; return;
+      cur = { section, pid: passage ? passage.id : null, body: '', options: [], exp: '', answer: '', marks: 0, ctx: ctxMarks }; cur.body = takeMarks(m[2], cur); mode = 'body'; return;
     }
     if (inPassage) { passage.body += (passage.body ? '\n' : '') + line.trim(); return; }
     if (!cur) return;
-    if ((m = line.match(MRK))) { cur.marks = +m[1]; return; }
+    if ((m = line.match(MRK)) || (m = line.match(MRK2))) { cur.marks = +m[1]; return; }
     if ((m = line.match(EXP))) { cur.exp = m[1]; mode = 'exp'; return; }
     if ((m = line.match(ANS))) { cur.answer = m[1]; mode = 'ans'; return; }
     if (mode !== 'exp' && (m = line.match(OPT))) {
@@ -682,7 +722,7 @@ function parseQuestions(text, opt = {}) {
     if (mode === 'exp') cur.exp += (cur.exp ? '\n' : '') + line.trim();
     else if (mode === 'opt' && cur.options.length) cur.options[cur.options.length - 1].raw += ' ' + line.trim();
     else if (mode === 'ans') cur.answer += ' ' + line.trim();
-    else cur.body += '\n' + line.trim();
+    else cur.body += '\n' + takeMarks(line.trim(), cur);
   });
   finish(); if (inPassage) flushPassage();
   return out;
@@ -762,11 +802,10 @@ function busy(btn, on, label) {
   else { btn.disabled = false; if (btn.dataset.l) btn.innerHTML = label || btn.dataset.l; }
 }
 
-function applyTheme(t) {
-  document.documentElement.dataset.theme = t;
-  const m = $('meta[name=theme-color]'); if (m) m.content = t === 'dark' ? '#06120E' : '#EDF2EE';
-  try { localStorage.setItem('qb_theme', t); } catch (e) { }
-}
+function syncMeta() { const m = $('meta[name=theme-color]'); if (m) m.content = (getComputedStyle(document.documentElement).getPropertyValue('--bg') || '#0A0B18').trim(); }
+function applyTheme(t) { document.documentElement.dataset.theme = t; try { localStorage.setItem('qb_theme', t); } catch (e) { } syncMeta(); }
+const ACCENTS = { royal: ['Royal', '#8F7CFF', '#5C6CFF'], emerald: ['Emerald', '#E2C170', '#0F9F72'], sunset: ['Sunset', '#FF8F5E', '#F0506E'], ocean: ['Ocean', '#39E0F0', '#3D8BFF'] };
+function applyAccent(a) { if (!ACCENTS[a]) a = 'royal'; document.documentElement.dataset.accent = a; try { localStorage.setItem('qb_accent', a); } catch (e) { } syncMeta(); }
 async function loadMe() {
   const { data } = await sb.auth.getSession(); S.session = data.session;
   if (!S.session) { S.me = null; return; }
@@ -789,23 +828,22 @@ const parseHash = () => { const h = location.hash.replace(/^#/, '') || '/'; cons
 
 function renderChrome() {
   const me = S.me, li = loggedIn();
-  $('#app').innerHTML = `
-  <header class="top"><div class="in">
+  if (!$('#view')) $('#app').innerHTML = '<header class="top"></header><main id="view"></main><nav class="nav" id="nav"></nav>';
+  $('header.top').innerHTML = `<div class="in">
     <a class="brand" href="#/">${LOGO}<span>QuizBuilt</span></a><div class="grow"></div>
-    <button class="iconbtn" data-act="theme" aria-label="Switch theme">${ic(document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon', 18)}</button>
+    <button class="iconbtn" data-act="theme" aria-label="Switch light or dark">${ic(document.documentElement.dataset.theme === 'dark' ? 'sun' : 'moon', 18)}</button>
     ${isAdmin() ? `<a class="iconbtn" href="#/admin" aria-label="Admin panel" style="color:var(--brass)">${ic('shield', 18)}</a>` : ''}
     ${li ? `<a class="me-chip" href="#/me"><span class="avatar">${esc(initial(me.username))}</span><span class="trunc">${esc(me.username)}</span></a>`
       : me && me.anon ? `<a class="me-chip" href="#/auth/login"><span class="avatar">G</span><span>Sign in</span></a>`
         : `<a class="btn sm brass" href="#/auth/login">Sign in</a>`}
-  </div></header>
-  <main id="view"></main>
-  <nav class="nav" id="nav">
+  </div>`;
+  $('#nav').innerHTML = `
     <a href="#/" data-n="home">${ic('home', 22)}<span>Home</span></a>
     <a href="#/explore" data-n="explore">${ic('compass', 22)}<span>Explore</span></a>
     <a href="#/create" class="mk" data-n="create" aria-label="Create a quiz">${ic('plus', 28)}</a>
     <a href="#/me/quizzes" data-n="mine">${ic('layers', 22)}<span>My quizzes</span></a>
-    <a href="#/me" data-n="me">${ic('user', 22)}<span>Account</span></a>
-  </nav>`;
+    <a href="#/me" data-n="me">${ic('user', 22)}<span>Account</span></a>`;
+  navHighlight();
 }
 function navHighlight() {
   const p = parseHash().path; let k = '';
@@ -835,7 +873,7 @@ document.addEventListener('paste', e => {
   e.preventDefault(); const t = (e.clipboardData || window.clipboardData).getData('text/plain'); document.execCommand('insertText', false, t);
 });
 
-ACT.theme = () => { const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; applyTheme(t); renderChrome(); navHighlight(); };
+ACT.theme = () => { applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); renderChrome(); };
 ACT.eye = el => { const i = $('input', el.parentElement); const on = i.type === 'password'; i.type = on ? 'text' : 'password'; el.innerHTML = ic(on ? 'eyeoff' : 'eye', 18); };
 ACT.back = () => { if (history.length > 1) history.back(); else nav('/'); };
 ACT.goto = el => nav(el.dataset.to);
@@ -889,6 +927,7 @@ function slip(q, extra = '') {
     <h3>${esc(q.title)}</h3><div class="mut sm">by @${esc(q.owner_name || 'user')}</div>
     <div class="meta"><span>${ic('help', 14)} ${q.question_count || 0} questions</span><span>${ic('clock', 14)} ${q.duration_min} min</span><span>${ic('users', 14)} ${q.attempts_count || 0}</span><span>${ic('heart', 14)} ${q.likes_count || 0}</span></div></a>${extra}</div>`;
 }
+const keyChip = code => `<button class="keychip" data-act="copy" data-v="${esc(code)}" aria-label="Copy quiz key">${ic('key', 13)}<span>${esc(String(code || '').toUpperCase())}</span>${ic('copy', 12)}</button>`;
 const emptyBox = (icon, title, sub = '') => `<div class="empty">${ic(icon, 32)}<div class="b" style="color:var(--tx)">${esc(title)}</div>${sub ? `<div class="sm gap0">${sub}</div>` : ''}</div>`;
 const secT = (t, right = '') => `<div class="sec-t"><h2 class="h2">${esc(t)}</h2>${right}</div>`;
 
@@ -1078,7 +1117,7 @@ async function vHome(a, q, tok) {
 ACT.join = () => {
   let v = ($('#join-code').value || '').trim(); if (!v) return;
   const m = v.match(/#\/(?:q|quiz)\/([\w-]+)/); if (m) v = m[1];
-  nav('/q/' + v.replace(/[^\w-]/g, ''));
+  v = v.replace(/[^\w-]/g, ''); if (/^[a-f0-9]{8}$/i.test(v)) v = v.toLowerCase(); nav('/q/' + v);
 };
 
 /* ============================================================
@@ -1132,7 +1171,7 @@ async function vMe([tab], q, tok) {
   if (tab === 'quizzes') {
     const rows = await db(sb.from('quizzes').select(QCOLS).eq('owner_id', me.id).order('created_at', { ascending: false }));
     if (stale(tok)) return;
-    body.innerHTML = `<a class="btn brass block" href="#/create">${ic('plus', 18)} Create a new quiz</a><div class="gap">` + (rows.length ? rows.map(z => slip(z, `<div class="row gap0 wrapf"><a class="btn sm" href="#/edit/${z.id}">${ic('edit', 14)} Edit</a><a class="btn sm" href="#/results/${z.id}">${ic('chart', 14)} Results</a></div>`)).join('') : emptyBox('layers', 'You have not created a quiz yet', 'Tap the + button to start.')) + '</div>';
+    body.innerHTML = `<a class="btn brass block" href="#/create">${ic('plus', 18)} Create a new quiz</a><div class="gap">` + (rows.length ? rows.map(z => slip(z, `<div class="row wrapf" style="gap:8px;margin-top:10px">${keyChip(z.share_code)}<span class="grow"></span><a class="btn sm" href="#/edit/${z.id}">${ic('edit', 14)} Edit</a><a class="btn sm" href="#/results/${z.id}">${ic('chart', 14)} Results</a><button class="btn sm danger" data-act="mq-del" data-id="${z.id}" aria-label="Delete quiz">${ic('trash', 14)}</button></div>`)).join('') : emptyBox('layers', 'You have not created a quiz yet', 'Tap the + button to start.')) + '</div>';
   } else if (tab === 'attempts') {
     const rows = await db(sb.from('attempts').select('id,status,started_at,submit_reason,attempt_no,quizzes(title,share_code),attempt_results(score,total,percentage,passed)').eq('user_id', me.id).order('started_at', { ascending: false }).limit(60));
     if (stale(tok)) return;
@@ -1142,7 +1181,8 @@ async function vMe([tab], q, tok) {
       return `<a class="slip" href="#/${r.status === 'ongoing' ? 'take' : 'result'}/${r.id}">${st}<h3>${esc((r.quizzes || {}).title || 'Quiz')}</h3><div class="meta"><span>${ic('calendar', 14)} ${fmtDT(r.started_at)}</span>${rs ? `<span>${ic('check', 14)} ${num(rs.score)}/${num(rs.total)} (${num(rs.percentage, 1)}%)</span>` : ''}</div></a>`;
     }).join('') : emptyBox('clock', 'No attempts yet', 'Quizzes you take will show up here.');
   } else {
-    body.innerHTML = `<div class="card"><div class="b">Appearance</div><div class="seg gap0"><button class="${document.documentElement.dataset.theme === 'dark' ? 'on' : ''}" data-act="settheme" data-t="dark">Dark</button><button class="${document.documentElement.dataset.theme === 'light' ? 'on' : ''}" data-act="settheme" data-t="light">Light</button></div></div>
+    body.innerHTML = `<div class="card"><div class="b">${ic('palette', 16)} Appearance</div><div class="seg gap0"><button class="${document.documentElement.dataset.theme === 'dark' ? 'on' : ''}" data-act="settheme" data-t="dark">Dark</button><button class="${document.documentElement.dataset.theme === 'light' ? 'on' : ''}" data-act="settheme" data-t="light">Light</button></div>
+        <div class="lbl">Colour theme</div><div class="swatches">${Object.entries(ACCENTS).map(([k, v]) => `<button class="swatch ${document.documentElement.dataset.accent === k ? 'on' : ''}" data-act="setaccent" data-a="${k}" style="--c1:${v[1]};--c2:${v[2]}"><i></i>${v[0]}</button>`).join('')}</div></div>
       <div class="card"><div class="b">Security question</div><div class="hint">${me.hasQA ? 'You have one set. You can replace it below.' : 'Not set yet. You need this to reset a forgotten password.'}</div>
         <select class="inp gap0" id="m-sq" data-chg="msq">${SEC_QUESTIONS.map(x => `<option>${esc(x)}</option>`).join('')}<option value="__own">Write my own question…</option></select>
         <input class="inp" id="m-sq2" placeholder="Your own question" style="display:none;margin-top:8px"><input class="inp gap0" id="m-sa" placeholder="Answer" autocomplete="off">
@@ -1151,7 +1191,13 @@ async function vMe([tab], q, tok) {
       <button class="btn danger block gap" data-act="logout">${ic('logout', 18)} Sign out</button>`;
   }
 }
-ACT.settheme = el => { applyTheme(el.dataset.t); renderChrome(); navHighlight(); $$('.seg button[data-act=settheme]').forEach(b => b.classList.toggle('on', b.dataset.t === el.dataset.t)); };
+ACT['mq-del'] = async el => {
+  const id = el.dataset.id;
+  if (!await ask({ title: 'Delete this quiz?', text: 'Its questions, attempts and results are deleted permanently.', ok: 'Delete forever', danger: true })) return;
+  await db(sb.from('quizzes').delete().eq('id', id)); toast('Quiz deleted', 'ok'); const c = el.closest('.slip'); if (c) c.remove();
+};
+ACT.settheme = el => { applyTheme(el.dataset.t); renderChrome(); $$('.seg button[data-act=settheme]').forEach(b => b.classList.toggle('on', b.dataset.t === el.dataset.t)); };
+ACT.setaccent = el => { applyAccent(el.dataset.a); $$('.swatch').forEach(s => s.classList.toggle('on', s.dataset.a === el.dataset.a)); };
 CHG.msq = el => { $('#m-sq2').style.display = el.value === '__own' ? '' : 'none'; };
 ACT.saveqa = async btn => {
   let sq = $('#m-sq').value; if (sq === '__own') sq = $('#m-sq2').value.trim(); const sa = $('#m-sa').value.trim();
@@ -1215,8 +1261,9 @@ async function vEditor([id, tab], query, tok) {
 function edShell(tab) {
   E.tab = tab; const q = E.quiz;
   const tb = (t, l) => `<button class="tab ${tab === t ? 'on' : ''}" data-act="edtab" data-t="${t}">${l}</button>`;
-  setView(`<div class="wrap"><div class="row"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><h1 class="h2 grow trunc">${q ? esc(q.title || 'Untitled quiz') : 'New quiz'}</h1>${q ? (q.status === 'published' ? '<span class="badge ok">Published</span>' : '<span class="badge warn">Draft</span>') : ''}</div>
-    <div class="tabs gap">${tb('details', 'Details')}${tb('questions', 'Questions')}${tb('publish', 'Publish')}</div><div id="ed-body"></div></div>`);
+  const live = q && q.status === 'published' && tab !== 'publish' ? `<div class="livebar">${ic('globe', 14)} This quiz is live — changes you save here apply to it immediately, for everyone.</div>` : '';
+  setView(`<div class="wrap"><div class="row"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><div class="grow" style="min-width:0"><h1 class="h2 trunc">${q ? esc(q.title || 'Untitled quiz') : 'New quiz'}</h1>${q ? `<div class="row" style="gap:8px;margin-top:3px">${keyChip(q.share_code)}${q.status === 'published' ? '<span class="badge ok">Published</span>' : '<span class="badge warn">Draft</span>'}</div>` : '<div class="xs mut">Not saved yet</div>'}</div>${q ? `<button class="iconbtn" data-act="ed-delete" aria-label="Delete quiz" style="color:var(--bad)">${ic('trash', 18)}</button>` : ''}</div>
+    <div class="tabs gap">${tb('details', 'Details')}${tb('questions', 'Questions')}${tb('publish', 'Publish')}</div>${live}<div id="ed-body"></div></div>`);
   if (tab === 'details') edRenderDetails(); else if (tab === 'questions') edRenderQs(); else edRenderPublish();
 }
 ACT.edtab = async el => {
@@ -1293,7 +1340,8 @@ function edRenderDetails() {
     ${swRow('d-lb', 'Enable leaderboard', 'Ranks overall and per subject.', q.leaderboard_enabled)}`)}
   ${accSec('list', 'Questions for takers (form)', `<div class="hint">Ask people something before they start, like "Are you a JAMB candidate for next year?".</div><div id="intake">${intake}</div><button class="btn sm gap0" data-act="intake-add">${ic('plus', 14)} Add a question</button>`)}
   <div class="row gap2"><button class="btn brass grow big" id="d-save" data-act="ed-save-continue">${E.quiz ? 'Save & continue' : 'Save & continue'} ${ic('next', 18)}</button></div>
-  ${E.quiz ? '' : '<div class="hint center gap0">Next you will add questions. You can come back and change any of this later.</div>'}`;
+  ${E.quiz ? '' : '<div class="hint center gap0">Next you will add questions. You can come back and change any of this later.</div>'}
+  ${E.quiz ? `<button class="btn danger block gap2" data-act="ed-delete">${ic('trash', 16)} Delete this quiz</button>` : `<button class="btn ghost block gap" data-act="ed-discard">Discard and go back</button>`}`;
 }
 CHG.reveal = el => { const t = $('#' + el.dataset.target); if (t) t.hidden = !el.checked; if (el.id === 'd-ac') CHG.acsync(el); };
 CHG.acsync = el => { const r = $('#d-resume'); if (r) { r.disabled = el.checked; if (el.checked) r.checked = false; } };
@@ -1403,8 +1451,9 @@ function edRenderQs() {
     <div class="hint">A set is a subject or section, like Use of English, Physics or Chemistry. Results are shown per set and as a total.</div>
     <div class="chips gap0">${E.sets.map(s => `<button class="chip ${s.id === E.active ? 'on' : ''}" data-act="set-sel" data-id="${s.id}">${esc(s.name)} (${E.qs.filter(q => q.set_id === s.id && q.type !== 'passage').length})</button>`).join('')}</div>
     <div class="card gap"><label class="lbl" style="margin-top:0" for="set-name">Question set name</label><input class="inp" id="set-name" data-inp="setname" value="${esc(aset.name)}" maxlength="60">
+      <label class="lbl" for="set-marks">Marks for every question in this set</label><div class="row"><input class="inp" id="set-marks" type="number" inputmode="decimal" min="0" step="0.5" placeholder="e.g. 2"><button class="btn" data-act="set-marks">Apply to all</button></div><div class="hint">Change one question's marks in the box on its card.</div>
       <button class="btn danger sm gap0" data-act="set-del">${ic('trash', 14)} Delete this set</button></div>
-    <div class="sec-t"><h2 class="h2" style="font-size:17px">${cnt} question${cnt === 1 ? '' : 's'} · ${num(marks)} marks</h2></div>
+    <div class="sec-t"><h2 class="h2" style="font-size:17px" id="set-total">${cnt} question${cnt === 1 ? '' : 's'} · ${num(marks)} marks</h2></div>
     <div id="qlist">${setQs.map(q => qGroup(q)).join('') || emptyBox('help', 'No questions in this set yet', 'Add one below, or use Bulk import to paste many at once.')}</div>
     <div class="card gap"><div class="b">Add a question</div><div class="tiles gap0">
       <button class="tile" data-act="q-add" data-t="mcq">${ic('list', 22)}Multiple choice</button><button class="tile" data-act="q-add" data-t="tf">${ic('check', 22)}True or false</button>
@@ -1412,18 +1461,27 @@ function edRenderQs() {
       <button class="tile" data-act="q-add" data-t="fib">${ic('help', 22)}Fill in the blank</button></div></div>`;
   window.scrollTo(0, y);
 }
+function edTotals() {
+  const el = $('#set-total'); if (!el) return; const a = E.qs.filter(q => q.set_id === E.active && q.type !== 'passage');
+  el.textContent = `${a.length} question${a.length === 1 ? '' : 's'} · ${num(a.reduce((z, q) => z + (+q.marks || 0), 0))} marks`;
+}
+ACT['set-marks'] = () => {
+  const v = parseFloat($('#set-marks').value); if (isNaN(v) || v < 0) return toast('Type the marks first, like 2', 'bad');
+  const a = E.qs.filter(q => q.set_id === E.active && q.type !== 'passage'); if (!a.length) return toast('No questions in this set yet', 'bad');
+  a.forEach(q => q.marks = v); E.lastMarks = v || E.lastMarks; edDirty(); edRenderQs(); toast(`${a.length} questions now carry ${num(v)} mark${v === 1 ? '' : 's'} each`, 'ok');
+};
 function qGroup(q) {
   if (q.type !== 'passage') return qCard(q);
   return qCard(q);
 }
 function qCard(q) {
   const n = numOf(q), open = !!q._open, isP = q.type === 'passage', child = !!q.parent_id;
-  const head = `<div class="qh"><div class="qn">${n}</div><div class="qsum" data-act="q-toggle" data-id="${q.id}"><div class="trunc" style="color:var(--tx)">${esc(snippet(q.body, 60))}</div><div class="xs dim">${TYPE_LBL[q.type]}${isP ? '' : ' · ' + num(q.marks) + ' mark' + (+q.marks === 1 ? '' : 's')}</div></div>
-    <button class="iconbtn" data-act="q-up" data-id="${q.id}" aria-label="Move up" style="width:32px;height:32px">${ic('up', 15)}</button><button class="iconbtn" data-act="q-down" data-id="${q.id}" aria-label="Move down" style="width:32px;height:32px">${ic('down', 15)}</button>
-    <button class="iconbtn" data-act="q-del" data-id="${q.id}" aria-label="Delete" style="width:32px;height:32px;color:var(--bad)">${ic('trash', 15)}</button></div>`;
+  const head = `<div class="qh"><div class="qn">${n}</div><div class="qsum" data-act="q-toggle" data-id="${q.id}"><div class="trunc" style="color:var(--tx)">${esc(snippet(q.body, 60))}</div><div class="xs dim">${TYPE_LBL[q.type]}</div></div>
+    ${isP ? '' : `<label class="mk-in"><input type="number" inputmode="decimal" min="0" step="0.5" value="${q.marks}" data-qf="marks" data-q="${q.id}" aria-label="Marks for question ${n}"><span>marks</span></label>`}
+    <button class="iconbtn qdel" data-act="q-del" data-id="${q.id}" aria-label="Delete this question">${ic('trash', 17)}</button></div>`;
   let inner = '';
   if (open) {
-    inner = '<div class="qbodyed">';
+    inner = `<div class="qbodyed"><div class="row" style="gap:8px;margin-bottom:6px"><button class="btn sm" data-act="q-up" data-id="${q.id}">${ic('up', 14)} Move up</button><button class="btn sm" data-act="q-down" data-id="${q.id}">${ic('down', 14)} Move down</button></div>`;
     if (!child) inner += `<label class="lbl" style="margin-top:0">Question set</label><select class="inp" data-chg="q-set" data-q="${q.id}">${E.sets.map(s => `<option value="${s.id}" ${s.id === q.set_id ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select>`;
     inner += `<label class="lbl">${isP ? 'Passage' : 'Question'}</label>${rte({ html: q.body, ph: isP ? 'Type or paste the passage…' : 'Type question', attrs: `data-q="${q.id}" data-f="body"` })}`;
     if (q.type === 'mcq') {
@@ -1446,9 +1504,9 @@ function qCard(q) {
       inner += `<div class="sec-t" style="margin:18px 0 8px"><b>Questions on this passage</b></div>${kids.map(k => qCard(k)).join('') || '<div class="hint">None yet.</div>'}
         <div class="row wrapf gap0"><button class="btn sm" data-act="q-add" data-t="mcq" data-p="${q.id}">+ Multiple choice</button><button class="btn sm" data-act="q-add" data-t="tf" data-p="${q.id}">+ True/False</button><button class="btn sm" data-act="q-add" data-t="essay" data-p="${q.id}">+ Essay</button><button class="btn sm" data-act="q-add" data-t="fib" data-p="${q.id}">+ Fill in</button></div>`;
     } else {
-      inner += `<label class="lbl" for="mk-${q.id}">Marks for this question</label><input class="inp" id="mk-${q.id}" type="number" min="0" step="0.5" value="${q.marks}" data-qf="marks" data-q="${q.id}" style="max-width:130px">
-        <label class="lbl">${q.type === 'essay' ? 'Marking guide (only you see this)' : 'Explanation (shown in review)'}</label>${rte({ html: q.explanation, ph: 'Optional', compact: true, attrs: `data-q="${q.id}" data-f="explanation"` })}`;
+      inner += `<label class="lbl">${q.type === 'essay' ? 'Marking guide (only you see this)' : 'Explanation (shown in review)'}</label>${rte({ html: q.explanation, ph: 'Optional', compact: true, attrs: `data-q="${q.id}" data-f="explanation"` })}`;
     }
+    inner += `<button class="btn danger sm gap" data-act="q-del" data-id="${q.id}">${ic('trash', 14)} Delete this ${isP ? 'passage' : 'question'}</button>`;
     inner += '</div>';
   }
   return `<div class="qc ${open ? 'open' : ''}" data-id="${q.id}" style="${child ? 'margin-left:10px' : ''}">${head}${inner}</div>`;
@@ -1461,7 +1519,7 @@ document.addEventListener('input', e => {
     else if (t.dataset.f === 'body') { q.body = html; const s = t.closest('.qc'); const sm = s && $('.qsum .trunc', s); if (sm) sm.textContent = snippet(html, 60); }
     else if (t.dataset.f === 'explanation') q.explanation = html;
     edDirty();
-  } else if (t.dataset.qf === 'marks') { const q = edQ(t.dataset.q); if (q) { q.marks = Math.max(0, parseFloat(t.value) || 0); E.lastMarks = q.marks || E.lastMarks; edDirty(); } }
+  } else if (t.dataset.qf === 'marks') { const q = edQ(t.dataset.q); if (q) { q.marks = Math.max(0, parseFloat(t.value) || 0); E.lastMarks = q.marks || E.lastMarks; edDirty(); edTotals(); } }
   else if (t.dataset.qa !== undefined && t.dataset.q) { const q = edQ(t.dataset.q); if (q) { q.correct[+t.dataset.qa] = t.value; edDirty(); } }
 });
 CHG['opt-ok'] = el => {
@@ -1642,15 +1700,25 @@ CHG.bkfile = async el => {
 ACT['bulk-parse'] = () => {
   const t = $('#bk-text').value; if (!t.trim()) return toast('Paste some questions first', 'bad');
   const items = parseQuestions(t, { marks: parseFloat($('#bk-marks').value) || 1, notation: $('#bk-not').checked });
-  BK.items = items;
-  const real = items.filter(i => i.type !== 'passage');
+  BK.items = items; const real = items.filter(i => i.type !== 'passage');
   if (!real.length) { $('#bk-prev').innerHTML = '<div class="err">No questions found. Check the format above.</div>'; return; }
-  const noAns = real.filter(i => (i.type === 'mcq' || i.type === 'tf' || i.type === 'fib') && !i.correct.length).length;
-  const by = {}; real.forEach(i => by[i.type] = (by[i.type] || 0) + 1);
-  $('#bk-prev').innerHTML = `<div class="card tight gap"><b>${real.length} question${real.length === 1 ? '' : 's'} found</b><div class="sm mut">${Object.entries(by).map(([k, v]) => `${v} ${TYPE_LBL[k].toLowerCase()}`).join(', ')}${items.length !== real.length ? `, ${items.length - real.length} passage(s)` : ''}</div>
-    ${noAns ? `<div class="sm warnc gap0">${noAns} have no answer marked. You can set them after import.</div>` : ''}</div>`;
+  const noAns = real.filter(i => (i.type === 'mcq' || i.type === 'tf') && !i.correct.length).length; let n = 0;
+  const rowsH = items.map((it, i) => {
+    if (it.type === 'passage') return `<div class="bk-row"><div class="qn">P</div><div class="grow" style="min-width:0"><div class="trunc">${esc(snippet(it.body, 44))}</div><div class="xs mut">Passage</div></div></div>`;
+    n++; let ans;
+    if (it.type === 'mcq' && it.correct.length > 1) ans = `<span class="badge ok">${it.correct.map(c => LETTERS[it.options.findIndex(o => o.id === c)]).join('+')}</span>`;
+    else if (it.type === 'mcq') ans = `<select class="inp bk-a ${it.correct.length ? '' : 'miss'}" data-chg="bkans" data-i="${i}"><option value="">Answer?</option>${it.options.map((o, k) => `<option value="${o.id}" ${it.correct[0] === o.id ? 'selected' : ''}>${LETTERS[k]}</option>`).join('')}</select>`;
+    else if (it.type === 'tf') ans = `<select class="inp bk-a ${it.correct.length ? '' : 'miss'}" data-chg="bkans" data-i="${i}"><option value="">Answer?</option><option value="T" ${it.correct[0] === 'T' ? 'selected' : ''}>True</option><option value="F" ${it.correct[0] === 'F' ? 'selected' : ''}>False</option></select>`;
+    else if (it.type === 'fib') ans = `<span class="badge">${esc(it.correct.join('/').slice(0, 12))}</span>`; else ans = `<span class="badge">Essay</span>`;
+    return `<div class="bk-row"><div class="qn">${n}</div><div class="grow" style="min-width:0"><div class="trunc">${esc(snippet(it.body, 40))}</div><div class="xs mut">${TYPE_LBL[it.type]}${it.section ? ' · ' + esc(it.section) : ''}</div></div>${ans}<label class="mk-in"><input type="number" inputmode="decimal" min="0" step="0.5" value="${it.marks}" data-inp="bkmarks" data-i="${i}" aria-label="Marks"><span>marks</span></label></div>`;
+  }).join('');
+  $('#bk-prev').innerHTML = `<div class="card tight gap"><b>${real.length} question${real.length === 1 ? '' : 's'} found</b><div class="hint" style="margin-top:2px">Check the answers and set each question's marks here, or change them later on the cards.${noAns ? ` <span class="warnc">${noAns} still need an answer.</span>` : ''}</div>
+    <div class="row gap0"><input class="inp" id="bk-all" type="number" inputmode="decimal" min="0" step="0.5" placeholder="Marks for all" style="max-width:150px"><button class="btn sm" data-act="bk-all">Apply to all</button></div><div class="bk-list gap0">${rowsH}</div></div>`;
   const b = $('.btn.brass[data-act=bulk-parse]'); b.textContent = `Add ${real.length} question${real.length === 1 ? '' : 's'}`; b.dataset.act = 'bulk-add';
 };
+INP.bkmarks = el => { const it = BK.items[+el.dataset.i]; if (it) it.marks = Math.max(0, parseFloat(el.value) || 0); };
+CHG.bkans = el => { const it = BK.items[+el.dataset.i]; if (it) { it.correct = el.value ? [el.value] : []; el.classList.toggle('miss', !el.value); } };
+ACT['bk-all'] = () => { const v = parseFloat($('#bk-all').value); if (isNaN(v) || v < 0) return toast('Type the marks first', 'bad'); BK.items.forEach(it => { if (it.type !== 'passage') it.marks = v; }); $$('[data-inp=bkmarks]').forEach(i => i.value = v); };
 ACT['bulk-add'] = () => {
   const target = $('#bk-set').value; const marksEach = parseFloat($('#bk-marks').value) || 1; E.lastMarks = marksEach;
   const setByName = {}; E.sets.forEach(s => setByName[s.name.trim().toLowerCase()] = s.id);
@@ -1667,7 +1735,7 @@ ACT['bulk-add'] = () => {
     if (it._p && pmap[it._p]) q.parent_id = pmap[it._p];
     E.qs.push(q);
   });
-  E.active = lastSet; closeSheet(); edDirty(); edRenderQs(); toast(`${BK.items.filter(i => i.type !== 'passage').length} questions added`, 'ok');
+  E.active = lastSet; closeSheet(); edDirty(); edRenderQs(); toast(`${BK.items.filter(i => i.type !== 'passage').length} questions added. Tap any question to edit it.`, 'ok');
   edSave();
 };
 
@@ -1724,6 +1792,7 @@ CHG.publish = async el => {
 };
 ACT['ed-preview'] = async () => { await edSave(); const p = edValidate(); if (!E.qs.some(x => x.type !== 'passage')) return toast('Add a question first', 'bad'); nav('/preview/' + E.quiz.id); };
 ACT['ed-share'] = () => shareQuiz(E.quiz);
+ACT['ed-discard'] = async () => { if (await ask({ title: 'Discard this quiz?', text: 'Nothing has been saved yet, so it will simply be dropped.', ok: 'Discard', danger: true })) { E.quiz = null; E.dirty = false; nav('/me/quizzes'); } };
 ACT['ed-delete'] = async () => {
   if (!await ask({ title: 'Delete this quiz?', text: 'All its questions, attempts and results are deleted permanently.', ok: 'Delete forever', danger: true })) return;
   await db(sb.from('quizzes').delete().eq('id', E.quiz.id)); E.quiz = null; E.dirty = false; toast('Quiz deleted', 'ok'); nav('/me/quizzes');
@@ -1737,7 +1806,7 @@ const Q = { quiz: null, sets: [], attempts: [], liked: false, guestName: '', isM
 
 async function vQuiz([key], query, tok) {
   setView(`<div class="wrap">${skel(4)}</div>`);
-  const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(key);
+  const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(key); if (!isId && /^[a-f0-9]{8}$/i.test(key)) key = key.toLowerCase();
   const quiz = await db(sb.from('quizzes').select('*').eq(isId ? 'id' : 'share_code', key).maybeSingle());
   if (stale(tok)) return;
   if (!quiz) {
@@ -1798,11 +1867,12 @@ function drawQuiz() {
       ${q.show_results && q.release_mode === 'manual' ? `<button class="tile" data-act="q-release">${ic(q.results_released ? 'eyeoff' : 'eye', 20)}${q.results_released ? 'Hide results' : 'Release results'}</button>` : ''}
       <button class="tile" data-act="q-pub">${ic('globe', 20)}${q.status === 'published' ? 'Unpublish' : 'Publish'}</button>
       ${isAdmin() ? `<button class="tile" data-act="q-feature">${ic('star', 20)}${q.featured ? 'Unfeature' : 'Feature'}</button>` : ''}
-      <button class="tile" data-act="q-del" style="color:var(--bad)">${ic('trash', 20)}Delete</button></div>
+      <button class="tile" data-act="q-delquiz" style="color:var(--bad)">${ic('trash', 20)}Delete</button></div>
       ${q.show_results && q.release_mode === 'manual' ? `<div class="hint">Results are hidden from takers until you release them. Status: <b>${q.results_released ? 'released' : 'not released'}</b>.</div>` : ''}</div>` : '';
   setView(`<div class="wrap"><div class="row"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><div class="grow"></div>${q.allow_sharing || mgr ? `<button class="iconbtn" data-act="q-share" aria-label="Share">${ic('share', 18)}</button>` : ''}</div>
     <div class="hero gap"><div class="row wrapf" style="gap:6px">${badges}</div><h1 class="h1 gap0">${esc(q.title)}</h1>
       <div class="mut sm gap0">by <b style="color:var(--tx)">@${esc(q.owner_name || 'user')}</b> on ${fmtDate(q.published_at || q.created_at)}</div>
+      <div class="row gap0" style="gap:8px"><span class="xs mut">Quiz key</span>${keyChip(q.share_code)}<span class="xs dim">Share it so others can open this quiz</span></div>
       ${q.description ? `<p class="gap" style="line-height:1.6">${nl2br(q.description)}</p>` : ''}
       ${Q.sets.length > 1 ? `<div class="row wrapf gap0" style="gap:6px">${Q.sets.map(s => `<span class="badge">${esc(s.name)}</span>`).join('')}</div>` : ''}</div>
     <div class="stats gap">${facts}</div>${feats ? `<div class="row wrapf gap0" style="gap:6px">${feats}</div>` : ''}
@@ -1872,10 +1942,33 @@ function preStart(q) {
   openSheet(`<h3 class="h2">${esc(q.title)}</h3>
     ${q.instructions ? `<div class="card tight gap0" style="line-height:1.6">${nl2br(q.instructions)}</div>` : ''}
     <ul class="sm gap0" style="padding-left:18px;line-height:1.7">${rules.map(r => `<li>${r}</li>`).join('')}</ul>
+    ${q.anticheat && q.anticheat_voice ? `<div class="card tight gap0"><button class="btn sm" data-act="mic-test">${ic('mic', 14)} Test my microphone</button><div id="mic-test-out" class="hint" style="margin-top:8px">Tap to check your microphone works before you start.</div></div>` : ''}
     ${intake.length ? `<div class="b gap">Before you start</div>${intake.map(intakeField).join('')}` : ''}
     <div class="err" id="ps-err"></div>
     <div class="row gap"><button class="btn grow ghost" data-act="close">Cancel</button><button class="btn grow brass" id="ps-go" data-act="q-go">${ic('play', 18)} Start exam</button></div>`);
 }
+ACT['mic-test'] = async btn => {
+  const out = $('#mic-test-out'); busy(btn, true); out.className = 'hint'; out.textContent = 'Listening for 3 seconds — say something out loud…';
+  let stream, ctx;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const an = ctx.createAnalyser(); an.fftSize = 2048; ctx.createMediaStreamSource(stream).connect(an);
+    const buf = new Float32Array(an.fftSize); let peak = 0; const until = Date.now() + 3000;
+    while (Date.now() < until) {
+      an.getFloatTimeDomainData(buf); let s = 0; for (let i = 0; i < buf.length; i++) s += buf[i] * buf[i];
+      peak = Math.max(peak, Math.sqrt(s / buf.length)); await sleep(80);
+    }
+    if (peak > 0.03) { out.className = 'hint ok'; out.textContent = 'Your microphone can hear you. It picked up sound clearly.'; }
+    else if (peak > 0.008) { out.className = 'hint'; out.textContent = 'Faint signal detected. Try speaking louder or moving closer to the phone.'; }
+    else { out.className = 'hint bad'; out.textContent = 'No sound was picked up. Check the phone is not on silent/muted input, or try again.'; }
+  } catch (e) {
+    out.className = 'hint bad';
+    out.textContent = e && e.name === 'NotAllowedError' ? 'Microphone permission was denied. Open the site settings for this page and allow the microphone.' : 'Could not access the microphone: ' + cleanErr(e);
+  } finally {
+    if (stream) stream.getTracks().forEach(t => t.stop()); if (ctx) ctx.close().catch(() => {}); busy(btn, false);
+  }
+};
 ACT['q-go'] = async btn => {
   const q = Q.quiz, intake = {};
   for (const f of (q.intake_form || [])) {
@@ -1908,7 +2001,7 @@ ACT['q-pub'] = async () => {
   drawQuiz();
 };
 ACT['q-feature'] = async () => { const q = Q.quiz; Q.quiz = await db(sb.from('quizzes').update({ featured: !q.featured }).eq('id', q.id).select().single()); toast(Q.quiz.featured ? 'Featured' : 'Removed from featured', 'ok'); drawQuiz(); };
-ACT['q-del'] = async () => {
+ACT['q-delquiz'] = async () => {
   if (!await ask({ title: 'Delete this quiz?', text: 'Questions, attempts and results are deleted permanently.', ok: 'Delete forever', danger: true })) return;
   await db(sb.from('quizzes').delete().eq('id', Q.quiz.id)); toast('Deleted', 'ok'); nav('/me/quizzes');
 };
@@ -1932,58 +2025,38 @@ async function duplicateQuiz(src) {
   for (let i = 0; i < kk.length; i += 100) await db(sb.from('question_keys').insert(kk.slice(i, i + 100)));
   return copy.id;
 }
-ACT['q-exportq'] = () => {
-  openSheet(`<h3 class="h2">Export questions</h3><p class="mut sm gap0">Only you can do this. The text file can be pasted back into Bulk import later.</p>
-    <div class="row gap"><button class="btn grow" data-act="exq" data-f="txt">${ic('file', 16)} Text (.txt)</button><button class="btn grow" data-act="exq" data-f="json">${ic('download', 16)} JSON</button></div>`);
-};
-ACT.exq = async el => {
-  const q = Q.quiz;
-  const [sets, qs, keys] = await Promise.all([db(sb.from('question_sets').select('*').eq('quiz_id', q.id).order('position')), db(sb.from('questions').select('*').eq('quiz_id', q.id).order('position')), db(sb.from('question_keys').select('*').eq('quiz_id', q.id))]);
-  const km = {}; keys.forEach(k => km[k.question_id] = k);
-  const fname = q.title.replace(/[^\w]+/g, '_').slice(0, 40) || 'quiz';
-  if (el.dataset.f === 'json') { download(fname + '.json', JSON.stringify({ quiz: { title: q.title, description: q.description, duration_min: q.duration_min }, sets, questions: qs.map(x => Object.assign({}, x, { key: km[x.id] || null })) }, null, 2), 'application/json'); closeSheet(); return; }
-  let out = '', n = 0;
-  sets.forEach(s => {
-    out += `[Section: ${s.name}]\n\n`;
-    const top = qs.filter(x => x.set_id === s.id && !x.parent_id);
-    const emit = x => {
-      n++; const k = km[x.id] || { correct: [], explanation: '' };
-      out += `${n}. ${htmlToPlain(x.body)}\n`;
-      if (x.type === 'mcq' || x.type === 'tf') {
-        x.options.forEach((o, i) => { out += `${LETTERS[i]}. ${htmlToPlain(o.text)}\n`; });
-        const ls = x.options.map((o, i) => (k.correct || []).includes(o.id) ? LETTERS[i] : '').filter(Boolean);
-        if (ls.length) out += `Answer: ${ls.join(', ')}\n`;
-      } else if (x.type === 'fib') out += `Answer: ${(k.correct || []).join(' | ')}\n`;
-      if (+x.marks !== 1) out += `Marks: ${x.marks}\n`;
-      if (k.explanation) out += `Explanation: ${htmlToPlain(k.explanation)}\n`;
-      out += '\n';
-    };
-    top.forEach(x => {
-      if (x.type === 'passage') { out += `[Passage]\n${htmlToPlain(x.body)}\n`; qs.filter(k => k.parent_id === x.id).forEach(emit); out += '[End Passage]\n\n'; }
-      else emit(x);
-    });
-  });
-  download(fname + '.txt', out, 'text/plain'); closeSheet();
-};
-
-/* ---------- comments ---------- */
+/* ---------- comments (with one level of replies) ---------- */
 async function cmLoad() {
   const q = Q.quiz, box = $('#cm-body'); if (!box) return;
-  const rows = await db(sb.from('comments').select('id,user_id,display_name,body,created_at').eq('quiz_id', q.id).order('created_at', { ascending: false }).limit(50));
+  const rows = await db(sb.from('comments').select('id,user_id,display_name,body,created_at,parent_id').eq('quiz_id', q.id).order('created_at', { ascending: true }).limit(300));
+  const top = rows.filter(c => !c.parent_id).reverse(), kids = {};
+  rows.filter(c => c.parent_id).forEach(c => (kids[c.parent_id] = kids[c.parent_id] || []).push(c));
   box.innerHTML = (loggedIn() && !S.me.banned ? `<div class="row"><input class="inp" id="cm-in" maxlength="1000" placeholder="Write a comment…"><button class="btn brass" data-act="cm-post">Post</button></div>` : `<div class="hint">${S.me && S.me.banned ? 'Your account is suspended.' : '<a class="link" href="#/auth/login">Sign in</a> to comment.'}</div>`)
-    + `<div id="cm-list" class="gap">${cmRows(rows)}</div>`;
+    + `<div id="cm-list" class="gap">${cmRows(top, kids)}</div>`;
 }
-const cmRows = rows => rows.length ? rows.map(c => `<div class="person" style="align-items:flex-start"><span class="avatar">${esc(initial(c.display_name))}</span><div class="grow"><div class="row" style="gap:8px"><b class="sm">@${esc(c.display_name || 'user')}</b><span class="xs dim">${ago(c.created_at)}</span></div><div style="word-break:break-word;line-height:1.5">${nl2br(c.body)}</div></div>${S.me && (c.user_id === S.me.id || Q.isMgr) ? `<button class="iconbtn" style="width:32px;height:32px" data-act="cm-del" data-id="${c.id}" aria-label="Delete">${ic('trash', 14)}</button>` : ''}</div>`).join('') : '<div class="hint">No comments yet. Be the first.</div>';
+const cmOne = (c, isReply) => `<div class="person cmt${isReply ? ' reply' : ''}" style="align-items:flex-start" data-cid="${c.id}"><span class="avatar${isReply ? ' sm' : ''}">${esc(initial(c.display_name))}</span><div class="grow" style="min-width:0"><div class="row" style="gap:8px"><b class="sm">@${esc(c.display_name || 'user')}</b><span class="xs dim">${ago(c.created_at)}</span></div><div style="word-break:break-word;line-height:1.5">${nl2br(c.body)}</div>
+  <div class="row gap0" style="gap:14px;margin-top:2px">${!isReply && loggedIn() && !S.me.banned ? `<button class="link xs" data-act="cm-showreply" data-id="${c.id}">Reply</button>` : ''}${S.me && (c.user_id === S.me.id || Q.isMgr) ? `<button class="link xs bad" data-act="cm-del" data-id="${c.id}">Delete</button>` : ''}</div>
+  <div id="rf-${c.id}" hidden></div></div></div>`;
+const cmRows = (top, kids) => top.length ? top.map(c => cmOne(c, false) + (kids[c.id] || []).map(k => cmOne(k, true)).join('')).join('') : '<div class="hint">No comments yet. Be the first.</div>';
 ACT['cm-post'] = async btn => {
   const v = $('#cm-in').value.trim(); if (!v) return; busy(btn, true);
   try { await db(sb.from('comments').insert({ quiz_id: Q.quiz.id, user_id: S.me.id, body: v })); Q.quiz.comments_count++; await cmLoad(); } finally { busy(btn, false); }
 };
 ACT['cm-del'] = async el => { await db(sb.from('comments').delete().eq('id', el.dataset.id)); Q.quiz.comments_count = Math.max(0, Q.quiz.comments_count - 1); await cmLoad(); };
+ACT['cm-showreply'] = el => {
+  const box = $('#rf-' + el.dataset.id); if (!box) return;
+  box.hidden = false; box.innerHTML = `<div class="row gap0" style="margin-top:8px"><input class="inp" id="ri-${el.dataset.id}" maxlength="1000" placeholder="Write a reply…"><button class="btn sm brass" data-act="cm-reply" data-id="${el.dataset.id}">Reply</button></div>`;
+  setTimeout(() => { const i = $('#ri-' + el.dataset.id); if (i) i.focus(); }, 30);
+};
+ACT['cm-reply'] = async (el, ev) => {
+  const pid = el.dataset.id, i = $('#ri-' + pid), v = i.value.trim(); if (!v) return; busy(el, true);
+  try { await db(sb.from('comments').insert({ quiz_id: Q.quiz.id, user_id: S.me.id, body: v, parent_id: pid })); Q.quiz.comments_count++; await cmLoad(); } finally { busy(el, false); }
+};
 
 /* ---------- leaderboard ---------- */
-const LB = { data: null, mode: 'all', quiz: null };
+const LB = { data: null, mode: 'all', quiz: null, view: 'score' };
 async function lbLoad(quiz) {
-  const q = quiz || Q.quiz; LB.quiz = q; LB.mode = 'all';
+  const q = quiz || Q.quiz; LB.quiz = q; LB.mode = 'all'; LB.view = 'score';
   const box = $('#lb-body'); if (!box) return;
   if (!S.me) { box.innerHTML = '<div class="hint"><a class="link" href="#/auth/login">Sign in</a> to see the leaderboard.</div>'; return; }
   try {
@@ -1993,31 +2066,37 @@ async function lbLoad(quiz) {
   box.innerHTML = lbRender();
 }
 function lbRender() {
-  const d = LB.data, q = LB.quiz;
+  const d = LB.data, q = LB.quiz, pctView = LB.view === 'pct';
   if (!d.enabled) return '<div class="hint">The creator turned the leaderboard off.</div>';
   if (!d.visible) return `<div class="hint">${ic('lock', 14)} The leaderboard opens when the creator releases the results.</div>`;
   if (!d.rows.length) return '<div class="hint">No completed attempts yet. Be the first on the board.</div>';
   const subs = []; d.rows.forEach(r => (r.subjects || []).forEach(s => { if (!subs.find(x => x.set_id === s.set_id)) subs.push({ set_id: s.set_id, name: s.name }); }));
-  const subRank = {};
-  subs.forEach(s => {
-    const sc = d.rows.map(r => (r.subjects || []).find(z => z.set_id === s.set_id)).filter(Boolean).map(z => +z.score);
-    subRank[s.set_id] = v => 1 + sc.filter(x => x > +v).length;
-  });
+  const fig = (score, total) => pctView ? num(total > 0 ? score / total * 100 : 0, 1) + '%' : num(score);
   let rows;
-  if (LB.mode === 'all') rows = d.rows.map(r => ({ rank: r.rank, name: r.name, main: `${num(r.score)}/${num(r.total)}`, pct: r.percentage, me: r.me, time: r.time, sub: r.subjects || [], pass: r.passed }));
-  else {
-    rows = d.rows.map(r => { const s = (r.subjects || []).find(z => z.set_id === LB.mode); return s ? { name: r.name, sc: +s.score, main: `${num(s.score)}/${num(s.total)}`, pct: s.total > 0 ? s.score / s.total * 100 : 0, me: r.me, time: r.time, sub: [], pass: null } : null; }).filter(Boolean)
-      .sort((a, b) => b.sc - a.sc || (a.time || 1e9) - (b.time || 1e9)).map((r, i, arr) => Object.assign(r, { rank: 1 + arr.filter(x => x.sc > r.sc).length }));
+  if (LB.mode === 'all') {
+    rows = d.rows.map(r => ({ rank: r.rank, name: r.name, score: r.score, total: r.total, pct: r.percentage, me: r.me, time: r.time, sub: r.subjects || [], pass: r.passed }));
+  } else {
+    rows = d.rows.map(r => { const s = (r.subjects || []).find(z => z.set_id === LB.mode); return s ? { name: r.name, score: +s.score, total: +s.total, pct: s.total > 0 ? s.score / s.total * 100 : 0, me: r.me, time: r.time, sub: [], pass: null } : null; }).filter(Boolean)
+      .sort((a, b) => b.score - a.score || (a.time || 1e9) - (b.time || 1e9)).map((r, i, arr) => Object.assign(r, { rank: 1 + arr.filter(x => x.score > r.score).length }));
   }
   const tabs = subs.length > 1 ? `<div class="chips"><button class="chip ${LB.mode === 'all' ? 'on' : ''}" data-act="lb-mode" data-m="all">Overall</button>${subs.map(s => `<button class="chip ${LB.mode === s.set_id ? 'on' : ''}" data-act="lb-mode" data-m="${s.set_id}">${esc(s.name)}</button>`).join('')}</div>` : '';
+  const toggle = `<div class="row between gap0" style="align-items:center;margin-top:10px"><span class="xs dim">Ranked by each person's first attempt</span><div class="seg sm" id="lb-view"><button class="${pctView ? '' : 'on'}" data-act="lb-view" data-v="score">Score</button><button class="${pctView ? 'on' : ''}" data-act="lb-view" data-v="pct">%</button></div></div>`;
   const pod = rows.slice(0, 3);
-  const podium = pod.length >= 3 ? `<div class="podium">${[1, 0, 2].map(i => { const r = pod[i]; return `<div class="pod ${i === 0 ? 'p1' : ''}"><div class="medal">${r.rank}</div><div class="nm trunc">${esc(r.name)}</div><div class="sc">${q.show_percentage ? num(r.pct, 1) + '%' : r.main}</div></div>`; }).join('')}</div>` : '';
-  const list = (pod.length >= 3 ? rows.slice(3) : rows).map(r => `<div class="lbrow ${r.me ? 'me' : ''}"><div class="rk">${r.rank}</div><div class="grow"><div class="b trunc">${esc(r.name)}${r.me ? ' <span class="badge gold">You</span>' : ''}</div>
-      ${LB.mode === 'all' && r.sub.length > 1 ? `<div class="xs mut" style="margin-top:2px">${r.sub.map(s => `${esc(s.name)} ${num(s.score)}/${num(s.total)} (#${subRank[s.set_id] ? subRank[s.set_id](s.score) : '-'})`).join(' • ')}</div>` : ''}</div>
-      <div style="text-align:right"><div class="b brass">${r.main}</div>${q.show_percentage ? `<div class="xs mut">${num(r.pct, 1)}%</div>` : ''}${r.time ? `<div class="xs dim">${fmtDur(r.time)}</div>` : ''}</div></div>`).join('');
-  return tabs + podium + `<div>${list}</div>`;
+  const podium = pod.length >= 3 ? `<div class="podium">${[1, 0, 2].map(i => { const r = pod[i]; return `<div class="pod ${i === 0 ? 'p1' : ''}"><div class="medal">${r.rank}</div><div class="nm trunc">${esc(r.name)}</div><div class="sc">${fig(r.score, r.total)}</div></div>`; }).join('')}</div>` : '';
+  const list = (pod.length >= 3 ? rows.slice(3) : rows).map(r => `<div class="lbrow2 ${r.me ? 'me' : ''}">
+      <div class="rk">${r.rank}</div>
+      <div class="grow" style="min-width:0">
+        <div class="row between">
+          <div class="b trunc">${esc(r.name)}${r.me ? ' <span class="badge gold">You</span>' : ''}</div>
+          <div class="agg">${fig(r.score, r.total)}<small>${LB.mode === 'all' ? 'Aggregate' : 'Score'}</small></div>
+        </div>
+        ${LB.mode === 'all' && r.sub.length > 0 ? `<div class="lbgrid">${r.sub.map(s => `<div><span class="mut">${esc(s.name)}</span><b>${fig(s.score, s.total)}</b></div>`).join('')}</div>` : ''}
+        ${r.time ? `<div class="xs dim" style="margin-top:6px">${ic('clock', 11)} ${fmtDur(r.time)}</div>` : ''}
+      </div></div>`).join('');
+  return tabs + toggle + podium + `<div class="gap0">${list}</div>`;
 }
 ACT['lb-mode'] = el => { LB.mode = el.dataset.m; $('#lb-body').innerHTML = lbRender(); };
+ACT['lb-view'] = el => { LB.view = el.dataset.v; $('#lb-body').innerHTML = lbRender(); };
 
 
 /* ============================================================
@@ -2109,7 +2188,7 @@ async function tkMount() {
       ${q.calculator !== 'none' ? `<button class="iconbtn" data-act="tk-calc" aria-label="Calculator">${ic('calc', 18)}</button>` : ''}
       <div class="tk-timer" id="tk-timer">--:--</div></div>
       <div class="bar" style="margin-top:8px;height:5px"><i id="tk-prog" style="width:0"></i></div>
-      ${T.preview ? `<div class="badge gold" style="margin-top:8px">${ic('eye', 12)} Preview. Nothing is saved.</div>` : (q.anticheat ? `<div class="acbadge" style="margin-top:8px">${ic('shield', 14)} Anti-cheat is on. Stay on this screen.</div>` : '')}</div>
+      ${T.preview ? `<div class="badge gold" style="margin-top:8px">${ic('eye', 12)} Preview. Nothing is saved.</div>` : (q.anticheat ? `<div class="acbadge" style="margin-top:8px">${ic('shield', 14)} Anti-cheat is on. Stay on this screen.</div>${q.anticheat_voice ? `<div class="microw"><span class="mic-ic">${ic('mic', 14)}</span><span class="micbar"><i id="mic-lvl"></i></span><span id="mic-txt" class="xs mut">Starting microphone…</span></div>` : ''}` : '')}</div>
     <div class="tk-sets" id="tk-sets"></div><div class="tk-body" id="tk-q"></div>
     <div class="tk-foot"><div class="in"><button class="btn" data-act="tk-prev" id="tk-prev">${ic('back', 18)}</button><button class="btn" data-act="tk-flag" id="tk-flag">${ic('flag', 18)}</button><button class="btn brass" style="flex:2" data-act="tk-next" id="tk-next">Next ${ic('next', 18)}</button></div></div></div>`;
   tkShow();
@@ -2126,7 +2205,7 @@ function tkTeardown() {
   clearInterval(t.timerId); clearInterval(t.saveId); clearInterval(t.vioTimer); clearInterval(t.idleId); clearInterval(t.micId);
   (t.G || []).forEach(f => f()); t.G = [];
   if (t.popGuard) window.removeEventListener('popstate', t.popGuard);
-  if (t.mic) { try { t.mic.stream.getTracks().forEach(x => x.stop()); t.mic.ac.close(); } catch (e) { } t.mic = null; }
+  if (t.mic) { try { t.mic.stream.getTracks().forEach(x => x.stop()); t.mic.ctx.close(); } catch (e) { } t.mic = null; }
   const v = $('#vio'); if (v) v.remove();
   document.body.classList.remove('taking', 'noselect');
   if (document.fullscreenElement && document.exitFullscreen) { try { document.exitFullscreen(); } catch (e) { } }
@@ -2276,22 +2355,33 @@ async function tkGuardsStart() {
   t.idleId = setInterval(() => { if (Date.now() - t.lastAct > AC.IDLE_MIN * 60000) tkSubmit(`anticheat:no activity for ${AC.IDLE_MIN} minutes`); }, 4000);
   if (q.anticheat_voice) await tkMicStart();
 }
+const setMic = (txt, lvl, cls) => { const t = $('#mic-txt'), l = $('#mic-lvl'); if (t) { t.textContent = txt; t.className = 'xs ' + (cls || 'mut'); } if (l && lvl != null) l.style.width = clamp(lvl, 0, 100) + '%'; };
 async function tkMicStart() {
   const t = T;
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false } });
-    const ac = new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') await ac.resume();
-    const an = ac.createAnalyser(); an.fftSize = 1024; ac.createMediaStreamSource(stream).connect(an);
-    t.mic = { stream, ac, an, buf: new Uint8Array(an.fftSize), cal: [], calUntil: Date.now() + 3500, base: null, th: 0.08, loud: 0 };
-    t.micId = setInterval(() => {
-      const m = t.mic; if (!m || t.done) return; m.an.getByteTimeDomainData(m.buf);
-      let s = 0; for (let i = 0; i < m.buf.length; i++) { const x = (m.buf[i] - 128) / 128; s += x * x; } const rms = Math.sqrt(s / m.buf.length);
-      if (Date.now() < m.calUntil) { m.cal.push(rms); return; }
-      if (m.base === null) { const avg = m.cal.reduce((a, b) => a + b, 0) / Math.max(1, m.cal.length); m.base = avg; m.th = Math.max(0.07, avg * 3.5); }
-      if (rms > m.th) m.loud++; else m.loud = Math.max(0, m.loud - 1);
-      if (m.loud >= 8) { m.loud = 0; tkViolation('voice or loud sound detected'); }
-    }, 100);
-  } catch (e) { t.cheat.push({ t: new Date().toISOString(), r: 'microphone unavailable', n: 0 }); }
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } });
+    const Ctx = window.AudioContext || window.webkitAudioContext; const ctx = new Ctx();
+    const an = ctx.createAnalyser(); an.fftSize = 2048; an.smoothingTimeConstant = 0.2; ctx.createMediaStreamSource(stream).connect(an);
+    t.mic = { stream, ctx, an, buf: new Float32Array(an.fftSize), cal: [], calUntil: Date.now() + 3000, base: 0.004, th: 0.02, hist: [], ready: false };
+    const wake = () => { if (t.mic && ctx.state !== 'running') ctx.resume().catch(() => { }); };
+    wake(); document.addEventListener('pointerdown', wake, true); t.G.push(() => document.removeEventListener('pointerdown', wake, true));
+    t.micId = setInterval(() => tkMicTick(t), 80);
+  } catch (e) {
+    t.cheat.push({ t: new Date().toISOString(), r: 'microphone unavailable: ' + (e && e.name || 'error'), n: 0 });
+    setMic('Microphone blocked. Allow it in the browser site settings.', 0, 'bad');
+  }
+}
+function tkMicTick(t) {
+  const m = t.mic; if (!m || t.done || t !== T) return;
+  if (m.ctx.state !== 'running') { m.ctx.resume().catch(() => { }); setMic('Microphone paused. Tap the screen.', 0, 'warnc'); return; }
+  m.an.getFloatTimeDomainData(m.buf);
+  let s = 0; for (let i = 0; i < m.buf.length; i++) s += m.buf[i] * m.buf[i]; const rms = Math.sqrt(s / m.buf.length);
+  if (Date.now() < m.calUntil) { m.cal.push(rms); setMic('Listening to the room… stay quiet', rms * 900); return; }
+  if (!m.ready) { const sorted = m.cal.slice().sort((a, b) => a - b); m.base = sorted[Math.floor(sorted.length / 2)] || 0.003; m.th = Math.max(0.018, m.base * 3); m.ready = true; }
+  if (rms < m.th * 0.6) { m.base = m.base * 0.97 + rms * 0.03; m.th = Math.max(0.018, m.base * 3); }
+  m.hist.push(rms > m.th ? 1 : 0); if (m.hist.length > 14) m.hist.shift();
+  setMic('Microphone is listening', rms / (m.th * 2) * 100, 'ok');
+  if (m.hist.reduce((a, b) => a + b, 0) >= 5) { m.hist = []; tkViolation('voice or loud sound was heard'); }
 }
 function tkViolation(reason) {
   const t = T; if (!t || t.done || t.submitting || t.vio || t.preview || Date.now() < (t.armedAt || 0)) return;
@@ -2507,7 +2597,7 @@ function orDraw() {
   let rank = 0;
   setView(`<div class="wrap"><div class="row"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><div class="grow"><h1 class="h2 trunc">${esc(q.title)}</h1><div class="xs mut">All attempts, highest score first</div></div></div>
     <div class="stats gap"><div class="stat"><b>${all.length}</b><span>Attempts</span></div><div class="stat"><b>${num(avg, 1)}%</b><span>Average</span></div><div class="stat"><b>${num(pass, 0)}%</b><span>Pass rate</span></div></div>
-    <div class="row gap wrapf"><button class="btn brass grow" data-act="or-xlsx">${ic('download', 18)} Download spreadsheet</button>${q.show_results && q.release_mode === 'manual' ? `<button class="btn grow" data-act="or-release">${q.results_released ? 'Hide results' : 'Release results'}</button>` : ''}</div>
+    <div class="row gap wrapf"><button class="btn brass grow" data-act="or-xlsx">${ic('download', 18)} Excel spreadsheet</button><button class="btn grow" data-act="or-pdf">${ic('file', 18)} PDF report</button>${q.show_results && q.release_mode === 'manual' ? `<button class="btn grow" data-act="or-release">${q.results_released ? 'Hide results' : 'Release results'}</button>` : ''}</div>
     <div class="chips gap0">${[['all', 'All'], ['completed', 'Completed'], ['ongoing', 'Ongoing'], ['auto', 'Auto-submitted']].map(f => `<button class="chip ${OR.filter === f[0] ? 'on' : ''}" data-act="or-f" data-f="${f[0]}">${f[1]}</button>`).join('')}</div>
     <div class="gap0">${rows.length ? rows.map(r => {
     const rk = r.score != null ? ++rank : '-';
@@ -2534,29 +2624,6 @@ ACT['or-info'] = el => {
     ${r.cheatLog.filter(c => c.n).length ? `<div class="b gap bad">Anti-cheat log</div>${r.cheatLog.filter(c => c.n).map(c => `<div class="sm gap0">${fmtDT(c.t)}: ${esc(c.r)}</div>`).join('')}` : ''}
     <button class="btn block gap" data-act="close">Close</button>`);
 };
-ACT['or-xlsx'] = async btn => {
-  busy(btn, true);
-  try {
-    const q = OR.quiz, subNames = []; OR.sets.forEach(s => subNames.push(s.name));
-    OR.rows.forEach(r => r.subs.forEach(s => { if (!subNames.includes(s.name)) subNames.push(s.name); }));
-    const intakeKeys = []; OR.rows.forEach(r => Object.keys(r.intake || {}).forEach(k => { if (!intakeKeys.includes(k)) intakeKeys.push(k); }));
-    const head = ['Rank', 'Username', 'Guest', 'Status', 'Ended because', 'Score', 'Total', 'Percentage', 'Passed', 'Time used (seconds)', 'Started', 'Submitted', ...subNames.map(n => n + ' score'), ...subNames.map(n => n + ' total'), 'Anti-cheat flags', 'Anti-cheat log', ...intakeKeys];
-    let rank = 0;
-    const data = OR.rows.map(r => [r.score != null ? ++rank : '', r.name, r.guest ? 'Yes' : 'No', statusLbl(r), (r.reason || '').replace(/^anticheat:/, 'Anti-cheat: '), r.score != null ? r.score : '', r.total != null ? r.total : '', r.pct != null ? r.pct : '', r.passed == null ? '' : (r.passed ? 'Yes' : 'No'), r.time != null ? r.time : '', r.started ? new Date(r.started).toLocaleString() : '', r.submitted ? new Date(r.submitted).toLocaleString() : '',
-    ...subNames.map(n => { const s = r.subs.find(x => x.name === n); return s ? s.score : ''; }), ...subNames.map(n => { const s = r.subs.find(x => x.name === n); return s ? s.total : ''; }),
-    r.cheats, r.cheatLog.filter(c => c.n).map(c => c.r).join('; '), ...intakeKeys.map(k => (r.intake || {})[k] || '')]);
-    const fname = (q.title.replace(/[^\w]+/g, '_').slice(0, 40) || 'quiz') + '_results';
-    try {
-      await loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
-      const ws = XLSX.utils.aoa_to_sheet([head, ...data]); ws['!cols'] = head.map((h, i) => ({ wch: i === 1 ? 22 : Math.max(10, String(h).length + 2) }));
-      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Results'); XLSX.writeFile(wb, fname + '.xlsx');
-    } catch (e) {
-      const csv = [head, ...data].map(row => row.map(c => '"' + String(c == null ? '' : c).replace(/"/g, '""') + '"').join(',')).join('\n');
-      download(fname + '.csv', '\ufeff' + csv, 'text/csv'); toast('Downloaded as CSV (opens in Excel)', 'ok');
-    }
-  } finally { busy(btn, false); }
-};
-
 /* ============================================================
    ADMIN PANEL
    ============================================================ */
@@ -2639,6 +2706,335 @@ async function boot() {
   render();
 }
 boot();
+
+
+/* ============================================================
+   FILE BUILDERS  (Excel, Word, PDF via print) - no internet libraries needed
+   ============================================================ */
+const _enc = new TextEncoder();
+function crc32(u8) {
+  if (!crc32.t) { crc32.t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; crc32.t[n] = c >>> 0; } }
+  let crc = -1; for (let i = 0; i < u8.length; i++) crc = crc32.t[(crc ^ u8[i]) & 255] ^ (crc >>> 8); return (crc ^ -1) >>> 0;
+}
+function zipStore(files, mime) {
+  const chunks = [], central = []; let offset = 0; const d = new Date();
+  const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  files.forEach(f => {
+    const name = _enc.encode(f.name), data = typeof f.data === 'string' ? _enc.encode(f.data) : f.data, crc = crc32(data);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true); lh.setUint16(10, time, true); lh.setUint16(12, date, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+    chunks.push(new Uint8Array(lh.buffer), name, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true); ch.setUint16(12, time, true); ch.setUint16(14, date, true);
+    ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, name.length, true); ch.setUint32(42, offset, true);
+    central.push(new Uint8Array(ch.buffer), name);
+    offset += 30 + name.length + data.length;
+  });
+  const csize = central.reduce((a, b) => a + b.length, 0), end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, csize, true); end.setUint32(16, offset, true);
+  return new Blob([...chunks, ...central, new Uint8Array(end.buffer)], { type: mime });
+}
+const xesc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+const colName = n => { let s = ''; n++; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+const XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+
+/* sheets: [{name, rows:[[cell,...]], widths:[..], heights:{rowIndex:pt}, merges:['A1:D1'], freeze:n, filter:'A1:F9', tab:'RRGGBB'}]
+   cell = value | {v, s:'styleName'} ;  defs: styleName -> {b,i,sz,color,bg,h,v,wrap,border,fmt} */
+function xlsxBuild(sheets, defs) {
+  const fonts = ['<font><sz val="11"/><name val="Calibri"/></font>'], fills = ['<fill><patternFill patternType="none"/></fill>', '<fill><patternFill patternType="gray125"/></fill>'];
+  const borders = ['<border><left/><right/><top/><bottom/><diagonal/></border>'], nf = [], xfs = ['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'], idx = {};
+  const reg = (arr, x) => { let i = arr.indexOf(x); if (i < 0) { arr.push(x); i = arr.length - 1; } return i; };
+  Object.keys(defs).forEach(k => {
+    const d = defs[k];
+    const font = `<font>${d.b ? '<b/>' : ''}${d.i ? '<i/>' : ''}<sz val="${d.sz || 11}"/>${d.color ? `<color rgb="FF${d.color}"/>` : ''}<name val="Calibri"/></font>`;
+    const fill = d.bg ? `<fill><patternFill patternType="solid"><fgColor rgb="FF${d.bg}"/><bgColor indexed="64"/></patternFill></fill>` : null;
+    const bc = d.border ? `<color rgb="FF${d.border}"/>` : '';
+    const border = d.border ? `<border><left style="thin">${bc}</left><right style="thin">${bc}</right><top style="thin">${bc}</top><bottom style="thin">${bc}</bottom><diagonal/></border>` : null;
+    let fid = 0; if (d.fmt) { fid = 164 + reg(nf, d.fmt); }
+    const al = `<alignment${d.h ? ` horizontal="${d.h}"` : ''} vertical="${d.v || 'center'}"${d.wrap ? ' wrapText="1"' : ''}/>`;
+    xfs.push(`<xf numFmtId="${fid}" fontId="${reg(fonts, font)}" fillId="${fill ? reg(fills, fill) : 0}" borderId="${border ? reg(borders, border) : 0}" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"${fid ? ' applyNumberFormat="1"' : ''}>${al}</xf>`);
+    idx[k] = xfs.length - 1;
+  });
+  const styles = `${XML}<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${nf.length ? `<numFmts count="${nf.length}">${nf.map((f, i) => `<numFmt numFmtId="${164 + i}" formatCode="${xesc(f)}"/>`).join('')}</numFmts>` : ''}<fonts count="${fonts.length}">${fonts.join('')}</fonts><fills count="${fills.length}">${fills.join('')}</fills><borders count="${borders.length}">${borders.join('')}</borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="${xfs.length}">${xfs.join('')}</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  const sheetXml = sh => {
+    let rows = '';
+    sh.rows.forEach((row, ri) => {
+      const r = ri + 1, h = sh.heights && sh.heights[ri]; let cells = '';
+      row.forEach((c, ci) => {
+        if (c == null) return; const cell = (typeof c === 'object') ? c : { v: c }; const ref = colName(ci) + r; const s = cell.s && idx[cell.s] ? ` s="${idx[cell.s]}"` : '';
+        if (cell.v === null || cell.v === undefined || cell.v === '') cells += `<c r="${ref}"${s}/>`;
+        else if (typeof cell.v === 'number' && isFinite(cell.v)) cells += `<c r="${ref}"${s}><v>${cell.v}</v></c>`;
+        else cells += `<c r="${ref}"${s} t="inlineStr"><is><t xml:space="preserve">${xesc(cell.v)}</t></is></c>`;
+      });
+      rows += `<row r="${r}"${h ? ` ht="${h}" customHeight="1"` : ''}>${cells}</row>`;
+    });
+    const pane = sh.freeze ? `<pane ySplit="${sh.freeze}" topLeftCell="A${sh.freeze + 1}" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft"/>` : '';
+    return `${XML}<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetPr>${sh.tab ? `<tabColor rgb="FF${sh.tab}"/>` : ''}<pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView workbookViewId="0" showGridLines="0">${pane}</sheetView></sheetViews><sheetFormatPr defaultRowHeight="20"/>${sh.widths ? `<cols>${sh.widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols>` : ''}<sheetData>${rows}</sheetData>${sh.filter ? `<autoFilter ref="${sh.filter}"/>` : ''}${sh.merges && sh.merges.length ? `<mergeCells count="${sh.merges.length}">${sh.merges.map(m => `<mergeCell ref="${m}"/>`).join('')}</mergeCells>` : ''}<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/><pageSetup orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>`;
+  };
+  const n = sheets.length;
+  const files = [
+    { name: '[Content_Types].xml', data: `${XML}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((s, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>` },
+    { name: '_rels/.rels', data: `${XML}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
+    { name: 'xl/workbook.xml', data: `${XML}<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets>${sheets.map((s, i) => `<sheet name="${xesc(s.name.replace(/[\\\/\?\*\[\]:]/g, ' ').slice(0, 31))}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>` },
+    { name: 'xl/_rels/workbook.xml.rels', data: `${XML}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((s, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${n + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>` },
+    { name: 'xl/styles.xml', data: styles }
+  ];
+  sheets.forEach((s, i) => files.push({ name: `xl/worksheets/sheet${i + 1}.xml`, data: sheetXml(s) }));
+  return zipStore(files, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+}
+
+/* ---------- Word (.docx) ---------- */
+function dxRuns(html, base = {}) {
+  const doc = new DOMParser().parseFromString('<body>' + clean(html || '') + '</body>', 'text/html'); let out = '';
+  const run = (text, st) => {
+    if (!text) return;
+    const pr = (st.font ? `<w:rFonts w:ascii="${st.font}" w:hAnsi="${st.font}"/>` : '') + (st.b ? '<w:b/>' : '') + (st.i ? '<w:i/>' : '') + (st.s ? '<w:strike/>' : '') + (st.color ? `<w:color w:val="${st.color}"/>` : '') + (st.sz ? `<w:sz w:val="${st.sz}"/>` : '') + (st.mark ? '<w:highlight w:val="yellow"/>' : '') + (st.u ? '<w:u w:val="single"/>' : '') + (st.sub ? '<w:vertAlign w:val="subscript"/>' : '') + (st.sup ? '<w:vertAlign w:val="superscript"/>' : '');
+    out += `<w:r>${pr ? `<w:rPr>${pr}</w:rPr>` : ''}<w:t xml:space="preserve">${xesc(text)}</w:t></w:r>`;
+  };
+  const BR = '<w:r><w:br/></w:r>';
+  const walk = (n, st) => {
+    n.childNodes.forEach(ch => {
+      if (ch.nodeType === 3) { run(ch.nodeValue.replace(/\s+/g, ' '), st); return; }
+      if (ch.nodeType !== 1) return; const t = ch.tagName, s2 = Object.assign({}, st);
+      if (t === 'B' || t === 'STRONG') s2.b = 1; if (t === 'I' || t === 'EM') s2.i = 1; if (t === 'U') s2.u = 1; if (t === 'S' || t === 'STRIKE' || t === 'DEL') s2.s = 1;
+      if (t === 'SUB') s2.sub = 1; if (t === 'SUP') s2.sup = 1; if (t === 'MARK') s2.mark = 1; if (t === 'CODE') s2.font = 'Consolas';
+      if (t === 'BR' || t === 'HR') { out += BR; return; }
+      if (t === 'IMG') { run('[picture]', Object.assign({}, st, { i: 1, color: '888888' })); return; }
+      if (['P', 'DIV', 'LI', 'BLOCKQUOTE', 'H3', 'H4', 'TR'].includes(t) && out && !out.endsWith(BR)) out += BR;
+      if (t === 'LI') run('• ', st);
+      walk(ch, s2);
+    });
+  };
+  walk(doc.body, base); while (out.endsWith(BR)) out = out.slice(0, -BR.length); return out;
+}
+function dxP(runs, o = {}) {
+  const ppr = (o.style ? `<w:pStyle w:val="${o.style}"/>` : '') + (o.keep ? '<w:keepNext/>' : '') + (o.brk ? '<w:pageBreakBefore/>' : '') +
+    (o.bdr ? `<w:pBdr><w:left w:val="single" w:sz="24" w:space="8" w:color="${o.bdr}"/></w:pBdr>` : '') + (o.shd ? `<w:shd w:val="clear" w:color="auto" w:fill="${o.shd}"/>` : '') +
+    (o.tab ? `<w:tabs><w:tab w:val="right" w:pos="${o.tab}"/></w:tabs>` : '') + `<w:spacing w:before="${o.before || 0}" w:after="${o.after == null ? 80 : o.after}" w:line="${o.line || 264}" w:lineRule="auto"/>` +
+    (o.ind || o.hang ? `<w:ind w:left="${o.ind || 0}"${o.hang ? ` w:hanging="${o.hang}"` : ''}/>` : '') + (o.jc ? `<w:jc w:val="${o.jc}"/>` : '');
+  return `<w:p><w:pPr>${ppr}</w:pPr>${runs}</w:p>`;
+}
+const dxT = (text, st) => dxRuns(esc(text), st);
+function docxBuild(body, title) {
+  const W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+  const styles = `${XML}<w:styles ${W}><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/><w:sz w:val="22"/></w:rPr></w:rPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>
+    <w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:basedOn w:val="Normal"/><w:rPr><w:rFonts w:ascii="Georgia" w:hAnsi="Georgia"/><w:b/><w:color w:val="2A1F8F"/><w:sz w:val="48"/></w:rPr></w:style>
+    <w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:pPr><w:keepNext/><w:pBdr><w:bottom w:val="single" w:sz="8" w:space="4" w:color="2A1F8F"/></w:pBdr><w:spacing w:before="360" w:after="160"/><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:rFonts w:ascii="Georgia" w:hAnsi="Georgia"/><w:b/><w:color w:val="2A1F8F"/><w:sz w:val="32"/></w:rPr></w:style></w:styles>`;
+  const doc = `${XML}<w:document ${W}><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  return zipStore([
+    { name: '[Content_Types].xml', data: `${XML}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>` },
+    { name: '_rels/.rels', data: `${XML}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>` },
+    { name: 'word/_rels/document.xml.rels', data: `${XML}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>` },
+    { name: 'word/styles.xml', data: styles }, { name: 'word/document.xml', data: doc }
+  ], 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+}
+
+/* ---------- question model shared by PDF / Word ---------- */
+function qModel(quiz, sets, qs, keys) {
+  const km = {}; keys.forEach(k => km[k.question_id] = k); const pos = (a, b) => a.position - b.position; let n = 0;
+  const groups = sets.slice().sort(pos).map(s => {
+    const items = [];
+    const push = (x, passage) => {
+      n++; const k = km[x.id] || { correct: [], explanation: '' };
+      const opts = (x.type === 'mcq' || x.type === 'tf') ? (x.type === 'tf' ? [{ id: 'T', text: 'True' }, { id: 'F', text: 'False' }] : x.options).map((o, i) => ({ letter: LETTERS[i], text: o.text, correct: (k.correct || []).includes(o.id) })) : [];
+      items.push({ no: n, type: x.type, body: x.body, marks: +x.marks, opts, answer: x.type === 'fib' ? (k.correct || []).join('  /  ') : opts.filter(o => o.correct).map(o => o.letter).join(', '), expl: k.explanation || '', passage: passage || null });
+    };
+    qs.filter(x => x.set_id === s.id && !x.parent_id).sort(pos).forEach(x => {
+      if (x.type === 'passage') qs.filter(c => c.parent_id === x.id).sort(pos).forEach((c, i) => push(c, i === 0 ? x.body : null)); else push(x, null);
+    });
+    return { name: s.name, items };
+  }).filter(g => g.items.length);
+  return { groups, total: n, marks: groups.reduce((a, g) => a + g.items.reduce((z, i) => z + i.marks, 0), 0) };
+}
+const TYPE_HINT = { mcq: '', tf: 'True or False', fib: 'Fill in the blank', essay: 'Essay' };
+function questionsDocx(quiz, m, withAns) {
+  let b = dxP(dxT(quiz.title, {}), { style: 'Title', after: 60 });
+  b += dxP(dxT(`${m.total} questions  |  ${num(m.marks)} marks  |  ${quiz.duration_min} minutes  |  Pass mark ${quiz.pass_mark}%`, { color: '6B6A8A', sz: 20 }), { after: 40 });
+  b += dxP(dxT(withAns ? 'ANSWER KEY COPY (teacher)' : 'STUDENT COPY', { b: 1, color: withAns ? 'B42318' : '2A1F8F', sz: 18 }) + dxT(`     Quiz key: ${String(quiz.share_code || '').toUpperCase()}`, { color: '6B6A8A', sz: 18 }), { after: 160 });
+  if (quiz.instructions) b += dxP(dxT('Instructions: ', { b: 1 }) + dxT(quiz.instructions, {}), { shd: 'F5F4FC', bdr: '2A1F8F', ind: 160, after: 200 });
+  m.groups.forEach((g, gi) => {
+    b += dxP(dxT(`${g.name}`, {}) + dxT(`   ${g.items.length} question${g.items.length === 1 ? '' : 's'}`, { color: '6B6A8A', sz: 20, font: 'Calibri' }), { style: 'Heading1', brk: gi > 0 && m.groups.length > 1 && false });
+    g.items.forEach(it => {
+      if (it.passage) b += dxP(dxT('Read the passage and answer the questions that follow.', { i: 1, color: '6B6A8A', sz: 20 }), { keep: 1, before: 120, after: 40 }) + dxP(dxRuns(it.passage, { sz: 22 }), { shd: 'F3F2FA', bdr: '7A69F0', ind: 160, after: 140 });
+      b += dxP(dxT(`${it.no}.  `, { b: 1, color: '2A1F8F' }) + dxRuns(it.body, {}) + `<w:r><w:tab/></w:r>` + dxT(`[${num(it.marks)} mark${it.marks === 1 ? '' : 's'}]`, { color: '8A88A6', sz: 18 }), { tab: 9600, ind: 460, hang: 460, keep: it.opts.length > 0, before: 120, after: 60 });
+      if (TYPE_HINT[it.type]) b += dxP(dxT(TYPE_HINT[it.type], { i: 1, color: '8A88A6', sz: 18 }), { ind: 460, after: 40 });
+      it.opts.forEach(o => { b += dxP(dxT(`${o.letter}.   `, { b: 1, color: withAns && o.correct ? '0B7A50' : '2A1F8F' }) + dxRuns(o.text, withAns && o.correct ? { b: 1, color: '0B7A50' } : {}) + (withAns && o.correct ? dxT('   ✓', { b: 1, color: '0B7A50' }) : ''), { ind: 1000, hang: 400, after: 40 }); });
+      if (it.type === 'essay' && !withAns) b += dxP('', { after: 200 }) + dxP('', { after: 200 });
+      if (it.type === 'fib' && !withAns) b += dxP(dxT('Answer: ______________________', { color: '8A88A6' }), { ind: 460 });
+      if (withAns) {
+        if (it.type === 'fib') b += dxP(dxT('Answer: ', { b: 1, color: '0B7A50' }) + dxT(it.answer, { b: 1, color: '0B7A50' }), { ind: 460, after: 40 });
+        if (it.expl) b += dxP(dxT('Explanation: ', { b: 1, i: 1, color: '6B6A8A', sz: 20 }) + dxRuns(it.expl, { i: 1, color: '6B6A8A', sz: 20 }), { ind: 460, after: 60 });
+      }
+    });
+  });
+  if (withAns) {
+    b += dxP(dxT('Answer key', {}), { style: 'Heading1', brk: true });
+    m.groups.forEach(g => { b += dxP(dxT(g.name, { b: 1, color: '2A1F8F' }), { before: 120, after: 60, keep: 1 }); b += dxP(g.items.map(it => dxT(`${it.no}. ${it.answer || (it.type === 'essay' ? '(essay)' : '-')}`, {}) + dxT('      ', {})).join(''), { after: 60, line: 300 }); });
+  }
+  b += dxP(dxT('Made with QuizBuilt', { color: 'A9A7C2', sz: 16 }), { jc: 'center', before: 300 });
+  return docxBuild(b, quiz.title);
+}
+/* ---------- printable HTML (used for "PDF": phone print dialog -> Save as PDF) ---------- */
+const PRINT_CSS = `@page{size:A4;margin:16mm 15mm}*{box-sizing:border-box}body{font-family:Georgia,'Times New Roman',serif;color:#1b1a33;font-size:11.5pt;line-height:1.5;margin:0}
+h1{font-size:24pt;color:#2A1F8F;margin:0 0 4pt;line-height:1.15}.meta{color:#6B6A8A;font-family:Arial,sans-serif;font-size:9.5pt}
+.tag{display:inline-block;font-family:Arial,sans-serif;font-size:8.5pt;font-weight:700;letter-spacing:.04em;padding:2pt 8pt;border-radius:10pt;margin:8pt 6pt 8pt 0;background:#eeecfb;color:#2A1F8F}.tag.red{background:#fde9e7;color:#B42318}
+.inst{background:#F5F4FC;border-left:3pt solid #2A1F8F;padding:8pt 12pt;margin:8pt 0 4pt;font-family:Arial,sans-serif;font-size:10pt}
+h2{font-size:15pt;color:#2A1F8F;border-bottom:1.5pt solid #2A1F8F;padding-bottom:3pt;margin:22pt 0 8pt;break-after:avoid}h2 small{font-family:Arial,sans-serif;font-size:9pt;color:#6B6A8A;font-weight:400;margin-left:8pt}
+.q{break-inside:avoid;margin:10pt 0 12pt}.qh{display:flex;gap:8pt}.no{font-weight:700;color:#2A1F8F;min-width:20pt}.qt{flex:1}.mk{font-family:Arial,sans-serif;font-size:8.5pt;color:#8A88A6;white-space:nowrap}
+.hint{font-family:Arial,sans-serif;font-size:8.5pt;color:#8A88A6;font-style:italic;margin-left:28pt}
+.o{display:flex;gap:8pt;margin:2.5pt 0 2.5pt 28pt}.ol{font-weight:700;color:#2A1F8F;min-width:14pt}.o.c{color:#0B7A50;font-weight:700}
+.psg{background:#F3F2FA;border-left:3pt solid #7A69F0;padding:8pt 12pt;margin:10pt 0;font-size:11pt;break-inside:avoid}.psg .cap{font-family:Arial,sans-serif;font-size:8.5pt;color:#6B6A8A;font-style:italic;margin-bottom:3pt}
+.ex{margin:4pt 0 0 28pt;font-size:10pt;color:#6B6A8A;font-style:italic}.ans{margin:4pt 0 0 28pt;color:#0B7A50;font-weight:700;font-family:Arial,sans-serif;font-size:10pt}
+.lines{margin:6pt 0 0 28pt}.lines i{display:block;border-bottom:.6pt solid #cfcde6;height:17pt}
+.key{columns:4;column-gap:16pt;font-family:Arial,sans-serif;font-size:10pt}.key div{break-inside:avoid;padding:1.5pt 0}.key b{color:#2A1F8F}
+.foot{text-align:center;color:#A9A7C2;font-family:Arial,sans-serif;font-size:8pt;margin-top:26pt}
+sup,sub{font-size:.7em}img{max-width:100%;height:auto}mark{background:#fff2a8}code{font-family:Consolas,monospace;background:#f0eef8;padding:0 3pt}
+table.t{width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:9.5pt;margin-top:10pt}table.t th{background:#2A1F8F;color:#fff;text-align:left;padding:5pt 6pt}table.t td{padding:4.5pt 6pt;border-bottom:.6pt solid #e2e0f2}table.t tr:nth-child(even) td{background:#F8F7FD}
+.kpis{display:flex;gap:8pt;margin:10pt 0}.kpi{flex:1;border:.8pt solid #e2e0f2;border-radius:8pt;padding:8pt;text-align:center;background:#F8F7FD}.kpi b{display:block;font-size:17pt;color:#2A1F8F}.kpi span{font-family:Arial,sans-serif;font-size:8.5pt;color:#6B6A8A}
+.g{color:#0B7A50;font-weight:700}.r{color:#B42318;font-weight:700}.w{color:#9A6A00;font-weight:700}`;
+function questionsHtml(quiz, m, withAns) {
+  let h = `<h1>${esc(quiz.title)}</h1><div class="meta">${m.total} questions &nbsp;|&nbsp; ${num(m.marks)} marks &nbsp;|&nbsp; ${quiz.duration_min} minutes &nbsp;|&nbsp; Pass mark ${quiz.pass_mark}% &nbsp;|&nbsp; Quiz key ${esc(String(quiz.share_code || '').toUpperCase())}</div>
+    <span class="tag ${withAns ? 'red' : ''}">${withAns ? 'ANSWER KEY COPY' : 'STUDENT COPY'}</span>${quiz.instructions ? `<div class="inst"><b>Instructions:</b> ${nl2br(quiz.instructions)}</div>` : ''}`;
+  m.groups.forEach(g => {
+    h += `<h2>${esc(g.name)}<small>${g.items.length} question${g.items.length === 1 ? '' : 's'}</small></h2>`;
+    g.items.forEach(it => {
+      if (it.passage) h += `<div class="psg"><div class="cap">Read the passage and answer the questions that follow.</div>${clean(it.passage)}</div>`;
+      h += `<div class="q"><div class="qh"><div class="no">${it.no}.</div><div class="qt">${clean(it.body)}</div><div class="mk">[${num(it.marks)} mark${it.marks === 1 ? '' : 's'}]</div></div>`;
+      if (TYPE_HINT[it.type]) h += `<div class="hint">${TYPE_HINT[it.type]}</div>`;
+      it.opts.forEach(o => { h += `<div class="o ${withAns && o.correct ? 'c' : ''}"><div class="ol">${o.letter}.</div><div>${clean(o.text)}${withAns && o.correct ? ' &#10003;' : ''}</div></div>`; });
+      if (it.type === 'essay' && !withAns) h += '<div class="lines"><i></i><i></i><i></i><i></i></div>';
+      if (it.type === 'fib' && !withAns) h += '<div class="lines"><i style="width:60%"></i></div>';
+      if (withAns) { if (it.type === 'fib') h += `<div class="ans">Answer: ${esc(it.answer)}</div>`; if (it.expl) h += `<div class="ex">Explanation: ${clean(it.expl)}</div>`; }
+      h += '</div>';
+    });
+  });
+  if (withAns) { h += '<h2 style="break-before:page">Answer key</h2>'; m.groups.forEach(g => { h += `<div style="font-family:Arial,sans-serif;font-weight:700;color:#2A1F8F;margin:10pt 0 4pt">${esc(g.name)}</div><div class="key">${g.items.map(it => `<div><b>${it.no}.</b> ${esc(it.answer || (it.type === 'essay' ? '(essay)' : '-'))}</div>`).join('')}</div>`; }); }
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(quiz.title)}</title><style>${PRINT_CSS}</style></head><body>${h}<div class="foot">Made with QuizBuilt</div></body></html>`;
+}
+function printHtml(html, title) {
+  const old = document.title; document.title = title;
+  const f = document.createElement('iframe'); f.style.cssText = 'position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0'; document.body.appendChild(f);
+  f.onload = () => setTimeout(() => {
+    try { f.contentWindow.focus(); f.contentWindow.print(); }
+    catch (e) { download(title + '.html', html, 'text/html'); toast('Saved as a web page. Open it and print to PDF.'); }
+    setTimeout(() => { document.title = old; }, 2500); setTimeout(() => f.remove(), 120000);
+  }, 500);
+  f.srcdoc = html;
+}
+
+/* ---------- results workbook ---------- */
+const XS = {
+  title: { b: 1, sz: 22, color: '2A1F8F' }, sub: { color: '6B6A8A', sz: 11 }, sec: { b: 1, sz: 13, color: '2A1F8F' },
+  h: { b: 1, color: 'FFFFFF', bg: '2A1F8F', h: 'center', wrap: 1, border: '2A1F8F' }, hl: { b: 1, color: 'FFFFFF', bg: '2A1F8F', h: 'left', border: '2A1F8F' },
+  t: { border: 'DAD8EE', v: 'center' }, t2: { border: 'DAD8EE', bg: 'F5F4FC' }, c: { h: 'center', border: 'DAD8EE' }, c2: { h: 'center', border: 'DAD8EE', bg: 'F5F4FC' },
+  n: { h: 'center', border: 'DAD8EE', fmt: '0.0' }, n2: { h: 'center', border: 'DAD8EE', bg: 'F5F4FC', fmt: '0.0' },
+  good: { h: 'center', b: 1, color: '0B7A50', bg: 'E2F7EE', border: 'DAD8EE' }, bad: { h: 'center', b: 1, color: 'B42318', bg: 'FDE9E7', border: 'DAD8EE' }, warn: { h: 'center', b: 1, color: '9A6A00', bg: 'FFF3D6', border: 'DAD8EE' },
+  kpi: { b: 1, sz: 20, color: '2A1F8F', h: 'center', bg: 'F5F4FC', border: 'DAD8EE' }, kpil: { color: '6B6A8A', sz: 10, h: 'center', bg: 'F5F4FC', border: 'DAD8EE' },
+  lab: { b: 1, color: '4A4870', border: 'DAD8EE', bg: 'F5F4FC' }, val: { border: 'DAD8EE', h: 'left' }, gold: { b: 1, h: 'center', color: '7A5A00', bg: 'FFF0BF', border: 'DAD8EE' }
+};
+function resultsStats(rows) {
+  const done = rows.filter(r => r.score != null), pcts = done.map(r => r.pct);
+  return { n: rows.length, done: done.length, auto: rows.filter(r => r.status === 'auto_submitted').length, live: rows.filter(r => r.status === 'ongoing').length, avg: pcts.length ? pcts.reduce((a, b) => a + b, 0) / pcts.length : 0, hi: pcts.length ? Math.max(...pcts) : 0, lo: pcts.length ? Math.min(...pcts) : 0, pass: done.length ? done.filter(r => r.passed).length / done.length * 100 : 0 };
+}
+function subjectRanks(rows, subNames) {
+  const out = {}; subNames.forEach(n => { const sc = rows.map(r => (r.subs.find(x => x.name === n) || {}).score).filter(v => v != null).map(Number); out[n] = v => 1 + sc.filter(x => x > +v).length; }); return out;
+}
+function buildResultsXlsx(quiz, rows, sets) {
+  const st = resultsStats(rows), subNames = []; sets.forEach(s => subNames.push(s.name)); rows.forEach(r => r.subs.forEach(s => { if (!subNames.includes(s.name)) subNames.push(s.name); }));
+  const intakeKeys = []; rows.forEach(r => Object.keys(r.intake || {}).forEach(k => { if (!intakeKeys.includes(k)) intakeKeys.push(k); }));
+  const sr = subjectRanks(rows, subNames), when = new Date().toLocaleString();
+  const S = [];
+  // ----- Summary
+  const kp = (l, v, s) => [{ v: l, s: 'kpil' }, { v, s: s || 'kpi' }];
+  const sum = [[{ v: quiz.title, s: 'title' }], [{ v: `Results report  |  ${when}  |  Quiz key ${String(quiz.share_code).toUpperCase()}`, s: 'sub' }], [],
+  [{ v: 'Attempts', s: 'kpil' }, { v: 'Average', s: 'kpil' }, { v: 'Highest', s: 'kpil' }, { v: 'Pass rate', s: 'kpil' }],
+  [{ v: st.n, s: 'kpi' }, { v: Math.round(st.avg * 10) / 10 + '%', s: 'kpi' }, { v: Math.round(st.hi * 10) / 10 + '%', s: 'kpi' }, { v: Math.round(st.pass) + '%', s: 'kpi' }],
+  [{ v: 'Completed', s: 'kpil' }, { v: 'Auto-submitted', s: 'kpil' }, { v: 'Not finished', s: 'kpil' }, { v: 'Pass mark', s: 'kpil' }],
+  [{ v: st.done - st.auto < 0 ? 0 : rows.filter(r => r.status === 'completed').length, s: 'kpi' }, { v: st.auto, s: 'kpi' }, { v: st.live, s: 'kpi' }, { v: quiz.pass_mark + '%', s: 'kpi' }], []];
+  const merges = ['A1:F1', 'A2:F2'];
+  if (subNames.length > 1) {
+    sum.push([{ v: 'By subject', s: 'sec' }]); sum.push([{ v: 'Subject', s: 'hl' }, { v: 'Average %', s: 'h' }, { v: 'Highest %', s: 'h' }, { v: 'Lowest %', s: 'h' }, { v: 'Takers', s: 'h' }]);
+    subNames.forEach((n, i) => {
+      const ps = rows.map(r => r.subs.find(x => x.name === n)).filter(Boolean).map(x => x.total > 0 ? x.score / x.total * 100 : 0), z = i % 2 ? '2' : '';
+      sum.push([{ v: n, s: 't' + z }, { v: ps.length ? Math.round(ps.reduce((a, b) => a + b, 0) / ps.length * 10) / 10 : '', s: 'n' + z }, { v: ps.length ? Math.round(Math.max(...ps) * 10) / 10 : '', s: 'n' + z }, { v: ps.length ? Math.round(Math.min(...ps) * 10) / 10 : '', s: 'n' + z }, { v: ps.length, s: 'c' + z }]);
+    });
+    sum.push([]);
+  }
+  sum.push([{ v: 'About this quiz', s: 'sec' }]);
+  [['Category', catName(quiz.category)], ['Duration', quiz.duration_min + ' minutes'], ['Questions', quiz.question_count], ['Total marks', num(quiz.total_marks)], ['Created by', '@' + quiz.owner_name], ['Anti-cheat', quiz.anticheat ? 'On' : 'Off'], ['Visibility', quiz.visibility]].forEach(r => sum.push([{ v: r[0], s: 'lab' }, { v: r[1], s: 'val' }, null]));
+  S.push({ name: 'Summary', rows: sum, widths: [24, 18, 18, 18, 14, 14], merges, heights: { 0: 34, 4: 36, 6: 36 }, tab: '7A69F0' });
+  // ----- Results
+  const head = ['Rank', 'Username', 'Guest', 'Status', 'Ended because', 'Score', 'Total', '%', 'Result', 'Time used', 'Started', 'Submitted'];
+  subNames.forEach(n => { head.push(n + ' score', n + ' rank'); });
+  head.push('Anti-cheat flags', 'Anti-cheat log', ...intakeKeys);
+  const data = [head.map((h, i) => ({ v: h, s: i === 1 ? 'hl' : 'h' }))]; let rank = 0;
+  rows.forEach((r, i) => {
+    const z = i % 2 ? '2' : ''; const stS = r.status === 'completed' ? 'good' : r.status === 'auto_submitted' ? 'bad' : 'warn';
+    const row = [{ v: r.score != null ? ++rank : '', s: rank <= 3 && r.score != null ? 'gold' : 'c' + z }, { v: r.name, s: 't' + z }, { v: r.guest ? 'Yes' : 'No', s: 'c' + z }, { v: statusLbl(r), s: stS }, { v: (r.reason || '').replace(/^anticheat:/, 'Anti-cheat: ').replace('time_up', 'Time up'), s: 't' + z },
+    { v: r.score != null ? r.score : '', s: 'c' + z }, { v: r.total != null ? r.total : '', s: 'c' + z }, { v: r.pct != null ? Math.round(r.pct * 10) / 10 : '', s: 'n' + z }, { v: r.passed == null ? '' : (r.passed ? 'Passed' : 'Failed'), s: r.passed == null ? 'c' + z : (r.passed ? 'good' : 'bad') },
+    { v: r.time != null ? fmtDur(r.time) : '', s: 'c' + z }, { v: r.started ? new Date(r.started).toLocaleString() : '', s: 'c' + z }, { v: r.submitted ? new Date(r.submitted).toLocaleString() : '', s: 'c' + z }];
+    subNames.forEach(n => { const s = r.subs.find(x => x.name === n); row.push({ v: s ? `${num(s.score)} / ${num(s.total)}` : '', s: 'c' + z }, { v: s ? sr[n](s.score) : '', s: 'c' + z }); });
+    row.push({ v: r.cheats || 0, s: r.cheats ? 'bad' : 'c' + z }, { v: r.cheatLog.filter(c => c.n).map(c => c.r).join('; '), s: 't' + z });
+    intakeKeys.forEach(k => row.push({ v: (r.intake || {})[k] || '', s: 't' + z }));
+    data.push(row);
+  });
+  const widths = [7, 22, 8, 16, 26, 8, 8, 8, 10, 11, 20, 20]; subNames.forEach(() => widths.push(13, 8)); widths.push(11, 34); intakeKeys.forEach(() => widths.push(24));
+  S.push({ name: 'Results', rows: data, widths, freeze: 1, filter: `A1:${colName(head.length - 1)}${Math.max(2, data.length)}`, heights: { 0: 34 }, tab: '2A1F8F' });
+  return xlsxBuild(S, XS);
+}
+function resultsHtml(quiz, rows, sets) {
+  const st = resultsStats(rows), subNames = []; sets.forEach(s => subNames.push(s.name)); rows.forEach(r => r.subs.forEach(s => { if (!subNames.includes(s.name)) subNames.push(s.name); }));
+  const sr = subjectRanks(rows, subNames); let rank = 0;
+  const trs = rows.map(r => { const k = r.score != null ? ++rank : '-'; return `<tr><td>${k}</td><td><b>${esc(r.name)}</b>${r.guest ? ' (guest)' : ''}</td><td>${r.score != null ? num(r.score) + '/' + num(r.total) : '-'}</td><td class="${r.passed ? 'g' : r.passed === false ? 'r' : ''}">${r.pct != null ? num(r.pct, 1) + '%' : '-'}</td><td class="${r.status === 'completed' ? 'g' : r.status === 'auto_submitted' ? 'r' : 'w'}">${statusLbl(r)}</td><td>${r.time != null ? fmtDur(r.time) : '-'}</td>${subNames.length > 1 ? `<td>${r.subs.map(s => `${esc(s.name)} ${num(s.score)}/${num(s.total)} (#${sr[s.name] ? sr[s.name](s.score) : '-'})`).join('<br>')}</td>` : ''}</tr>`; }).join('');
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(quiz.title)} results</title><style>${PRINT_CSS}@page{size:A4 landscape}</style></head><body><h1>${esc(quiz.title)}</h1><div class="meta">Results report &nbsp;|&nbsp; ${new Date().toLocaleString()} &nbsp;|&nbsp; Quiz key ${esc(String(quiz.share_code).toUpperCase())}</div>
+  <div class="kpis"><div class="kpi"><b>${st.n}</b><span>Attempts</span></div><div class="kpi"><b>${num(st.avg, 1)}%</b><span>Average</span></div><div class="kpi"><b>${num(st.hi, 1)}%</b><span>Highest</span></div><div class="kpi"><b>${num(st.pass, 0)}%</b><span>Pass rate</span></div></div>
+  <table class="t"><thead><tr><th>#</th><th>Name</th><th>Score</th><th>%</th><th>Status</th><th>Time</th>${subNames.length > 1 ? '<th>By subject (rank)</th>' : ''}</tr></thead><tbody>${trs}</tbody></table><div class="foot">Made with QuizBuilt</div></body></html>`;
+}
+
+/* ---------- export sheets ---------- */
+ACT['q-exportq'] = () => {
+  openSheet(`<h3 class="h2">Export questions</h3><p class="mut sm gap0">Only you can do this. Pick a format.</p>
+    ${swRow('ex-ans', 'Include answers and explanations', 'Turn off to make a clean student copy for printing.', true)}
+    <div class="tiles gap0"><button class="tile" data-act="exq" data-f="pdf">${ic('file', 22)}PDF<small class="mut" style="font-weight:500">Print / save as PDF</small></button><button class="tile" data-act="exq" data-f="docx">${ic('edit', 22)}Word<small class="mut" style="font-weight:500">Editable .docx</small></button>
+    <button class="tile" data-act="exq" data-f="txt">${ic('list', 22)}Text<small class="mut" style="font-weight:500">Re-importable .txt</small></button><button class="tile" data-act="exq" data-f="json">${ic('download', 22)}JSON<small class="mut" style="font-weight:500">Raw data</small></button></div>`);
+};
+async function loadQuizContent(q) {
+  const [sets, qs, keys] = await Promise.all([db(sb.from('question_sets').select('*').eq('quiz_id', q.id).order('position')), db(sb.from('questions').select('*').eq('quiz_id', q.id).order('position')), db(sb.from('question_keys').select('*').eq('quiz_id', q.id))]);
+  return { sets, qs, keys };
+}
+ACT.exq = async el => {
+  const q = Q.quiz, f = el.dataset.f, withAns = $('#ex-ans') ? $('#ex-ans').checked : true; busy(el, true);
+  try {
+    const { sets, qs, keys } = await loadQuizContent(q); const fname = q.title.replace(/[^\w]+/g, '_').replace(/^_|_$/g, '').slice(0, 40) || 'quiz'; const km = {}; keys.forEach(k => km[k.question_id] = k);
+    if (f === 'json') { download(fname + '.json', JSON.stringify({ quiz: { title: q.title, description: q.description, duration_min: q.duration_min }, sets, questions: qs.map(x => Object.assign({}, x, { key: km[x.id] || null })) }, null, 2), 'application/json'); }
+    else if (f === 'docx') { const m = qModel(q, sets, qs, keys); download(fname + (withAns ? '_with_answers' : '_student_copy') + '.docx', questionsDocx(q, m, withAns)); toast('Word file downloaded', 'ok'); }
+    else if (f === 'pdf') { const m = qModel(q, sets, qs, keys); printHtml(questionsHtml(q, m, withAns), fname + (withAns ? '_with_answers' : '_student_copy')); toast('Choose "Save as PDF" in the print window'); }
+    else {
+      let out = '', n = 0;
+      sets.forEach(s => {
+        out += `[Section: ${s.name}]\n\n`;
+        const emit = x => {
+          n++; const k = km[x.id] || { correct: [], explanation: '' }; out += `${n}. ${htmlToPlain(x.body)}\n`;
+          if (x.type === 'mcq' || x.type === 'tf') { x.options.forEach((o, i) => { out += `${LETTERS[i]}. ${htmlToPlain(o.text)}\n`; }); const ls = x.options.map((o, i) => (k.correct || []).includes(o.id) ? LETTERS[i] : '').filter(Boolean); if (ls.length && withAns) out += `Answer: ${ls.join(', ')}\n`; }
+          else if (x.type === 'fib' && withAns) out += `Answer: ${(k.correct || []).join(' | ')}\n`;
+          out += `Marks: ${x.marks}\n`; if (k.explanation && withAns) out += `Explanation: ${htmlToPlain(k.explanation)}\n`; out += '\n';
+        };
+        qs.filter(x => x.set_id === s.id && !x.parent_id).forEach(x => { if (x.type === 'passage') { out += `[Passage]\n${htmlToPlain(x.body)}\n`; qs.filter(k => k.parent_id === x.id).forEach(emit); out += '[End Passage]\n\n'; } else emit(x); });
+      });
+      download(fname + '.txt', out, 'text/plain');
+    }
+    if (f !== 'pdf') closeSheet();
+  } finally { busy(el, false); }
+};
+ACT['or-xlsx'] = async btn => {
+  busy(btn, true);
+  try {
+    const q = OR.quiz, fname = (q.title.replace(/[^\w]+/g, '_').replace(/^_|_$/g, '').slice(0, 40) || 'quiz') + '_results';
+    download(fname + '.xlsx', buildResultsXlsx(q, OR.rows, OR.sets)); toast('Spreadsheet downloaded', 'ok');
+  } finally { busy(btn, false); }
+};
+ACT['or-pdf'] = () => { const q = OR.quiz; printHtml(resultsHtml(q, OR.rows, OR.sets), (q.title.replace(/[^\w]+/g, '_').slice(0, 40) || 'quiz') + '_results'); toast('Choose "Save as PDF" in the print window'); };
 
 </script>
 </body>
