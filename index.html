@@ -28,12 +28,12 @@
 }
 [data-theme=light]{
   color-scheme:light;
-  --bg:#F7F2E7;--s1:#FFFFFF;--s2:#F1EADA;--s3:#E7DCC2;
-  --line:rgba(43,32,10,.12);--line2:rgba(43,32,10,.22);
-  --tx:#241C0D;--mut:#6B5F45;--dim:#8B7F63;
-  --brass:#8F6A1B;--brass2:#6E4F0E;--onb:#FFF8E6;
-  --ok:#0E8F5C;--bad:#C1362B;--warn:#A9660A;--info:#2A5FA8;
-  --shadow:0 14px 36px rgba(43,32,10,.14);--grain:.035;
+  --bg:#F6F8FC;--s1:#FFFFFF;--s2:#FFFFFF;--s3:#EEF3FC;
+  --line:rgba(20,35,70,.10);--line2:rgba(20,35,70,.18);
+  --tx:#131A2C;--mut:#5C6785;--dim:#8891AC;
+  --brass:#2F6FED;--brass2:#1E56D6;--onb:#FFFFFF;
+  --ok:#0E9F6E;--bad:#E23B3B;--warn:#C98A0A;--info:#2F6FED;
+  --shadow:0 10px 30px rgba(20,35,70,.10);--grain:0;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
@@ -102,8 +102,7 @@ body.taking .top,body.taking .nav{display:none}
 /* forms */
 .lbl{display:block;font-weight:600;font-size:13.5px;margin:14px 0 6px}
 .hint{font-size:12.5px;color:var(--dim);margin-top:5px;line-height:1.4}
-.inp{width:100%;padding:12px 14px;background:var(--s2);color:var(--tx);border:1px solid var(--line2);border-radius:10px;font-size:15px;min-height:46px}
-.inp::placeholder{color:var(--dim)}
+.inp{width:100%;padding:12px 14px;background:var(--s2);border:1px solid var(--line2);border-radius:10px;font-size:15px;min-height:46px;color:var(--tx)}
 .inp::placeholder{color:var(--dim)}
 textarea.inp{min-height:88px;resize:vertical;line-height:1.45}
 select.inp{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%2398AC9F' stroke-width='1.8'/></svg>");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
@@ -376,6 +375,11 @@ const SUPABASE_KEY = 'sb_publishable_52dmXGyGlmgzsshRhFupPg_r8QwHbVU';
 
 /* Anti-cheat settings (change here if you want it softer or harder) */
 const AC = { GRACE_SEC: 5, MAX_STRIKES: 3, IDLE_MIN: 10 };
+const VOICE_MODES = {
+  aggressive: { thMul: 3, need: 5, win: 14, label: 'Aggressive', sub: 'Triggers fast on any talking or loud noise. What quizzes use today.' },
+  balanced: { thMul: 4.5, need: 8, win: 22, label: 'Balanced', sub: 'A short burst of noise needs to last a bit longer before it counts.' },
+  gentle: { thMul: 6, need: 12, win: 34, label: 'Gentle', sub: 'Only sustained talking triggers it. Brief noises are ignored.' }
+};
 
 const CATEGORIES = [
   ['general', 'General'], ['jamb', 'JAMB'], ['post-utme', 'Post-UTME'], ['waec', 'WAEC'], ['neco', 'NECO'],
@@ -397,13 +401,6 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&a
 const uid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() :
   'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); });
 const sid = () => Math.random().toString(36).slice(2, 8);
-function deviceId() {
-  try {
-    let d = localStorage.getItem('qb_device_id');
-    if (!d || d.length < 16) { d = uid() + '-' + Date.now().toString(36); localStorage.setItem('qb_device_id', d); }
-    return d;
-  } catch (e) { return 'nols-' + uid(); }
-}
 const pad = n => String(n).padStart(2, '0');
 const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
 const num = (n, dp = 2) => { n = +n || 0; return Number.isInteger(n) ? String(n) : n.toFixed(dp).replace(/\.?0+$/, ''); };
@@ -897,6 +894,7 @@ const ROUTES = [
   [/^\/me(?:\/(quizzes|attempts|settings))?$/, vMe],
   [/^\/create$/, vEditor], [/^\/edit\/([\w-]+)(?:\/(details|questions|publish))?$/, vEditor],
   [/^\/(?:quiz|q)\/([\w-]+)$/, vQuiz],
+  [/^\/leaderboard\/([\w-]+)$/, vLeaderboardFull], [/^\/attempts\/([\w-]+)$/, vAttemptsFull],
   [/^\/take\/([\w-]+)$/, vTake], [/^\/preview\/([\w-]+)$/, vPreview],
   [/^\/result\/([\w-]+)$/, vResult], [/^\/review\/([\w-]+)$/, vReview],
   [/^\/results\/([\w-]+)$/, vOwnerResults],
@@ -1233,7 +1231,9 @@ const DEF = {
   anticheat: false, anticheat_voice: false, anticheat_voice_mode: 'aggressive', require_login: true, allow_guest: false, show_answers: true, show_results: true,
   release_mode: 'immediate', release_at: null, calculator: 'none', score_quotes: [], allow_likes: true, allow_comments: true,
   allow_sharing: true, leaderboard_enabled: true, schedule_enabled: false, starts_at: null, ends_at: null, fifty_fifty: false,
-  fifty_count: 2, auto_advance: false, intake_form: [], show_percentage: true, visibility: 'public'
+  fifty_count: 2, auto_advance: false, intake_form: [], show_percentage: true, visibility: 'public',
+  is_paid: false, price_amount: null, price_currency: 'NGN', paystack_public_key: '',
+  prize_enabled: false, prize_mode: 'top3', prize_text: { desc: '' }
 };
 const edQ = id => E.qs.find(x => x.id === id);
 const numOf = q => { let n = 0; for (const x of E.qs) { if (x.type !== 'passage') n++; if (x === q) return x.type === 'passage' ? 'P' : n; } return '?'; };
@@ -1327,13 +1327,8 @@ function edRenderDetails() {
         • Resuming an unfinished attempt is turned off.</div>
       ${swRow('d-voice', 'Also listen for voices (microphone)', 'Detects someone talking or saying a wake word out loud. Needs microphone permission, and a noisy room can trigger it.', q.anticheat_voice, { reveal: 'sub-voice' })}
       <div class="sub" id="sub-voice" ${q.anticheat_voice ? '' : 'hidden'}>
-        <label class="lbl" for="d-voicemode">Voice sensitivity</label>
-        <select class="inp" id="d-voicemode">
-          <option value="aggressive" ${q.anticheat_voice_mode === 'aggressive' ? 'selected' : ''}>Aggressive — reacts fast to any talking or a sudden loud sound</option>
-          <option value="balanced" ${q.anticheat_voice_mode === 'balanced' ? 'selected' : ''}>Balanced — needs a longer stretch of noise before it warns</option>
-          <option value="gentle" ${q.anticheat_voice_mode === 'gentle' ? 'selected' : ''}>Gentle — only reacts to sustained, louder talking</option>
-        </select>
-        <div class="hint">A single sudden noise (a door, a dropped object) is less likely to trigger Balanced or Gentle. Pick Aggressive only for strict exam conditions.</div>
+        <label class="lbl">How sensitive should it be?</label>
+        <div class="gap0" id="vm-seg">${Object.entries(VOICE_MODES).map(([k, v]) => `<label class="row" style="align-items:flex-start;gap:10px;padding:8px 0"><input type="radio" name="d-vmode" value="${k}" ${((q.anticheat_voice_mode || 'aggressive') === k) ? 'checked' : ''} style="margin-top:3px;width:18px;height:18px;accent-color:var(--brass)"><span><b style="display:block">${v.label}</b><small class="mut">${v.sub}</small></span></label>`).join('')}</div>
       </div>
     </div>`)}
   ${accSec('globe', 'Access and sharing', `
@@ -1357,6 +1352,20 @@ function edRenderDetails() {
   ${accSec('heart', 'Engagement', `
     ${swRow('d-likes', 'Allow likes', '', q.allow_likes)}${swRow('d-comm', 'Allow comments', '', q.allow_comments)}${swRow('d-shr', 'Allow sharing', 'Shows a Share button.', q.allow_sharing)}
     ${swRow('d-lb', 'Enable leaderboard', 'Ranks overall and per subject.', q.leaderboard_enabled)}`)}
+  ${accSec('zap', 'Payment and prizes', `
+    ${swRow('d-paid', 'Require payment to start', 'People pay with Paystack before they can begin.', q.is_paid, { reveal: 'sub-paid' })}
+    <div class="sub" id="sub-paid" ${q.is_paid ? '' : 'hidden'}>
+      <div class="row"><div class="grow"><label class="lbl" for="d-price">Price</label><input class="inp" id="d-price" type="number" min="0" step="1" value="${esc(q.price_amount ?? '')}" placeholder="e.g. 500"></div>
+      <div style="width:110px"><label class="lbl" for="d-curr">Currency</label><select class="inp" id="d-curr"><option value="NGN" ${q.price_currency === 'NGN' ? 'selected' : ''}>NGN</option><option value="USD" ${q.price_currency === 'USD' ? 'selected' : ''}>USD</option><option value="GHS" ${q.price_currency === 'GHS' ? 'selected' : ''}>GHS</option></select></div></div>
+      <label class="lbl" for="d-pstk">Paystack public key</label><input class="inp" id="d-pstk" value="${esc(q.paystack_public_key || '')}" placeholder="pk_live_… or pk_test_…">
+      <div class="hint">Guests cannot take a paid quiz — payers must be signed in.</div>
+    </div>
+    ${swRow('d-prize', 'Offer a prize', 'Winners submit their bank details to claim it. You settle payouts yourself.', q.prize_enabled, { reveal: 'sub-prize' })}
+    <div class="sub" id="sub-prize" ${q.prize_enabled ? '' : 'hidden'}>
+      <label class="lbl">Who wins?</label>
+      <div class="seg gap0" id="pz-seg"><button type="button" data-act="pzmode" data-v="top3" class="${(q.prize_mode || 'top3') === 'top3' ? 'on' : ''}">Top 3</button><button type="button" data-act="pzmode" data-v="passmark" class="${q.prize_mode === 'passmark' ? 'on' : ''}">Everyone who passes</button></div>
+      <label class="lbl" for="d-ptext">Describe the prize</label><textarea class="inp" id="d-ptext" maxlength="300" placeholder="e.g. ₦5,000 airtime for the top 3">${esc((q.prize_text && q.prize_text.desc) || '')}</textarea>
+    </div>`)}
   ${accSec('list', 'Questions for takers (form)', `<div class="hint">Ask people something before they start, like "Are you a JAMB candidate for next year?".</div><div id="intake">${intake}</div><button class="btn sm gap0" data-act="intake-add">${ic('plus', 14)} Add a question</button>`)}
   <div class="row gap2"><button class="btn brass grow big" id="d-save" data-act="ed-save-continue">${E.quiz ? 'Save & continue' : 'Save & continue'} ${ic('next', 18)}</button></div>
   ${E.quiz ? '' : '<div class="hint center gap0">Next you will add questions. You can come back and change any of this later.</div>'}
@@ -1365,6 +1374,7 @@ function edRenderDetails() {
 CHG.reveal = el => { const t = $('#' + el.dataset.target); if (t) t.hidden = !el.checked; if (el.id === 'd-ac') CHG.acsync(el); };
 CHG.acsync = el => { const r = $('#d-resume'); if (r) { r.disabled = el.checked; if (el.checked) r.checked = false; } };
 CHG.relmode = el => { $('#rel-at').hidden = el.value !== 'scheduled'; };
+ACT.pzmode = el => { $$('#pz-seg button').forEach(b => b.classList.toggle('on', b === el)); };
 ACT.vis = el => {
   E.vis = el.dataset.v; $$('#vis-seg button').forEach(b => b.classList.toggle('on', b.dataset.v === E.vis));
   $('#vis-hint').textContent = E.vis === 'public' ? 'Listed in Explore. Anyone can open it.' : 'Not listed. Only people you invite can open it.';
@@ -1400,12 +1410,15 @@ function edReadDetails() {
     duration_min: dur, pass_mark: pass, shuffle_questions: c('d-shq'), shuffle_options: c('d-sho'),
     allow_multiple_attempts: c('d-multi'), max_attempts: c('d-multi') ? (parseInt(v('d-maxatt'), 10) || null) : null,
     allow_resume: ac ? false : c('d-resume'), anticheat: ac, anticheat_voice: ac && c('d-voice'),
-    anticheat_voice_mode: (ac && c('d-voice') && $('#d-voicemode')) ? $('#d-voicemode').value : 'aggressive',
+    anticheat_voice_mode: ($('input[name=d-vmode]:checked') || {}).value || 'aggressive',
     require_login: c('d-login'), allow_guest: c('d-guest'), show_answers: c('d-showans'), show_results: c('d-showres'),
     release_mode: rel, release_at: rel === 'scheduled' ? fromLocalInput(v('d-relat')) : null,
     calculator: c('d-calc') ? v('d-calctype') : 'none', score_quotes: quotes, allow_likes: c('d-likes'), allow_comments: c('d-comm'),
     allow_sharing: c('d-shr'), leaderboard_enabled: c('d-lb'), schedule_enabled: sched, starts_at: sched ? st : null, ends_at: sched ? en : null,
-    fifty_fifty: c('d-fifty'), fifty_count: clamp(parseInt(v('d-fc'), 10) || 2, 1, 50), auto_advance: c('d-auto'), intake_form: intake, visibility: E.vis
+    fifty_fifty: c('d-fifty'), fifty_count: clamp(parseInt(v('d-fc'), 10) || 2, 1, 50), auto_advance: c('d-auto'), intake_form: intake, visibility: E.vis,
+    is_paid: c('d-paid'), price_amount: c('d-paid') ? (parseFloat(v('d-price')) || 0) : null, price_currency: v('d-curr'),
+    paystack_public_key: v('d-pstk').trim(),
+    prize_enabled: c('d-prize'), prize_mode: (($('#pz-seg .on') || {}).dataset || {}).v || 'top3', prize_text: { desc: $('#d-ptext') ? $('#d-ptext').value.trim() : '' }
   };
 }
 async function edSaveDetails(silent) {
@@ -1869,7 +1882,9 @@ function drawQuiz() {
   const feats = [
     q.anticheat ? `<span class="badge bad">${ic('shield', 12)} Anti-cheat on</span>` : '', q.calculator !== 'none' ? `<span class="badge">${ic('calc', 12)} ${q.calculator} calculator</span>` : '',
     q.fifty_fifty ? `<span class="badge">50:50 lifeline</span>` : '', q.shuffle_questions ? '<span class="badge">Shuffled</span>' : '', q.allow_multiple_attempts ? (q.max_attempts ? `<span class="badge">${q.max_attempts} attempts</span>` : '<span class="badge">Unlimited attempts</span>') : '<span class="badge">One attempt</span>',
-    q.schedule_enabled && q.starts_at ? `<span class="badge">${ic('calendar', 12)} ${fmtDT(q.starts_at)}${q.ends_at ? ' to ' + fmtDT(q.ends_at) : ''}</span>` : ''
+    q.schedule_enabled && q.starts_at ? `<span class="badge">${ic('calendar', 12)} ${fmtDT(q.starts_at)}${q.ends_at ? ' to ' + fmtDT(q.ends_at) : ''}</span>` : '',
+    q.is_paid ? `<span class="badge gold">${ic('zap', 12)} ${esc(q.price_currency || 'NGN')} ${num(q.price_amount || 0)}</span>` : '',
+    q.prize_enabled ? `<span class="badge gold">${ic('trophy' in ICONS ? 'trophy' : 'zap', 12)} Prize</span>` : ''
   ].filter(Boolean).join(' ');
   let startBtn = '';
   if (st.kind === 'start') startBtn = `<button class="btn brass block big" data-act="q-start">${ic('play', 20)} Start quiz</button>`;
@@ -1897,16 +1912,17 @@ function drawQuiz() {
       ${Q.sets.length > 1 ? `<div class="row wrapf gap0" style="gap:6px">${Q.sets.map(s => `<span class="badge">${esc(s.name)}</span>`).join('')}</div>` : ''}</div>
     <div class="stats gap">${facts}</div>${feats ? `<div class="row wrapf gap0" style="gap:6px">${feats}</div>` : ''}
     <div class="gap">${startBtn}</div>${engage}${tools}
-    ${lbOn ? `<details class="acc gap" id="lb-acc"><summary>${ic('trophy', 20)}<span>Leaderboard</span><span class="chev">${ic('down', 18)}</span></summary><div class="accb" id="lb-body"><div class="spin"></div></div></details>` : ''}
+    <div class="row gap0" style="gap:8px">
+      ${lbOn ? `<a class="btn sm grow" href="#/leaderboard/${q.share_code}">${ic('trophy', 16)} Leaderboard${ic('right', 14)}</a>` : ''}
+      <a class="btn sm grow" href="#/attempts/${q.share_code}">${ic('users' in ICONS ? 'users' : 'clock', 16)} Attempts${ic('right', 14)}</a>
+    </div>
     ${q.allow_comments ? `<details class="acc" id="cm-acc"><summary>${ic('msg', 20)}<span>Comments (${q.comments_count || 0})</span><span class="chev">${ic('down', 18)}</span></summary><div class="accb" id="cm-body"><div class="spin"></div></div></details>` : ''}
     ${S.me && Q.attempts.length ? `<details class="acc" id="at-acc"><summary>${ic('clock', 20)}<span>Your attempts (${Q.attempts.length})</span><span class="chev">${ic('down', 18)}</span></summary><div class="accb">${Q.attempts.map(a => {
       const rs = Array.isArray(a.attempt_results) ? a.attempt_results[0] : a.attempt_results;
       return `<a class="person" href="#/${a.status === 'ongoing' ? 'take' : 'result'}/${a.id}"><div class="grow"><div class="b">Attempt ${a.attempt_no}</div><div class="xs mut">${fmtDT(a.started_at)}</div></div>${rs ? `<span class="badge ${rs.passed ? 'ok' : 'bad'}">${num(rs.percentage, 1)}%</span>` : `<span class="badge">${a.status === 'ongoing' ? 'In progress' : 'Submitted'}</span>`}${ic('right', 16)}</a>`;
     }).join('')}</div></details>` : ''}
   </div>`);
-  const lb = $('#lb-acc'); if (lb) lb.addEventListener('toggle', () => { if (lb.open && !lb.dataset.done) { lb.dataset.done = 1; lbLoad(); } });
   const cm = $('#cm-acc'); if (cm) cm.addEventListener('toggle', () => { if (cm.open && !cm.dataset.done) { cm.dataset.done = 1; cmLoad(); } });
-  if (Q.quiz.is_challenge && lb) { lb.open = true; }
 }
 ACT['q-share'] = () => shareQuiz(Q.quiz);
 ACT['q-jump-c'] = () => { const c = $('#cm-acc'); if (c) { c.open = true; c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } };
@@ -1918,15 +1934,48 @@ ACT['q-like'] = async () => {
   const b = $('#like-b'); b.classList.toggle('brass', Q.liked); $('#like-n').textContent = q.likes_count;
 };
 
+/* ---------- device id (for guest one-attempt lock) ---------- */
+function deviceId() {
+  try {
+    let d = localStorage.getItem('qb_device_id');
+    if (!d) { d = uid() + uid(); localStorage.setItem('qb_device_id', d); }
+    return d;
+  } catch (e) { return sid() + sid() + sid() + sid(); }
+}
+/* ---------- paid quizzes (Paystack) ---------- */
+async function ensurePaid(q) {
+  if (!q.is_paid) return true;
+  if (S.me && (S.me.id === q.owner_id || isAdmin())) return true;
+  const already = await rpc('has_paid', { p_quiz_id: q.id }).catch(() => false);
+  if (already) return true;
+  if (!q.paystack_public_key) throw new Error('This quiz needs payment, but the creator has not set it up yet.');
+  await loadScript('https://js.paystack.co/v1/inline.js');
+  return new Promise((resolve, reject) => {
+    let handler;
+    try {
+      handler = PaystackPop.setup({
+        key: q.paystack_public_key,
+        email: (S.me && S.me.email) || `guest${Date.now()}@quizboot.app`,
+        amount: Math.round((+q.price_amount || 0) * 100),
+        currency: q.price_currency || 'NGN',
+        ref: 'qb_' + String(q.id).slice(0, 8) + '_' + Date.now(),
+        callback: res => { rpc('record_paystack_payment', { p_quiz_id: q.id, p_reference: res.reference }).then(() => resolve(true)).catch(reject); },
+        onClose: () => reject(new Error('Payment was not completed'))
+      });
+    } catch (e) { return reject(new Error('Could not start payment: ' + cleanErr(e))); }
+    handler.openIframe();
+  });
+}
 /* ---------- start flow ---------- */
 ACT['q-start'] = () => {
   const q = Q.quiz;
   if (S.me) { if (S.me.anon && !Q.guestName) return guestSheet(q); return preStart(q); }
   S.returnTo = '/q/' + q.share_code;
-  openSheet(`<h3 class="h2">${q.allow_guest ? 'How do you want to take this quiz?' : 'Sign in to take this quiz'}</h3>
-    <p class="mut sm gap0">${q.require_login || !q.allow_guest ? 'An account keeps your results and rank on your profile.' : 'You can sign in, or continue without an account.'}</p>
+  const allowGuest = q.allow_guest && !q.is_paid;
+  openSheet(`<h3 class="h2">${allowGuest ? 'How do you want to take this quiz?' : 'Sign in to take this quiz'}</h3>
+    <p class="mut sm gap0">${q.is_paid ? 'This is a paid quiz, so an account is required.' : (q.require_login || !q.allow_guest ? 'An account keeps your results and rank on your profile.' : 'You can sign in, or continue without an account.')}</p>
     <div class="row gap"><a class="btn brass grow" href="#/auth/login">Sign in</a><a class="btn grow" href="#/auth/signup">Create account</a></div>
-    ${q.allow_guest ? `<div class="center mut sm gap">or</div><button class="btn block gap0" data-act="guest-open">Continue without an account</button>` : ''}`);
+    ${allowGuest ? `<div class="center mut sm gap">or</div><button class="btn block gap0" data-act="guest-open">Continue without an account</button>` : ''}`);
 };
 ACT['guest-open'] = () => guestSheet(Q.quiz);
 function guestSheet(q) {
@@ -1956,6 +2005,8 @@ function preStart(q) {
   const rules = [`You have <b>${q.duration_min} minute${q.duration_min === 1 ? '' : 's'}</b> once you start.`, `Pass mark is <b>${q.pass_mark}%</b>.`];
   if (q.anticheat) rules.push(`<b class="bad">Anti-cheat is ON.</b> Leaving this screen, switching apps, or the screen turning off gives a ${AC.GRACE_SEC}-second warning and then submits your quiz. ${AC.MAX_STRIKES} warnings submit it at once. Do not touch anything else while you take it.`);
   if (q.anticheat_voice) rules.push('Your <b>microphone</b> will be used to detect talking. Stay quiet during the quiz.');
+  if (q.is_paid) rules.push(`This is a <b>paid quiz</b> — ${esc(q.price_currency || 'NGN')} ${num(q.price_amount || 0)} to start.`);
+  if (q.prize_enabled) rules.push(`<b>Prize:</b> ${esc((q.prize_text && q.prize_text.desc) || (q.prize_mode === 'passmark' ? 'Everyone who passes wins.' : 'Top 3 win.'))}`);
   if (!q.anticheat && q.allow_resume) rules.push('If you leave, you can come back and continue while time has not run out.');
   if (q.calculator !== 'none') rules.push(`A ${q.calculator} calculator is available.`);
   const intake = (q.intake_form || []);
@@ -1998,7 +2049,9 @@ ACT['q-go'] = async btn => {
   }
   busy(btn, true);
   try {
+    if (q.is_paid && S.me && S.me.anon) throw new Error('Paid quizzes require an account. Please sign in.');
     if (q.anticheat && q.anticheat_voice) { try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach(t => t.stop()); } catch (e) { throw new Error('This quiz needs microphone permission. Allow the microphone for this site, then tap Start again.'); } }
+    await ensurePaid(q);
     if (q.anticheat) { const de = document.documentElement; try { (de.requestFullscreen || de.webkitRequestFullscreen || (() => { })).call(de); } catch (e) { } }
     const res = await rpc('start_attempt', { p_quiz_id: q.id, p_guest_name: S.me && S.me.anon ? (Q.guestName || 'Anonymous') : null, p_intake: intake, p_guest_device_id: S.me && S.me.anon ? deviceId() : null });
     LIVE.add(res.attempt.id);
@@ -2045,24 +2098,45 @@ async function duplicateQuiz(src) {
   for (let i = 0; i < kk.length; i += 100) await db(sb.from('question_keys').insert(kk.slice(i, i + 100)));
   return copy.id;
 }
-/* ---------- comments (with one level of replies) ---------- */
+/* ---------- comments (unlimited nested replies + likes) ---------- */
+const CM = { likeCount: {}, mine: new Set() };
 async function cmLoad() {
   const q = Q.quiz, box = $('#cm-body'); if (!box) return;
-  const rows = await db(sb.from('comments').select('id,user_id,display_name,body,created_at,parent_id').eq('quiz_id', q.id).order('created_at', { ascending: true }).limit(300));
-  const top = rows.filter(c => !c.parent_id).reverse(), kids = {};
-  rows.filter(c => c.parent_id).forEach(c => (kids[c.parent_id] = kids[c.parent_id] || []).push(c));
+  const rows = await db(sb.from('comments').select('id,user_id,display_name,body,created_at,parent_id').eq('quiz_id', q.id).order('created_at', { ascending: true }).limit(500));
+  let likes = [];
+  if (rows.length) likes = await db(sb.from('comment_likes').select('comment_id,user_id').in('comment_id', rows.map(r => r.id))).catch(() => []);
+  CM.likeCount = {}; CM.mine = new Set();
+  likes.forEach(l => { CM.likeCount[l.comment_id] = (CM.likeCount[l.comment_id] || 0) + 1; if (S.me && l.user_id === S.me.id) CM.mine.add(l.comment_id); });
+  const byParent = {};
+  rows.forEach(c => { const p = c.parent_id || '_root'; (byParent[p] = byParent[p] || []).push(c); });
   box.innerHTML = (loggedIn() && !S.me.banned ? `<div class="row"><input class="inp" id="cm-in" maxlength="1000" placeholder="Write a comment…"><button class="btn brass" data-act="cm-post">Post</button></div>` : `<div class="hint">${S.me && S.me.banned ? 'Your account is suspended.' : '<a class="link" href="#/auth/login">Sign in</a> to comment.'}</div>`)
-    + `<div id="cm-list" class="gap">${cmRows(top, kids)}</div>`;
+    + `<div id="cm-list" class="gap">${cmTree(byParent, '_root', 0)}</div>`;
 }
-const cmOne = (c, isReply) => `<div class="person cmt${isReply ? ' reply' : ''}" style="align-items:flex-start" data-cid="${c.id}"><span class="avatar${isReply ? ' sm' : ''}">${esc(initial(c.display_name))}</span><div class="grow" style="min-width:0"><div class="row" style="gap:8px"><b class="sm">@${esc(c.display_name || 'user')}</b><span class="xs dim">${ago(c.created_at)}</span></div><div style="word-break:break-word;line-height:1.5">${nl2br(c.body)}</div>
-  <div class="row gap0" style="gap:14px;margin-top:2px">${!isReply && loggedIn() && !S.me.banned ? `<button class="link xs" data-act="cm-showreply" data-id="${c.id}">Reply</button>` : ''}${S.me && (c.user_id === S.me.id || Q.isMgr) ? `<button class="link xs bad" data-act="cm-del" data-id="${c.id}">Delete</button>` : ''}</div>
+function cmTree(byParent, pid, depth) {
+  const kids = (byParent[pid] || []).slice().reverse();
+  if (!kids.length) return depth === 0 ? '<div class="hint">No comments yet. Be the first.</div>' : '';
+  return kids.map(c => cmOne(c, depth) + cmTree(byParent, c.id, depth + 1)).join('');
+}
+const cmOne = (c, depth) => {
+  const n = CM.likeCount[c.id] || 0, liked = CM.mine.has(c.id);
+  return `<div class="person cmt${depth ? ' reply' : ''}" style="align-items:flex-start;margin-left:${Math.min(depth, 6) * 16}px" data-cid="${c.id}"><span class="avatar${depth ? ' sm' : ''}">${esc(initial(c.display_name))}</span><div class="grow" style="min-width:0"><div class="row" style="gap:8px"><b class="sm">@${esc(c.display_name || 'user')}</b><span class="xs dim">${ago(c.created_at)}</span></div><div style="word-break:break-word;line-height:1.5">${nl2br(c.body)}</div>
+  <div class="row gap0" style="gap:14px;margin-top:2px">${loggedIn() && !S.me.banned ? `<button class="link xs ${liked ? 'brass' : ''}" data-act="cm-like" data-id="${c.id}">${ic('heart', 12)} ${n || ''}</button>` : (n ? `<span class="xs dim">${ic('heart', 12)} ${n}</span>` : '')}${loggedIn() && !S.me.banned ? `<button class="link xs" data-act="cm-showreply" data-id="${c.id}">Reply</button>` : ''}${S.me && (c.user_id === S.me.id || Q.isMgr) ? `<button class="link xs bad" data-act="cm-del" data-id="${c.id}">Delete</button>` : ''}</div>
   <div id="rf-${c.id}" hidden></div></div></div>`;
-const cmRows = (top, kids) => top.length ? top.map(c => cmOne(c, false) + (kids[c.id] || []).map(k => cmOne(k, true)).join('')).join('') : '<div class="hint">No comments yet. Be the first.</div>';
+};
 ACT['cm-post'] = async btn => {
   const v = $('#cm-in').value.trim(); if (!v) return; busy(btn, true);
   try { await db(sb.from('comments').insert({ quiz_id: Q.quiz.id, user_id: S.me.id, body: v })); Q.quiz.comments_count++; await cmLoad(); } finally { busy(btn, false); }
 };
 ACT['cm-del'] = async el => { await db(sb.from('comments').delete().eq('id', el.dataset.id)); Q.quiz.comments_count = Math.max(0, Q.quiz.comments_count - 1); await cmLoad(); };
+ACT['cm-like'] = async el => {
+  if (!loggedIn()) return needLogin('Sign in to like comments');
+  const id = el.dataset.id;
+  try {
+    if (CM.mine.has(id)) { await db(sb.from('comment_likes').delete().eq('comment_id', id).eq('user_id', S.me.id)); CM.mine.delete(id); CM.likeCount[id] = Math.max(0, (CM.likeCount[id] || 1) - 1); }
+    else { await db(sb.from('comment_likes').insert({ comment_id: id, user_id: S.me.id })); CM.mine.add(id); CM.likeCount[id] = (CM.likeCount[id] || 0) + 1; }
+    el.classList.toggle('brass', CM.mine.has(id)); el.innerHTML = `${ic('heart', 12)} ${CM.likeCount[id] || ''}`;
+  } catch (e) { errHandler(e); }
+};
 ACT['cm-showreply'] = el => {
   const box = $('#rf-' + el.dataset.id); if (!box) return;
   box.hidden = false; box.innerHTML = `<div class="row gap0" style="margin-top:8px"><input class="inp" id="ri-${el.dataset.id}" maxlength="1000" placeholder="Write a reply…"><button class="btn sm brass" data-act="cm-reply" data-id="${el.dataset.id}">Reply</button></div>`;
@@ -2074,7 +2148,7 @@ ACT['cm-reply'] = async (el, ev) => {
 };
 
 /* ---------- leaderboard ---------- */
-const LB = { data: null, mode: 'all', quiz: null, view: 'score' };
+const LB = { data: null, mode: 'all', quiz: null, view: 'score', search: '' };
 async function lbLoad(quiz) {
   const q = quiz || Q.quiz; LB.quiz = q; LB.mode = 'all'; LB.view = 'score';
   const box = $('#lb-body'); if (!box) return;
@@ -2099,6 +2173,8 @@ function lbRender() {
     rows = d.rows.map(r => { const s = (r.subjects || []).find(z => z.set_id === LB.mode); return s ? { name: r.name, score: +s.score, total: +s.total, pct: s.total > 0 ? s.score / s.total * 100 : 0, me: r.me, time: r.time, sub: [], pass: null } : null; }).filter(Boolean)
       .sort((a, b) => b.score - a.score || (a.time || 1e9) - (b.time || 1e9)).map((r, i, arr) => Object.assign(r, { rank: 1 + arr.filter(x => x.score > r.score).length }));
   }
+  if (LB.search) rows = rows.filter(r => (r.name || '').toLowerCase().includes(LB.search));
+  if (LB.search && !rows.length) return '<div class="hint">No one matches that search.</div>';
   const tabs = subs.length > 1 ? `<div class="chips"><button class="chip ${LB.mode === 'all' ? 'on' : ''}" data-act="lb-mode" data-m="all">Overall</button>${subs.map(s => `<button class="chip ${LB.mode === s.set_id ? 'on' : ''}" data-act="lb-mode" data-m="${s.set_id}">${esc(s.name)}</button>`).join('')}</div>` : '';
   const toggle = `<div class="row between gap0" style="align-items:center;margin-top:10px"><span class="xs dim">Ranked by each person's first attempt</span><div class="seg sm" id="lb-view"><button class="${pctView ? '' : 'on'}" data-act="lb-view" data-v="score">Score</button><button class="${pctView ? 'on' : ''}" data-act="lb-view" data-v="pct">%</button></div></div>`;
   const pod = rows.slice(0, 3);
@@ -2117,6 +2193,66 @@ function lbRender() {
 }
 ACT['lb-mode'] = el => { LB.mode = el.dataset.m; $('#lb-body').innerHTML = lbRender(); };
 ACT['lb-view'] = el => { LB.view = el.dataset.v; $('#lb-body').innerHTML = lbRender(); };
+
+/* ---------- leaderboard: dedicated full-screen page ---------- */
+async function vLeaderboardFull([key], query, tok) {
+  setView(`<div class="wrap"><div class="spin"></div></div>`);
+  const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(key); if (!isId && /^[a-f0-9]{8}$/i.test(key)) key = key.toLowerCase();
+  const quiz = await db(sb.from('quizzes').select('*').eq(isId ? 'id' : 'share_code', key).maybeSingle());
+  if (stale(tok)) return;
+  if (!quiz) { setView(`<div class="wrap">${emptyBox('lock', 'Quiz not found')}</div>`); return; }
+  Q.quiz = quiz; LB.search = '';
+  setView(`<div class="wrap"><div class="row"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><h1 class="h2 grow">Leaderboard</h1>${quiz.allow_sharing ? `<button class="btn sm" data-act="q-share">${ic('share', 14)} Share</button>` : ''}</div>
+    <input class="inp gap" id="lb-search" placeholder="Search participant by name">
+    <div id="lb-body" class="gap"><div class="spin"></div></div></div>`);
+  await lbLoad(quiz);
+  const s = $('#lb-search'); if (s) s.addEventListener('input', debounce(() => { LB.search = s.value.trim().toLowerCase(); $('#lb-body').innerHTML = lbRender(); }, 150));
+}
+
+/* ---------- attempts: dedicated full-screen activity feed ---------- */
+const AF = { data: null, filter: 'all', search: '' };
+async function vAttemptsFull([key], query, tok) {
+  setView(`<div class="wrap"><div class="spin"></div></div>`);
+  const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(key); if (!isId && /^[a-f0-9]{8}$/i.test(key)) key = key.toLowerCase();
+  const quiz = await db(sb.from('quizzes').select('*').eq(isId ? 'id' : 'share_code', key).maybeSingle());
+  if (stale(tok)) return;
+  if (!quiz) { setView(`<div class="wrap">${emptyBox('lock', 'Quiz not found')}</div>`); return; }
+  Q.quiz = quiz; AF.filter = 'all'; AF.search = '';
+  setView(`<div class="wrap"><div class="row"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><h1 class="h2 grow" id="af-title">Attempts</h1></div>
+    <input class="inp gap" id="af-search" placeholder="Search…">
+    <div class="chips gap" id="af-tabs"></div>
+    <div id="af-body" class="gap"><div class="spin"></div></div></div>`);
+  if (!S.me) { $('#af-body').innerHTML = '<div class="hint"><a class="link" href="#/auth/login">Sign in</a> to see attempts.</div>'; return; }
+  try { AF.data = await rpc('get_attempt_feed', { p_quiz_id: quiz.id }); }
+  catch (e) { $('#af-body').innerHTML = `<div class="hint bad">${esc(cleanErr(e))}</div>`; return; }
+  if (stale(tok)) return;
+  afRender();
+  const s = $('#af-search'); if (s) s.addEventListener('input', debounce(() => { AF.search = s.value.trim().toLowerCase(); afRender(); }, 150));
+}
+function afStatus(r) { return r.status === 'ongoing' ? 'ongoing' : (r.status === 'submitted' || r.status === 'completed') ? 'completed' : 'cancelled'; }
+function afRender() {
+  const d = AF.data; if (!d) return;
+  if (!d.visible) { $('#af-body').innerHTML = `<div class="hint">${ic('lock', 14)} Attempts open when the creator releases results.</div>`; $('#af-tabs').innerHTML = ''; return; }
+  const rows = d.rows || [];
+  const cnt = { all: rows.length, completed: 0, cancelled: 0, ongoing: 0 };
+  rows.forEach(r => cnt[afStatus(r)]++);
+  $('#af-title').textContent = `${cnt.all} ${cnt.all === 1 ? 'person' : 'people'} attempted this quiz`;
+  $('#af-tabs').innerHTML = [['all', 'All', cnt.all], ['completed', 'Completed', cnt.completed], ['cancelled', 'Cancelled', cnt.cancelled], ['ongoing', 'Pending', cnt.ongoing]]
+    .map(([k, l, n]) => `<button class="chip ${AF.filter === k ? 'on' : ''}" data-act="af-filter" data-f="${k}">${l} <b>${n}</b></button>`).join('');
+  let list = AF.filter === 'all' ? rows : rows.filter(r => afStatus(r) === AF.filter);
+  if (AF.search) list = list.filter(r => (r.name || '').toLowerCase().includes(AF.search));
+  $('#af-body').innerHTML = list.length ? list.map(afRow).join('') : emptyBox('users', 'No attempts yet');
+}
+function afRow(r) {
+  const st = afStatus(r);
+  const badge = st === 'ongoing' ? `<span class="badge">ONGOING</span>` : st === 'completed' ? `<span class="badge ok">COMPLETED ${r.time ? fmtDur(r.time) : ''}</span>` : `<span class="badge bad">CANCELLED</span>`;
+  const score = st === 'ongoing' ? `<span class="badge"><span class="xs">SCORE</span> --</span>` : `<span class="badge ${r.passed ? 'ok' : 'bad'}"><span class="xs">SCORE</span> ${num(r.percentage, 0)}%</span>`;
+  return `<div class="card tight gap0"><div class="row between" style="align-items:flex-start">
+      <div class="row" style="gap:10px"><span class="avatar">${esc(initial(r.name))}</span><div><div class="b">${esc(r.name || 'Anonymous')}${r.guest ? ' <span class="xs mut">(guest)</span>' : ''}</div><div class="xs mut">${fmtDT(r.started_at)}</div></div></div>
+      <span class="badge">1 ATTEMPT</span></div>
+    <div class="row between gap0" style="margin-top:10px;align-items:center">${score}${badge}</div></div>`;
+}
+ACT['af-filter'] = el => { AF.filter = el.dataset.f; afRender(); };
 
 
 /* ============================================================
@@ -2376,26 +2512,17 @@ async function tkGuardsStart() {
   if (q.anticheat_voice) await tkMicStart();
 }
 const setMic = (txt, lvl, cls) => { const t = $('#mic-txt'), l = $('#mic-lvl'); if (t) { t.textContent = txt; t.className = 'xs ' + (cls || 'mut'); } if (l && lvl != null) l.style.width = clamp(lvl, 0, 100) + '%'; };
-const MIC_MODES = {
-  aggressive: { calMs: 3000, thMult: 3, histLen: 14, need: 5, tickMs: 80 },
-  balanced: { calMs: 3000, thMult: 3.6, histLen: 22, need: 10, tickMs: 80 },
-  gentle: { calMs: 3500, thMult: 4.4, histLen: 30, need: 16, tickMs: 80 }
-};
-function micModeFor(t) {
-  const key = (t.quiz && t.quiz.anticheat_voice_mode) || 'aggressive';
-  return MIC_MODES[key] || MIC_MODES.aggressive;
-}
 async function tkMicStart() {
   const t = T;
   try {
-    const mm = micModeFor(t);
     const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } });
     const Ctx = window.AudioContext || window.webkitAudioContext; const ctx = new Ctx();
     const an = ctx.createAnalyser(); an.fftSize = 2048; an.smoothingTimeConstant = 0.2; ctx.createMediaStreamSource(stream).connect(an);
-    t.mic = { stream, ctx, an, buf: new Float32Array(an.fftSize), cal: [], calUntil: Date.now() + mm.calMs, base: 0.004, th: 0.02, hist: [], ready: false, mm };
+    const vm = VOICE_MODES[t.quiz.anticheat_voice_mode] || VOICE_MODES.aggressive;
+    t.mic = { stream, ctx, an, buf: new Float32Array(an.fftSize), cal: [], calUntil: Date.now() + 3000, base: 0.004, th: 0.02, hist: [], ready: false, vm };
     const wake = () => { if (t.mic && ctx.state !== 'running') ctx.resume().catch(() => { }); };
     wake(); document.addEventListener('pointerdown', wake, true); t.G.push(() => document.removeEventListener('pointerdown', wake, true));
-    t.micId = setInterval(() => tkMicTick(t), mm.tickMs);
+    t.micId = setInterval(() => tkMicTick(t), 80);
   } catch (e) {
     t.cheat.push({ t: new Date().toISOString(), r: 'microphone unavailable: ' + (e && e.name || 'error'), n: 0 });
     setMic('Microphone blocked. Allow it in the browser site settings.', 0, 'bad');
@@ -2403,16 +2530,16 @@ async function tkMicStart() {
 }
 function tkMicTick(t) {
   const m = t.mic; if (!m || t.done || t !== T) return;
-  const mm = m.mm || MIC_MODES.aggressive;
   if (m.ctx.state !== 'running') { m.ctx.resume().catch(() => { }); setMic('Microphone paused. Tap the screen.', 0, 'warnc'); return; }
   m.an.getFloatTimeDomainData(m.buf);
   let s = 0; for (let i = 0; i < m.buf.length; i++) s += m.buf[i] * m.buf[i]; const rms = Math.sqrt(s / m.buf.length);
   if (Date.now() < m.calUntil) { m.cal.push(rms); setMic('Listening to the room… stay quiet', rms * 900); return; }
-  if (!m.ready) { const sorted = m.cal.slice().sort((a, b) => a - b); m.base = sorted[Math.floor(sorted.length / 2)] || 0.003; m.th = Math.max(0.018, m.base * mm.thMult); m.ready = true; }
-  if (rms < m.th * 0.6) { m.base = m.base * 0.97 + rms * 0.03; m.th = Math.max(0.018, m.base * mm.thMult); }
-  m.hist.push(rms > m.th ? 1 : 0); if (m.hist.length > mm.histLen) m.hist.shift();
+  const vm = m.vm || VOICE_MODES.aggressive;
+  if (!m.ready) { const sorted = m.cal.slice().sort((a, b) => a - b); m.base = sorted[Math.floor(sorted.length / 2)] || 0.003; m.th = Math.max(0.018, m.base * vm.thMul); m.ready = true; }
+  if (rms < m.th * 0.6) { m.base = m.base * 0.97 + rms * 0.03; m.th = Math.max(0.018, m.base * vm.thMul); }
+  m.hist.push(rms > m.th ? 1 : 0); if (m.hist.length > vm.win) m.hist.shift();
   setMic('Microphone is listening', rms / (m.th * 2) * 100, 'ok');
-  if (m.hist.reduce((a, b) => a + b, 0) >= mm.need) { m.hist = []; tkViolation('voice or loud sound was heard'); }
+  if (m.hist.reduce((a, b) => a + b, 0) >= vm.need) { m.hist = []; tkViolation('voice or loud sound was heard'); }
 }
 function tkViolation(reason) {
   const t = T; if (!t || t.done || t.submitting || t.vio || t.preview || Date.now() < (t.armedAt || 0)) return;
@@ -2522,9 +2649,10 @@ function resultScreen(d) {
     ${r.pending_review ? `<div class="card gap" style="border-color:var(--warn)"><b class="warnc">Essay answers waiting</b><div class="sm mut">Your essay marks will be added when the quiz creator marks them.</div></div>` : ''}
     <div class="stats gap"><div class="stat"><b>${r.time_taken_sec != null ? fmtDur(r.time_taken_sec) : '-'}</b><span>Time used</span></div><div class="stat"><b>${num(r.score)}</b><span>Marks</span></div><div class="stat"><b>${num(r.total)}</b><span>Total</span></div></div>
     ${subs.length > 1 ? `<div class="card gap"><div class="b">By subject</div>${subs.map(x => { const p = x.total > 0 ? x.score / x.total * 100 : 0; return `<div class="gap0"><div class="row between sm"><span>${esc(x.name)}</span><span class="b">${num(x.score)} / ${num(x.total)}${q.show_percentage ? ` (${num(p, 0)}%)` : ''}</span></div><div class="bar" style="margin-top:5px"><i style="width:${p}%"></i></div></div>`; }).join('')}<div class="row between gap0 b" style="border-top:1px solid var(--line);padding-top:10px"><span>Aggregate</span><span class="brass">${num(r.score)} / ${num(r.total)}</span></div></div>` : ''}
+    ${!d.preview && r.passed && q.prize_enabled ? `<div class="card gap" id="pz-card"><div class="b">${ic('zap', 16)} ${esc((q.prize_text && q.prize_text.desc) || 'Prize')}</div><div class="sm mut gap0">${q.prize_mode === 'passmark' ? 'Everyone who passes qualifies. ' : 'Only the top 3 win. '}Submit your bank details to claim it if you win.</div><button class="btn brass sm gap" data-act="pz-open" data-aid="${esc(att.id)}">Claim prize</button></div>` : ''}
     <div class="col gap">
       ${canRev ? `<button class="btn block" data-act="${d.preview ? 'pv-review' : 'res-review'}" data-id="${esc(att.id)}">${ic('eye', 18)} Review answers</button>` : ''}
-      ${!d.preview && (q.leaderboard_enabled || q.is_challenge) ? `<a class="btn block" href="#/quiz/${esc(q.share_code)}">${ic('trophy', 18)} See the leaderboard</a>` : ''}
+      ${!d.preview && (q.leaderboard_enabled || q.is_challenge) ? `<a class="btn block" href="#/leaderboard/${esc(q.share_code)}">${ic('trophy', 18)} See the leaderboard</a>` : ''}
       ${!d.preview && !other ? `<button class="btn block" data-act="res-share">${ic('share', 18)} Share my result</button>` : ''}
       ${S.me && S.me.anon ? `<a class="btn brass block" href="#/auth/signup">Create an account to keep your results</a>` : ''}
       ${back}</div></div>`);
@@ -2542,6 +2670,24 @@ ACT['res-share'] = async () => {
 };
 ACT['res-review'] = el => nav('/review/' + el.dataset.id);
 ACT['pv-review'] = () => reviewScreen(Object.assign({}, RES.d, { mgr: true }));
+ACT['pz-open'] = el => {
+  const aid = el.dataset.aid;
+  openSheet(`<h3 class="h2">Claim your prize</h3><p class="mut sm gap0">Enter the account this prize should be paid into. The quiz owner settles payouts directly.</p>
+    <label class="lbl" for="pz-an">Account name</label><input class="inp" id="pz-an" maxlength="120">
+    <label class="lbl" for="pz-bn">Bank name</label><input class="inp" id="pz-bn" maxlength="120">
+    <label class="lbl" for="pz-num">Account number</label><input class="inp" id="pz-num" inputmode="numeric" maxlength="20">
+    <div class="err" id="pz-err"></div>
+    <button class="btn brass block gap" id="pz-go" data-act="pz-submit" data-aid="${esc(aid)}">Submit claim</button>`);
+};
+ACT['pz-submit'] = async btn => {
+  const aid = btn.dataset.aid, an = $('#pz-an').value.trim(), bn = $('#pz-bn').value.trim(), num2 = $('#pz-num').value.trim();
+  if (an.length < 2 || bn.length < 2 || !/^\d{6,20}$/.test(num2)) { $('#pz-err').textContent = 'Fill in a valid account name, bank and account number.'; return; }
+  busy(btn, true);
+  try {
+    const res = await rpc('submit_prize_claim', { p_attempt_id: aid, p_account_name: an, p_bank_name: bn, p_account_number: num2 });
+    closeSheet(); toast(res.rank ? `Claim submitted — you're rank ${res.rank}` : 'Claim submitted', 'ok');
+  } catch (e) { busy(btn, false); $('#pz-err').textContent = cleanErr(e); }
+};
 
 async function vReview([aid], query, tok) {
   if (!S.me) { nav('/auth/login'); return; }
