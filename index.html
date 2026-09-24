@@ -1409,6 +1409,13 @@ function edRenderDetails() {
       <div style="width:110px"><label class="lbl" for="d-curr">Currency</label><select class="inp" id="d-curr"><option value="NGN" ${q.price_currency === 'NGN' ? 'selected' : ''}>NGN</option><option value="USD" ${q.price_currency === 'USD' ? 'selected' : ''}>USD</option><option value="GHS" ${q.price_currency === 'GHS' ? 'selected' : ''}>GHS</option></select></div></div>
       <label class="lbl" for="d-pstk">Paystack public key</label><input class="inp" id="d-pstk" value="${esc(q.paystack_public_key || '')}" placeholder="pk_live_… or pk_test_…">
       <div class="hint">Guests cannot take a paid quiz — payers must be signed in.</div>
+      <div class="card tight gap" style="margin-top:10px">
+        <label class="lbl" for="pstk-secret">Paystack secret key</label>
+        <input class="inp" id="pstk-secret" type="password" autocomplete="off" placeholder="sk_live_… or sk_test_…">
+        <div class="hint">Different from the public key above — find it in Paystack → Settings → API Keys & Webhooks → Secret Key. This is what actually verifies a payment really happened, so payments won't confirm without it. Stored securely; never shown again once saved.</div>
+        <div class="err" id="pstk-err"></div>
+        <button class="btn sm gap0" data-act="pstk-save">Save secret key</button>
+      </div>
     </div>
     ${swRow('d-prize', 'Offer a prize', 'Winners submit their bank details to claim it. You settle payouts yourself.', q.prize_enabled, { reveal: 'sub-prize' })}
     <div class="sub" id="sub-prize" ${q.prize_enabled ? '' : 'hidden'}>
@@ -1425,6 +1432,14 @@ CHG.reveal = el => { const t = $('#' + el.dataset.target); if (t) t.hidden = !el
 CHG.acsync = el => { const r = $('#d-resume'); if (r) { r.disabled = el.checked; if (el.checked) r.checked = false; } };
 CHG.relmode = el => { $('#rel-at').hidden = el.value !== 'scheduled'; };
 ACT.pzmode = el => { $$('#pz-seg button').forEach(b => b.classList.toggle('on', b === el)); };
+ACT['pstk-save'] = async btn => {
+  const key = $('#pstk-secret').value.trim(); $('#pstk-err').textContent = '';
+  if (key.length < 10) { $('#pstk-err').textContent = 'Enter your Paystack secret key.'; return; }
+  busy(btn, true);
+  try { await rpc('set_paystack_secret_key', { p_key: key }); $('#pstk-secret').value = ''; toast('Secret key saved', 'ok'); }
+  catch (e) { $('#pstk-err').textContent = cleanErr(e); }
+  finally { busy(btn, false); }
+};
 ACT.vis = el => {
   E.vis = el.dataset.v; $$('#vis-seg button').forEach(b => b.classList.toggle('on', b.dataset.v === E.vis));
   $('#vis-hint').textContent = E.vis === 'public' ? 'Listed in Explore. Anyone can open it.' : 'Not listed. Only people you invite can open it.';
