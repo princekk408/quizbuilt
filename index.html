@@ -987,7 +987,7 @@ async function vAuth([mode], q, tok) {
     $('#l-pw').addEventListener('keydown', e => { if (e.key === 'Enter') ACT.login($('#l-go')); });
   } else if (mode === 'signup') {
     setView(`<div class="wrap narrow">${head('Create your account', 'Pick a username. It is the name others will see.')}
-      <div class="card gap">
+      <div class="card gap" id="su-box">
         <label class="lbl" for="s-un">Username</label><input class="inp" id="s-un" maxlength="20" autocapitalize="none" autocomplete="username" placeholder="e.g. Ogonor20008" data-inp="unamechk">
         <div class="hint" id="un-hint">3–20 letters, numbers, dot or underscore.</div>
         <label class="lbl" for="s-em">Email</label><input class="inp" id="s-em" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com">
@@ -1062,18 +1062,43 @@ ACT.signup = async btn => {
   try {
     if (S.me && S.me.anon) { await sb.auth.signOut(); }
     if (!(await rpc('username_available', { p_username: un }))) throw new Error('That username is taken. Try another one.');
-    const { data, error } = await sb.auth.signUp({ email: em, password: pw, options: { data: { username: un } } });
+    await rpc('request_signup_code', { p_email: em, p_username: un, p_password: pw });
+    AUTH.pending = { em, un, pw, sq, sa };
+    signupCodeScreen(em);
+  } catch (e) { authErr(mapAuthError(e)); busy(btn, false); }
+};
+function signupCodeScreen(em) {
+  $('#su-box').innerHTML = `<div class="badge gold">${ic('mail' in ICONS ? 'mail' : 'check', 14)} Check your inbox</div>
+    <p class="mut gap0">We sent a 6-digit code to <b>${esc(em)}</b>. It expires in 10 minutes.</p>
+    <label class="lbl" for="v-code">Verification code</label>
+    <input class="inp" id="v-code" inputmode="numeric" maxlength="6" placeholder="000000" style="letter-spacing:8px;font-size:22px;text-align:center;font-weight:700">
+    <div class="err" id="auth-err"></div>
+    <button class="btn brass block gap" id="v-go" data-act="signup-verify">Verify & create account</button>
+    <div class="center sm gap">Didn't get it? <button class="link" data-act="signup-resend">Resend code</button></div>`;
+  const c = $('#v-code'); if (c) { c.focus(); c.addEventListener('keydown', e => { if (e.key === 'Enter') ACT['signup-verify']($('#v-go')); }); }
+}
+ACT['signup-verify'] = async btn => {
+  authErr('');
+  if (!AUTH.pending) return authErr('Session expired — please start signup again.');
+  const code = $('#v-code').value.trim();
+  if (!/^\d{6}$/.test(code)) return authErr('Enter the 6-digit code.');
+  busy(btn, true);
+  try {
+    await rpc('verify_signup_code', { p_email: AUTH.pending.em, p_code: code });
+    const { error } = await sb.auth.signInWithPassword({ email: AUTH.pending.em, password: AUTH.pending.pw });
     if (error) throw error;
-    let session = data.session;
-    if (!session) { const r = await sb.auth.signInWithPassword({ email: em, password: pw }); if (!r.error) session = r.data.session; }
-    if (!session) {
-      setView(`<div class="wrap narrow"><div class="card gap center">${ic('check', 34)}<h2 class="h2 gap0">Account created</h2><p class="mut gap0">We sent a confirmation link to <b>${esc(em)}</b>. Confirm it, then sign in.</p><a class="btn brass block gap" href="#/auth/login">Go to sign in</a></div></div>`);
-      return;
-    }
-    try { await rpc('set_security_qa', { p_question: sq, p_answer: sa }); } catch (e) { toast('Account created, but the security question was not saved. Add it in Account → Settings.', 'bad'); }
+    try { await rpc('set_security_qa', { p_question: AUTH.pending.sq, p_answer: AUTH.pending.sa }); } catch (e) { toast('Account created, but the security question was not saved. Add it in Account → Settings.', 'bad'); }
+    AUTH.pending = null;
     await loadMe(); renderChrome(); toast('Welcome, ' + S.me.username + '!', 'ok');
     const to = S.returnTo || '/'; S.returnTo = null; nav(to);
   } catch (e) { authErr(mapAuthError(e)); busy(btn, false); }
+};
+ACT['signup-resend'] = async btn => {
+  authErr(''); if (!AUTH.pending) return authErr('Session expired — please start signup again.');
+  busy(btn, true);
+  try { await rpc('request_signup_code', { p_email: AUTH.pending.em, p_username: AUTH.pending.un, p_password: AUTH.pending.pw }); toast('Code resent', 'ok'); }
+  catch (e) { authErr(mapAuthError(e)); }
+  busy(btn, false);
 };
 ACT.forgot1 = async btn => {
   const em = $('#f-em').value.trim(); authErr('');
