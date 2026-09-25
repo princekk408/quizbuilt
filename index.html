@@ -994,7 +994,7 @@ async function vAuth([mode], q, tok) {
         ${pwField('s-pw', 'Password', 'At least 8 characters')}
         <div class="meter"><i id="pw-m"></i></div>
         ${pwField('s-pw2', 'Confirm password', 'Type it again')}
-        <label class="lbl" for="s-sq">Security question</label>
+        <label class="lbl" for="s-sq">Security question <span class="mut" style="font-weight:400">(optional)</span></label>
         <select class="inp" id="s-sq" data-chg="sqsel">${SEC_QUESTIONS.map(x => `<option>${esc(x)}</option>`).join('')}<option value="__own">Write my own question…</option></select>
         <input class="inp" id="s-sq2" placeholder="Your own question" style="display:none;margin-top:8px">
         <label class="lbl" for="s-sa">Answer</label><input class="inp" id="s-sa" autocomplete="off" placeholder="Your answer">
@@ -1006,7 +1006,7 @@ async function vAuth([mode], q, tok) {
     $('#s-pw').setAttribute('data-inp', 'pwmeter');
   } else {
     AUTH.step = 1;
-    setView(`<div class="wrap narrow">${head('Reset password', 'Answer your security question to set a new password.')}
+    setView(`<div class="wrap narrow">${head('Reset password', 'Enter your email and we will send you a verification code.')}
       <div class="card gap" id="fg-box">
         <label class="lbl" for="f-em">Your email</label><input class="inp" id="f-em" type="email" inputmode="email" placeholder="you@example.com">
         <div class="err" id="auth-err"></div>
@@ -1056,8 +1056,8 @@ ACT.signup = async btn => {
   if (!/^\S+@\S+\.\S+$/.test(em)) return authErr('Enter a valid email address.');
   if (pw.length < 8) return authErr('Password must be at least 8 characters.');
   if (pw !== pw2) return authErr('The two passwords do not match.');
-  if (sq.length < 5) return authErr('Write a security question.');
-  if (sa.length < 2) return authErr('Enter an answer to your security question.');
+  if (sa && sq.length < 5) return authErr('Write a security question, or leave both blank.');
+  if (sq.length >= 5 && !sa) return authErr('Enter an answer, or leave both blank.');
   busy(btn, true);
   try {
     if (S.me && S.me.anon) { await sb.auth.signOut(); }
@@ -1087,7 +1087,7 @@ ACT['signup-verify'] = async btn => {
     await rpc('verify_signup_code', { p_email: AUTH.pending.em, p_code: code });
     const { error } = await sb.auth.signInWithPassword({ email: AUTH.pending.em, password: AUTH.pending.pw });
     if (error) throw error;
-    try { await rpc('set_security_qa', { p_question: AUTH.pending.sq, p_answer: AUTH.pending.sa }); } catch (e) { toast('Account created, but the security question was not saved. Add it in Account → Settings.', 'bad'); }
+    if (AUTH.pending.sa) { try { await rpc('set_security_qa', { p_question: AUTH.pending.sq, p_answer: AUTH.pending.sa }); } catch (e) { /* optional — no need to bother the user if this fails */ } }
     AUTH.pending = null;
     await loadMe(); renderChrome(); toast('Welcome, ' + S.me.username + '!', 'ok');
     const to = S.returnTo || '/'; S.returnTo = null; nav(to);
@@ -1105,24 +1105,50 @@ ACT.forgot1 = async btn => {
   if (!/^\S+@\S+\.\S+$/.test(em)) return authErr('Enter your email address.');
   busy(btn, true);
   try {
-    const q = await rpc('get_security_question', { p_email: em });
-    if (!q) throw new Error('No security question is set for that email. Password reset is not available for it.');
+    await rpc('request_password_reset', { p_email: em });
     AUTH.email = em;
-    $('#fg-box').innerHTML = `<div class="badge gold">Your security question</div><p class="b gap0" style="font-size:17px">${esc(q)}</p>
-      <label class="lbl" for="f-an">Your answer</label><input class="inp" id="f-an" autocomplete="off">
-      ${pwField('f-pw', 'New password', 'At least 8 characters')}${pwField('f-pw2', 'Confirm new password')}
-      <div class="err" id="auth-err"></div><button class="btn brass block gap" data-act="forgot2">Reset password</button>`;
-  } catch (e) { authErr(cleanErr(e)); busy(btn, false); }
+    $('#fg-box').innerHTML = `<div class="badge gold">${ic('mail' in ICONS ? 'mail' : 'check', 14)} Check your inbox</div>
+      <p class="mut gap0">If an account exists for <b>${esc(em)}</b>, we sent it a 6-digit code. It expires in 10 minutes.</p>
+      <label class="lbl" for="f-code">Verification code</label>
+      <input class="inp" id="f-code" inputmode="numeric" maxlength="6" placeholder="000000" style="letter-spacing:8px;font-size:22px;text-align:center;font-weight:700">
+      <div class="err" id="auth-err"></div>
+      <button class="btn brass block gap" data-act="forgot2">Verify code</button>
+      <div class="center sm gap">Didn't get it? <button class="link" data-act="forgot-resend">Resend code</button></div>`;
+    const c = $('#f-code'); if (c) c.focus();
+  } catch (e) { authErr(cleanErr(e)); }
+  busy(btn, false);
+};
+ACT['forgot-resend'] = async btn => {
+  authErr(''); busy(btn, true);
+  try { await rpc('request_password_reset', { p_email: AUTH.email }); toast('Code resent', 'ok'); }
+  catch (e) { authErr(cleanErr(e)); }
+  busy(btn, false);
 };
 ACT.forgot2 = async btn => {
-  const an = $('#f-an').value, pw = $('#f-pw').value, pw2 = $('#f-pw2').value; authErr('');
-  if (!an.trim()) return authErr('Enter your answer.');
-  if (pw.length < 8) return authErr('Password must be at least 8 characters.');
-  if (pw !== pw2) return authErr('The two passwords do not match.');
+  authErr('');
+  const code = $('#f-code').value.trim();
+  if (!/^\d{6}$/.test(code)) return authErr('Enter the 6-digit code.');
   busy(btn, true);
   try {
-    const r = await rpc('reset_password_with_answer', { p_email: AUTH.email, p_answer: an, p_new_password: pw });
-    if (r !== 'ok') throw new Error(r);
+    const r = await rpc('verify_password_reset_otp', { p_email: AUTH.email, p_otp: code });
+    AUTH.resetToken = r.token;
+    $('#fg-box').innerHTML = `<div class="badge ok">${ic('check', 14)} Code verified</div>
+      <p class="mut gap0">Choose a new password for <b>${esc(AUTH.email)}</b>.</p>
+      ${pwField('f-pw', 'New password', 'At least 8 characters')}${pwField('f-pw2', 'Confirm new password')}
+      <div class="err" id="auth-err"></div><button class="btn brass block gap" data-act="forgot3">Set new password</button>`;
+  } catch (e) { authErr(cleanErr(e)); }
+  busy(btn, false);
+};
+ACT.forgot3 = async btn => {
+  authErr('');
+  const pw = $('#f-pw').value, pw2 = $('#f-pw2').value;
+  if (pw.length < 8) return authErr('Password must be at least 8 characters.');
+  if (pw !== pw2) return authErr('The two passwords do not match.');
+  if (!AUTH.resetToken) return authErr('This reset session expired. Please start again.');
+  busy(btn, true);
+  try {
+    await rpc('complete_password_reset', { p_email: AUTH.email, p_token: AUTH.resetToken, p_new_password: pw });
+    AUTH.resetToken = null;
     toast('Password changed. Sign in with the new one.', 'ok');
     if (loggedIn()) { await sb.auth.signOut(); await loadMe(); renderChrome(); }
     nav('/auth/login');
@@ -1146,7 +1172,7 @@ async function vHome(a, q, tok) {
       <div class="row gap wrapf"><a class="btn brass" href="#/auth/signup">Create free account</a><a class="btn" href="#/auth/login">Sign in</a></div></div>`;
   const join = `<div class="card tight gap"><div class="row"><input class="inp" id="join-code" placeholder="Have a quiz code or link?" autocapitalize="none" style="flex:1"><button class="btn" data-act="join">Open</button></div></div>`;
   const warn = li && me.banned ? `<div class="card gap" style="border-color:var(--bad)"><b class="bad">Your account is suspended.</b><div class="sm mut">You can browse, but you cannot take or create quizzes. Contact the admin.</div></div>` : '';
-  const qa = li && !me.hasQA && !me.banned ? `<div class="card gap" style="border-color:var(--warn)"><b class="warnc">Set a security question</b><div class="sm mut">Without one you cannot reset a forgotten password.</div><a class="btn sm gap0" href="#/me/settings">Set it now</a></div>` : '';
+  const qa = '';
   setView(`<div class="wrap">${hero}${warn}${qa}${join}<div id="home-cont"></div><div id="home-lists">${skel(3)}</div></div>`);
   $('#join-code').addEventListener('keydown', e => { if (e.key === 'Enter') ACT.join(); });
 
@@ -1241,7 +1267,7 @@ async function vMe([tab], q, tok) {
   } else {
     body.innerHTML = `<div class="card"><div class="b">${ic('palette', 16)} Appearance</div><div class="seg gap0"><button class="${document.documentElement.dataset.theme === 'dark' ? 'on' : ''}" data-act="settheme" data-t="dark">Dark</button><button class="${document.documentElement.dataset.theme === 'light' ? 'on' : ''}" data-act="settheme" data-t="light">Light</button></div>
         <div class="lbl">Colour theme</div><div class="swatches">${Object.entries(ACCENTS).map(([k, v]) => `<button class="swatch ${document.documentElement.dataset.accent === k ? 'on' : ''}" data-act="setaccent" data-a="${k}" style="--c1:${v[1]};--c2:${v[2]}"><i></i>${v[0]}</button>`).join('')}</div></div>
-      <div class="card"><div class="b">Security question</div><div class="hint">${me.hasQA ? 'You have one set. You can replace it below.' : 'Not set yet. You need this to reset a forgotten password.'}</div>
+      <div class="card"><div class="b">Security question</div><div class="hint">${me.hasQA ? 'You have one set. You can replace it below. This is optional and no longer needed to reset a forgotten password — that now goes through an emailed verification code.' : 'Optional — password reset now uses an emailed code instead, so this is no longer required.'}</div>
         <select class="inp gap0" id="m-sq" data-chg="msq">${SEC_QUESTIONS.map(x => `<option>${esc(x)}</option>`).join('')}<option value="__own">Write my own question…</option></select>
         <input class="inp" id="m-sq2" placeholder="Your own question" style="display:none;margin-top:8px"><input class="inp gap0" id="m-sa" placeholder="Answer" autocomplete="off">
         <button class="btn block gap" data-act="saveqa">Save security question</button></div>
