@@ -923,7 +923,7 @@ const ROUTES = [
   [/^\/take\/([\w-]+)$/, vTake], [/^\/preview\/([\w-]+)$/, vPreview],
   [/^\/result\/([\w-]+)$/, vResult], [/^\/review\/([\w-]+)$/, vReview],
   [/^\/results\/([\w-]+)$/, vOwnerResults],
-  [/^\/admin(?:\/(users|quizzes|attempts))?$/, vAdmin]
+  [/^\/admin(?:\/(users|quizzes|attempts|payments))?$/, vAdmin]
 ];
 async function render() {
   const { path, query } = parseHash();
@@ -968,6 +968,9 @@ const secT = (t, right = '') => `<div class="sec-t"><h2 class="h2">${esc(t)}</h2
    AUTH
    ============================================================ */
 const AUTH = { email: '' };
+try { const saved = JSON.parse(sessionStorage.getItem('qb_auth_flow') || 'null'); if (saved) Object.assign(AUTH, saved); } catch (e) { }
+function authPersist() { try { sessionStorage.setItem('qb_auth_flow', JSON.stringify({ email: AUTH.email, pending: AUTH.pending || null, resetToken: AUTH.resetToken || null })); } catch (e) { } }
+function authClearPersist() { try { sessionStorage.removeItem('qb_auth_flow'); } catch (e) { } }
 function pwField(id, label, ph = '') {
   return `<label class="lbl" for="${id}">${label}</label><div class="pw"><input class="inp" id="${id}" type="password" placeholder="${ph}" autocomplete="${id === 'l-pw' ? 'current-password' : 'new-password'}"><button type="button" class="eye" data-act="eye" aria-label="Show password">${ic('eye', 18)}</button></div>`;
 }
@@ -986,6 +989,11 @@ async function vAuth([mode], q, tok) {
       </div></div>`);
     $('#l-pw').addEventListener('keydown', e => { if (e.key === 'Enter') ACT.login($('#l-go')); });
   } else if (mode === 'signup') {
+    if (AUTH.pending && AUTH.pending.em) {
+      setView(`<div class="wrap narrow">${head('Create your account', 'Pick a username. It is the name others will see.')}<div class="card gap" id="su-box"></div></div>`);
+      signupCodeScreen(AUTH.pending.em);
+      return;
+    }
     setView(`<div class="wrap narrow">${head('Create your account', 'Pick a username. It is the name others will see.')}
       <div class="card gap" id="su-box">
         <label class="lbl" for="s-un">Username</label><input class="inp" id="s-un" maxlength="20" autocapitalize="none" autocomplete="username" placeholder="e.g. Ogonor20008" data-inp="unamechk">
@@ -1013,6 +1021,8 @@ async function vAuth([mode], q, tok) {
         <button class="btn brass block gap" data-act="forgot1">Continue</button>
         <div class="center sm gap"><a class="link" href="#/auth/login">Back to sign in</a></div>
       </div></div>`);
+    if (AUTH.resetToken && AUTH.email) forgotNewPwScreen(AUTH.email);
+    else if (AUTH.email) forgotCodeScreen(AUTH.email);
   }
 }
 INP.unamechk = debounce(async el => {
@@ -1063,7 +1073,7 @@ ACT.signup = async btn => {
     if (S.me && S.me.anon) { await sb.auth.signOut(); }
     if (!(await rpc('username_available', { p_username: un }))) throw new Error('That username is taken. Try another one.');
     await rpc('request_signup_code', { p_email: em, p_username: un, p_password: pw });
-    AUTH.pending = { em, un, pw, sq, sa };
+    AUTH.pending = { em, un, pw, sq, sa }; authPersist();
     signupCodeScreen(em);
   } catch (e) { authErr(mapAuthError(e)); busy(btn, false); }
 };
@@ -1088,7 +1098,7 @@ ACT['signup-verify'] = async btn => {
     const { error } = await sb.auth.signInWithPassword({ email: AUTH.pending.em, password: AUTH.pending.pw });
     if (error) throw error;
     if (AUTH.pending.sa) { try { await rpc('set_security_qa', { p_question: AUTH.pending.sq, p_answer: AUTH.pending.sa }); } catch (e) { /* optional — no need to bother the user if this fails */ } }
-    AUTH.pending = null;
+    AUTH.pending = null; authClearPersist();
     await loadMe(); renderChrome(); toast('Welcome, ' + S.me.username + '!', 'ok');
     const to = S.returnTo || '/'; S.returnTo = null; nav(to);
   } catch (e) { authErr(mapAuthError(e)); busy(btn, false); }
@@ -1106,18 +1116,27 @@ ACT.forgot1 = async btn => {
   busy(btn, true);
   try {
     await rpc('request_password_reset', { p_email: em });
-    AUTH.email = em;
-    $('#fg-box').innerHTML = `<div class="badge gold">${ic('mail' in ICONS ? 'mail' : 'check', 14)} Check your inbox</div>
-      <p class="mut gap0">If an account exists for <b>${esc(em)}</b>, we sent it a 6-digit code. It expires in 10 minutes.</p>
-      <label class="lbl" for="f-code">Verification code</label>
-      <input class="inp" id="f-code" inputmode="numeric" maxlength="6" placeholder="000000" style="letter-spacing:8px;font-size:22px;text-align:center;font-weight:700">
-      <div class="err" id="auth-err"></div>
-      <button class="btn brass block gap" data-act="forgot2">Verify code</button>
-      <div class="center sm gap">Didn't get it? <button class="link" data-act="forgot-resend">Resend code</button></div>`;
-    const c = $('#f-code'); if (c) c.focus();
+    AUTH.email = em; authPersist();
+    forgotCodeScreen(em);
   } catch (e) { authErr(cleanErr(e)); }
   busy(btn, false);
 };
+function forgotCodeScreen(em) {
+  $('#fg-box').innerHTML = `<div class="badge gold">${ic('mail' in ICONS ? 'mail' : 'check', 14)} Check your inbox</div>
+    <p class="mut gap0">If an account exists for <b>${esc(em)}</b>, we sent it a 6-digit code. It expires in 10 minutes.</p>
+    <label class="lbl" for="f-code">Verification code</label>
+    <input class="inp" id="f-code" inputmode="numeric" maxlength="6" placeholder="000000" style="letter-spacing:8px;font-size:22px;text-align:center;font-weight:700">
+    <div class="err" id="auth-err"></div>
+    <button class="btn brass block gap" data-act="forgot2">Verify code</button>
+    <div class="center sm gap">Didn't get it? <button class="link" data-act="forgot-resend">Resend code</button></div>`;
+  const c = $('#f-code'); if (c) c.focus();
+}
+function forgotNewPwScreen(em) {
+  $('#fg-box').innerHTML = `<div class="badge ok">${ic('check', 14)} Code verified</div>
+    <p class="mut gap0">Choose a new password for <b>${esc(em)}</b>.</p>
+    ${pwField('f-pw', 'New password', 'At least 8 characters')}${pwField('f-pw2', 'Confirm new password')}
+    <div class="err" id="auth-err"></div><button class="btn brass block gap" data-act="forgot3">Set new password</button>`;
+}
 ACT['forgot-resend'] = async btn => {
   authErr(''); busy(btn, true);
   try { await rpc('request_password_reset', { p_email: AUTH.email }); toast('Code resent', 'ok'); }
@@ -1131,11 +1150,8 @@ ACT.forgot2 = async btn => {
   busy(btn, true);
   try {
     const r = await rpc('verify_password_reset_otp', { p_email: AUTH.email, p_otp: code });
-    AUTH.resetToken = r.token;
-    $('#fg-box').innerHTML = `<div class="badge ok">${ic('check', 14)} Code verified</div>
-      <p class="mut gap0">Choose a new password for <b>${esc(AUTH.email)}</b>.</p>
-      ${pwField('f-pw', 'New password', 'At least 8 characters')}${pwField('f-pw2', 'Confirm new password')}
-      <div class="err" id="auth-err"></div><button class="btn brass block gap" data-act="forgot3">Set new password</button>`;
+    AUTH.resetToken = r.token; authPersist();
+    forgotNewPwScreen(AUTH.email);
   } catch (e) { authErr(cleanErr(e)); }
   busy(btn, false);
 };
@@ -1148,7 +1164,7 @@ ACT.forgot3 = async btn => {
   busy(btn, true);
   try {
     await rpc('complete_password_reset', { p_email: AUTH.email, p_token: AUTH.resetToken, p_new_password: pw });
-    AUTH.resetToken = null;
+    AUTH.resetToken = null; authClearPersist();
     toast('Password changed. Sign in with the new one.', 'ok');
     if (loggedIn()) { await sb.auth.signOut(); await loadMe(); renderChrome(); }
     nav('/auth/login');
