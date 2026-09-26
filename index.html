@@ -1459,7 +1459,8 @@ function edRenderDetails() {
         <label class="lbl" for="po-acct">Account number</label><input class="inp" id="po-acct" inputmode="numeric" maxlength="20">
         <div class="hint">This is where your share of every payment lands — set once, used for all your paid quizzes.</div>
         <div class="err" id="po-err"></div>
-        <button class="btn sm gap0" data-act="payout-save">Save payout account</button>
+        <div id="po-confirm" hidden></div>
+        <button class="btn sm gap0" id="po-verify-btn" data-act="payout-verify">Verify account</button>
       </div>`}
     </div>
     ${swRow('d-prize', 'Offer a prize', 'Winners submit their bank details to claim it. You settle payouts yourself.', q.prize_enabled, { reveal: 'sub-prize' })}
@@ -1485,11 +1486,26 @@ async function edInitPayout() {
     const banks = await rpc('list_paystack_banks', {});
     sel.innerHTML = '<option value="">Select your bank</option>' + (banks || []).map(b => `<option value="${esc(b.code)}">${esc(b.name)}</option>`).join('');
   } catch (e) { sel.innerHTML = '<option value="">Could not load banks — try again shortly</option>'; }
+  const resetVerify = () => { const c = $('#po-confirm'), v = $('#po-verify-btn'); if (c) { c.hidden = true; c.innerHTML = ''; } if (v) v.hidden = false; };
+  const acctEl = $('#po-acct'); if (acctEl) acctEl.addEventListener('input', resetVerify);
+  if (sel) sel.addEventListener('change', resetVerify);
 }
-ACT['payout-save'] = async btn => {
+ACT['payout-verify'] = async btn => {
   const bank = $('#po-bank').value, acct = $('#po-acct').value.trim(); $('#po-err').textContent = '';
   if (!bank) { $('#po-err').textContent = 'Select your bank.'; return; }
   if (!/^\d{6,20}$/.test(acct)) { $('#po-err').textContent = 'Enter a valid account number.'; return; }
+  busy(btn, true);
+  try {
+    const r = await rpc('resolve_bank_account', { p_account_number: acct, p_bank_code: bank });
+    $('#po-confirm').hidden = false;
+    $('#po-confirm').innerHTML = `<div class="hint ok">This account belongs to <b>${esc(r.account_name || 'unknown')}</b>. Is that you?</div>
+      <button class="btn sm brass gap0" data-act="payout-save">Yes, save this account</button>`;
+    btn.hidden = true;
+  } catch (e) { $('#po-err').textContent = cleanErr(e); }
+  finally { busy(btn, false); }
+};
+ACT['payout-save'] = async btn => {
+  const bank = $('#po-bank').value, acct = $('#po-acct').value.trim(); $('#po-err').textContent = '';
   busy(btn, true);
   try {
     await rpc('set_creator_payout_account', { p_account_number: acct, p_bank_code: bank });
@@ -2068,34 +2084,24 @@ function deviceId() {
     return d;
   } catch (e) { return sid() + sid() + sid() + sid(); }
 }
-/* ---------- paid quizzes (Paystack, platform account + creator subaccount split) ---------- */
+/* ---------- paid quizzes (Paystack, platform account + creator subaccount split, initialized server-side) ---------- */
 async function ensurePaid(q) {
   if (!q.is_paid) return true;
   if (S.me && (S.me.id === q.owner_id || isAdmin())) return true;
   const already = await rpc('has_paid', { p_quiz_id: q.id }).catch(() => false);
   if (already) return true;
-  const info = await rpc('get_quiz_payment_info', { p_quiz_id: q.id });
-  if (!info.public_key) throw new Error('Payments are not fully set up on this app yet. Try again later.');
-  if (!info.owner_is_admin && !info.subaccount_code) throw new Error('This quiz needs payment, but the creator has not finished setting up their payout account yet.');
-  await loadScript('https://js.paystack.co/v1/inline.js');
-  const amountKobo = Math.round((+info.price_amount || 0) * 100);
-  const splitPct = (!info.owner_is_admin && info.platform_split_percent != null) ? +info.platform_split_percent : null;
+  const init = await rpc('initialize_quiz_payment', { p_quiz_id: q.id });
+  if (!init.access_code) throw new Error('Could not start payment. Try again shortly.');
+  await loadScript('https://js.paystack.co/v2/inline.js');
   return new Promise((resolve, reject) => {
-    let handler;
     try {
-      handler = PaystackPop.setup({
-        key: info.public_key,
-        ...(info.owner_is_admin ? {} : { subaccount: info.subaccount_code }),
-        ...(splitPct != null ? { transaction_charge: Math.round(amountKobo * splitPct / 100) } : {}),
-        email: (S.me && S.me.email) || `guest${Date.now()}@quizboot.app`,
-        amount: amountKobo,
-        currency: info.price_currency || 'NGN',
-        ref: 'qb_' + String(q.id).slice(0, 8) + '_' + Date.now(),
-        callback: res => { rpc('record_paystack_payment', { p_quiz_id: q.id, p_reference: res.reference }).then(() => resolve(true)).catch(reject); },
-        onClose: () => reject(new Error('Payment was not completed'))
+      const popup = new PaystackPop();
+      popup.resumeTransaction(init.access_code, {
+        onSuccess: res => { rpc('record_paystack_payment', { p_quiz_id: q.id, p_reference: (res && res.reference) || init.reference }).then(() => resolve(true)).catch(reject); },
+        onCancel: () => reject(new Error('Payment was not completed')),
+        onError: err => reject(new Error('Payment failed: ' + ((err && err.message) || 'unknown error')))
       });
-    } catch (e) { return reject(new Error('Could not start payment: ' + cleanErr(e))); }
-    handler.openIframe();
+    } catch (e) { reject(new Error('Could not start payment: ' + cleanErr(e))); }
   });
 }
 /* ---------- start flow ---------- */
