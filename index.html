@@ -920,6 +920,7 @@ const ROUTES = [
   [/^\/create$/, vEditor], [/^\/edit\/([\w-]+)(?:\/(details|questions|publish))?$/, vEditor],
   [/^\/(?:quiz|q)\/([\w-]+)$/, vQuiz],
   [/^\/leaderboard\/([\w-]+)$/, vLeaderboardFull], [/^\/attempts\/([\w-]+)$/, vAttemptsFull],
+  [/^\/practice\/([\w-]+)$/, vPracticeWeak],
   [/^\/take\/([\w-]+)$/, vTake], [/^\/preview\/([\w-]+)$/, vPreview],
   [/^\/result\/([\w-]+)$/, vResult], [/^\/review\/([\w-]+)$/, vReview],
   [/^\/results\/([\w-]+)$/, vOwnerResults],
@@ -947,7 +948,7 @@ ACT.reload = () => render();
 /* ============================================================
    SHARED LIST PIECES
    ============================================================ */
-const QCOLS = 'id,share_code,title,description,category,owner_id,owner_name,is_challenge,featured,visibility,status,duration_min,question_count,attempts_count,likes_count,comments_count,published_at,created_at';
+const QCOLS = 'id,share_code,title,description,category,owner_id,owner_name,is_challenge,featured,visibility,status,duration_min,question_count,attempts_count,likes_count,comments_count,published_at,created_at,show_results,release_mode,release_at,results_released,leaderboard_enabled';
 function slip(q, extra = '') {
   const b = [
     q.status === 'draft' ? '<span class="badge warn">Draft</span>' : '',
@@ -958,7 +959,7 @@ function slip(q, extra = '') {
   ].join(' ');
   return `<div class="slip"><a href="#/quiz/${esc(q.share_code)}" style="display:block"><div class="row wrapf" style="gap:6px">${b}</div>
     <h3>${esc(q.title)}</h3><div class="mut sm">by @${esc(q.owner_name || 'user')}</div>
-    <div class="meta"><span>${ic('help', 14)} ${q.question_count || 0} questions</span><span>${ic('clock', 14)} ${q.duration_min} min</span><span>${ic('users', 14)} ${q.attempts_count || 0}</span><span>${ic('heart', 14)} ${q.likes_count || 0}</span></div></a>${extra}</div>`;
+    <div class="meta"><span>${ic('help', 14)} ${q.question_count || 0} questions</span><span>${ic('clock', 14)} ${q.duration_min} min</span>${resultsPubliclyAvailable(q) ? `<span>${ic('users', 14)} ${q.attempts_count || 0}</span>` : ''}<span>${ic('heart', 14)} ${q.likes_count || 0}</span></div></a>${extra}</div>`;
 }
 const keyChip = code => `<button class="keychip" data-act="copy" data-v="${esc(code)}" aria-label="Copy quiz key">${ic('key', 13)}<span>${esc(String(code || '').toUpperCase())}</span>${ic('copy', 12)}</button>`;
 const emptyBox = (icon, title, sub = '') => `<div class="empty">${ic(icon, 32)}<div class="b" style="color:var(--tx)">${esc(title)}</div>${sub ? `<div class="sm gap0">${sub}</div>` : ''}</div>`;
@@ -2000,6 +2001,32 @@ async function vQuiz([key], query, tok) {
   Q.sets = sets || []; Q.attempts = atts || []; Q.liked = !!(likes && likes.length);
   drawQuiz();
 }
+/* ---------- public result release gate ----------
+   One source of truth for every public surface that can expose a score,
+   ranking, or completed-attempt activity. Owners/admins can still use the
+   private Results & export area before release. Active attempts are never
+   blocked by this gate. */
+function resultsPubliclyAvailable(q) {
+  if (!q || q.show_results === false) return false;
+  const mode = q.release_mode || 'immediate';
+  if (mode === 'immediate') return true;
+  if (mode === 'manual') return q.results_released === true;
+  if (mode === 'scheduled') {
+    if (q.results_released === true) return true;
+    return !!q.release_at && Date.now() >= new Date(q.release_at).getTime();
+  }
+  return q.results_released === true;
+}
+function resultReleaseMessage(q) {
+  if (q && q.release_mode === 'scheduled' && q.release_at && Date.now() < new Date(q.release_at).getTime()) {
+    return `Results are not available yet. Check back later. They are scheduled to be released on ${fmtDT(q.release_at)}.`;
+  }
+  return 'Results are not available yet. Check back later.';
+}
+function resultsUnavailableBox(q) {
+  return `<div class="empty gap">${ic('clock', 38)}<h2 class="h2">Results not available</h2><p class="gap0">${esc(resultReleaseMessage(q))}</p></div>`;
+}
+
 function quizState() {
   const q = Q.quiz, now = Date.now();
   if (q.status !== 'published') return Q.isMgr ? { kind: 'draft' } : { kind: 'closed', msg: 'Not published yet' };
@@ -2033,11 +2060,12 @@ function drawQuiz() {
   else if (st.kind === 'resume') startBtn = `<a class="btn brass block big" href="#/take/${st.id}">${ic('play', 20)} Resume your attempt</a>`;
   else if (st.kind === 'draft') startBtn = `<a class="btn brass block big" href="#/preview/${q.id}">${ic('eye', 20)} Preview quiz</a><div class="hint center">This quiz is a draft. Publish it so others can take it.</div>`;
   else startBtn = `<button class="btn block big off" disabled>${esc(st.msg)}</button>`;
+  const publicResults = resultsPubliclyAvailable(q);
   const engage = `<div class="row wrapf gap">${q.allow_likes ? `<button class="btn sm ${Q.liked ? 'brass' : ''}" data-act="q-like" id="like-b">${ic('heart', 16)} <span id="like-n">${q.likes_count || 0}</span></button>` : ''}
     ${q.allow_comments ? `<button class="btn sm" data-act="q-jump-c">${ic('msg', 16)} ${q.comments_count || 0}</button>` : ''}
     ${q.allow_sharing || mgr ? `<button class="btn sm" data-act="q-share">${ic('share', 16)} Share</button>` : ''}
-    <span class="mut sm" style="margin-left:auto">${ic('users', 14)} ${q.attempts_count || 0} attempt${q.attempts_count === 1 ? '' : 's'}</span></div>`;
-  const lbOn = q.leaderboard_enabled || q.is_challenge;
+    ${mgr || publicResults ? `<span class="mut sm" style="margin-left:auto">${ic('users', 14)} ${q.attempts_count || 0} attempt${q.attempts_count === 1 ? '' : 's'}</span>` : ''}</div>`;
+  const lbOn = publicResults && (q.leaderboard_enabled || q.is_challenge);
   const tools = mgr ? `<div class="card gap"><div class="b">${ic('gear' in ICONS ? 'gear' : 'edit', 16)} Manage this quiz</div><div class="tiles gap0">
       <a class="tile" href="#/edit/${q.id}/details">${ic('edit', 20)}Edit</a><a class="tile" href="#/results/${q.id}">${ic('chart', 20)}Results & export</a>
       <button class="tile" data-act="q-exportq">${ic('download', 20)}Export questions</button><button class="tile" data-act="q-dup">${ic('copy', 20)}Duplicate</button>
@@ -2054,15 +2082,15 @@ function drawQuiz() {
       ${Q.sets.length > 1 ? `<div class="row wrapf gap0" style="gap:6px">${Q.sets.map(s => `<span class="badge">${esc(s.name)}</span>`).join('')}</div>` : ''}</div>
     <div class="stats gap">${facts}</div>${feats ? `<div class="row wrapf gap0" style="gap:6px">${feats}</div>` : ''}
     <div class="gap">${startBtn}</div>${engage}${tools}
-    <div class="row gap0" style="gap:8px">
+    ${mgr || publicResults ? `<div class="row gap0" style="gap:8px">
       ${lbOn ? `<a class="btn sm grow" href="#/leaderboard/${q.share_code}">${ic('trophy', 16)} Leaderboard${ic('right', 14)}</a>` : ''}
       <a class="btn sm grow" href="#/attempts/${q.share_code}">${ic('users' in ICONS ? 'users' : 'clock', 16)} Attempts${ic('right', 14)}</a>
-    </div>
+    </div>` : resultsUnavailableBox(q)}
     ${q.allow_comments ? `<details class="acc" id="cm-acc"><summary>${ic('msg', 20)}<span>Comments (${q.comments_count || 0})</span><span class="chev">${ic('down', 18)}</span></summary><div class="accb" id="cm-body"><div class="spin"></div></div></details>` : ''}
-    ${S.me && Q.attempts.length ? `<details class="acc" id="at-acc"><summary>${ic('clock', 20)}<span>Your attempts (${Q.attempts.length})</span><span class="chev">${ic('down', 18)}</span></summary><div class="accb">${Q.attempts.map(a => {
+    ${S.me && Q.attempts.length ? `<details class="acc" id="at-acc"><summary>${ic('clock', 20)}<span>Your attempts</span><span class="chev">${ic('down', 18)}</span></summary><div class="accb">${mgr || publicResults ? Q.attempts.map(a => {
       const rs = Array.isArray(a.attempt_results) ? a.attempt_results[0] : a.attempt_results;
       return `<a class="person" href="#/${a.status === 'ongoing' ? 'take' : 'result'}/${a.id}"><div class="grow"><div class="b">Attempt ${a.attempt_no}</div><div class="xs mut">${fmtDT(a.started_at)}</div></div>${rs ? `<span class="badge ${rs.passed ? 'ok' : 'bad'}">${num(rs.percentage, 1)}%</span>` : `<span class="badge">${a.status === 'ongoing' ? 'In progress' : 'Submitted'}</span>`}${ic('right', 16)}</a>`;
-    }).join('')}</div></details>` : ''}
+    }).join('') : `<div class="hint">${ic('lock', 14)} ${esc(resultReleaseMessage(q))}</div>`}</div></details>` : ''}
   </div>`);
   const cm = $('#cm-acc'); if (cm) cm.addEventListener('toggle', () => { if (cm.open && !cm.dataset.done) { cm.dataset.done = 1; cmLoad(); } });
 }
@@ -2340,6 +2368,10 @@ async function vLeaderboardFull([key], query, tok) {
   if (stale(tok)) return;
   if (!quiz) { setView(`<div class="wrap">${emptyBox('lock', 'Quiz not found')}</div>`); return; }
   Q.quiz = quiz; LB.search = '';
+  if (!resultsPubliclyAvailable(quiz)) {
+    setView(`<div class="wrap"><div class="row"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><h1 class="h2 grow">Leaderboard</h1></div>${resultsUnavailableBox(quiz)}</div>`);
+    return;
+  }
   setView(`<div class="wrap"><div class="row"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><h1 class="h2 grow">Leaderboard</h1>${quiz.allow_sharing ? `<button class="btn sm" data-act="q-share">${ic('share', 14)} Share</button>` : ''}</div>
     <input class="inp gap" id="lb-search" placeholder="Search participant by name">
     <div id="lb-body" class="gap"><div class="spin"></div></div></div>`);
@@ -2356,6 +2388,10 @@ async function vAttemptsFull([key], query, tok) {
   if (stale(tok)) return;
   if (!quiz) { setView(`<div class="wrap">${emptyBox('lock', 'Quiz not found')}</div>`); return; }
   Q.quiz = quiz; AF.filter = 'all'; AF.search = '';
+  if (!resultsPubliclyAvailable(quiz)) {
+    setView(`<div class="wrap"><div class="row"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><h1 class="h2 grow">Attempts</h1></div>${resultsUnavailableBox(quiz)}</div>`);
+    return;
+  }
   setView(`<div class="wrap"><div class="row"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><h1 class="h2 grow" id="af-title">Attempts</h1></div>
     <input class="inp gap" id="af-search" placeholder="Search…">
     <div class="chips gap" id="af-tabs"></div>
@@ -2768,10 +2804,19 @@ function tkPreviewFinish() {
    ============================================================ */
 async function vResult([aid], query, tok) {
   if (!S.me) { S.returnTo = '/result/' + aid; nav('/auth/login'); return; }
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(aid || '')) { throw new Error('Invalid attempt ID.'); }
   setView(`<div class="wrap">${skel(3)}</div>`);
+  const att = await db(sb.from('attempts').select('id,quiz_id,status').eq('id', aid).maybeSingle());
+  if (!att) throw new Error('Attempt not found');
+  const quiz = await db(sb.from('quizzes').select('*').eq('id', att.quiz_id).single());
+  if (stale(tok)) return;
+  const mgr = S.me && (quiz.owner_id === S.me.id || isAdmin());
+  if (!mgr && !resultsPubliclyAvailable(quiz)) {
+    setView(`<div class="wrap narrow">${resultsUnavailableBox(quiz)}<div class="row gap"><a class="btn brass grow" href="#/quiz/${esc(quiz.share_code)}">Back to quiz</a></div></div>`);
+    return;
+  }
+  if (att.status === 'ongoing') { location.replace('#/take/' + aid); return; }
   const summary = await rpc('get_attempt_summary', { p_attempt_id: aid });
-  if (summary.attempt.status === 'ongoing') { location.replace('#/take/' + aid); return; }
-  const quiz = await db(sb.from('quizzes').select('*').eq('id', summary.attempt.quiz_id).single());
   if (stale(tok)) return;
   resultScreen({ quiz, summary, aid });
 }
@@ -2804,7 +2849,8 @@ function resultScreen(d) {
     ${!d.preview && r.passed && q.prize_enabled ? `<div class="card gap" id="pz-card"><div class="b">${ic('zap', 16)} ${esc((q.prize_text && q.prize_text.desc) || 'Prize')}</div><div class="sm mut gap0">${q.prize_mode === 'passmark' ? 'Everyone who passes qualifies. ' : 'Only the top 3 win. '}Submit your bank details to claim it if you win.</div><button class="btn brass sm gap" data-act="pz-open" data-aid="${esc(att.id)}">Claim prize</button></div>` : ''}
     <div class="col gap">
       ${canRev ? `<button class="btn block" data-act="${d.preview ? 'pv-review' : 'res-review'}" data-id="${esc(att.id)}">${ic('eye', 18)} Review answers</button>` : ''}
-      ${!d.preview && (q.leaderboard_enabled || q.is_challenge) ? `<a class="btn block" href="#/leaderboard/${esc(q.share_code)}">${ic('trophy', 18)} See the leaderboard</a>` : ''}
+      ${canRev && !d.preview && pct < 100 ? `<button class="btn brass block" data-act="practice-weak" data-id="${esc(att.id)}">${ic('zap', 18)} Practice what I got wrong</button>` : ''}
+      ${!d.preview && (S.me && (q.owner_id === S.me.id || isAdmin()) || resultsPubliclyAvailable(q)) && (q.leaderboard_enabled || q.is_challenge) ? `<a class="btn block" href="#/leaderboard/${esc(q.share_code)}">${ic('trophy', 18)} See the leaderboard</a>` : ''}
       ${!d.preview && !other ? `<button class="btn block" data-act="res-share">${ic('share', 18)} Share my result</button>` : ''}
       ${S.me && S.me.anon ? `<a class="btn brass block" href="#/auth/signup">Create an account to keep your results</a>` : ''}
       ${back}</div></div>`);
@@ -2843,9 +2889,14 @@ ACT['pz-submit'] = async btn => {
 
 async function vReview([aid], query, tok) {
   if (!S.me) { nav('/auth/login'); return; }
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(aid || '')) { throw new Error('Invalid attempt ID.'); }
   setView(`<div class="wrap">${skel(4)}</div>`);
+  const att = await db(sb.from('attempts').select('id,quiz_id,status').eq('id', aid).maybeSingle());
+  if (!att) throw new Error('Attempt not found');
+  const quiz = await db(sb.from('quizzes').select('*').eq('id', att.quiz_id).single());
+  const mgr = S.me && (quiz.owner_id === S.me.id || isAdmin());
+  if (!mgr && !resultsPubliclyAvailable(quiz)) { setView(`<div class="wrap narrow">${resultsUnavailableBox(quiz)}</div>`); return; }
   const summary = await rpc('get_attempt_summary', { p_attempt_id: aid });
-  const quiz = await db(sb.from('quizzes').select('*').eq('id', summary.attempt.quiz_id).single());
   let review, questions;
   try { [questions, review] = await Promise.all([rpc('get_attempt_questions', { p_attempt_id: aid }), rpc('get_attempt_review', { p_attempt_id: aid })]); }
   catch (e) { setView(`<div class="wrap"><div class="empty">${ic('lock', 34)}<h3 class="h2">Review is not available</h3><p class="gap0">${esc(cleanErr(e))}</p><a class="btn gap" href="#/result/${aid}">Back to result</a></div></div>`); return; }
@@ -2887,7 +2938,100 @@ function reviewScreen(d) {
   setView(`<div class="wrap narrow"><div class="row"><button class="iconbtn" data-act="${d.preview ? 'rv-back-pv' : 'back'}" aria-label="Back">${ic('back', 18)}</button><h1 class="h2 grow">Review answers</h1></div>
     ${d.preview ? '' : `<div class="hint">Option letters follow the quiz creator's order, which may differ from the shuffled order you saw.</div>`}<div class="gap">${out}</div></div>`);
 }
+/* ---------- practice weak spots (client-side self-quiz, nothing graded or saved) ---------- */
+const PW = { items: [], key: {}, idx: 0, checked: false, picked: null, right: 0, total: 0 };
+ACT['practice-weak'] = el => nav('/practice/' + el.dataset.id);
+async function vPracticeWeak([aid], query, tok) {
+  if (!S.me) { nav('/auth/login'); return; }
+  setView(`<div class="wrap">${skel(4)}</div>`);
+  let questions, review, summary, quiz;
+  try {
+    summary = await rpc('get_attempt_summary', { p_attempt_id: aid });
+    quiz = await db(sb.from('quizzes').select('*').eq('id', summary.attempt.quiz_id).single());
+    if (!(S.me && (quiz.owner_id === S.me.id || isAdmin())) && !resultsPubliclyAvailable(quiz)) {
+      setView(`<div class="wrap narrow">${resultsUnavailableBox(quiz)}</div>`); return;
+    }
+    [questions, review] = await Promise.all([rpc('get_attempt_questions', { p_attempt_id: aid }), rpc('get_attempt_review', { p_attempt_id: aid })]);
+  } catch (e) { setView(`<div class="wrap"><div class="empty">${ic('lock', 34)}<h3 class="h2">Not available</h3><p class="gap0">${esc(cleanErr(e))}</p><a class="btn gap" href="#/result/${aid}">Back to result</a></div></div>`); return; }
+  if (stale(tok)) return;
+  const byId = {}; questions.questions.forEach(x => byId[x.id] = x);
+  const key = {}; review.forEach(r => key[r.question_id] = { correct: r.correct || [], explanation: r.explanation });
+  const wrongIds = review.filter(r => r.is_correct === false).map(r => r.question_id);
+  const items = wrongIds.map(id => byId[id]).filter(x => x && (x.type === 'mcq' || x.type === 'tf' || x.type === 'fib'));
+  if (!items.length) { setView(`<div class="wrap narrow"><div class="empty">${ic('check', 34)}<h3 class="h2">Nothing to practice</h3><p class="gap0">You got everything machine-gradable right — nice.</p><a class="btn gap" href="#/result/${aid}">Back to result</a></div></div>`); return; }
+  PW.items = items; PW.key = key; PW.idx = 0; PW.checked = false; PW.picked = null; PW.right = 0; PW.total = 0;
+  pwRender();
+}
+function pwRender() {
+  if (PW.idx >= PW.items.length) {
+    setView(`<div class="wrap narrow"><div class="empty">${ic('trophy', 34)}<h3 class="h2">Practice round done</h3><p class="gap0">You got <b>${PW.right} of ${PW.total}</b> right this time.</p>
+      <div class="row gap" style="margin-top:14px"><button class="btn brass grow" data-act="pw-again">Go again</button><a class="btn grow" href="#/">Home</a></div></div></div>`);
+    return;
+  }
+  const x = PW.items[PW.idx];
+  let body = `<div class="qbody" style="font-size:16px">${clean(x.body)}</div>`;
+  if (x.type === 'mcq' || x.type === 'tf') {
+    const opts = x.type === 'tf' ? [{ id: 'T', text: 'True' }, { id: 'F', text: 'False' }] : x.options;
+    body += `<div id="pw-opts">` + opts.map((o, i) => `<button type="button" class="opt" data-act="pw-pick" data-id="${o.id}" style="margin-bottom:8px;width:100%;text-align:left"><span class="ol">${LETTERS[i]}</span><span class="grow">${x.type === 'tf' ? esc(o.text) : clean(o.text)}</span></button>`).join('') + `</div>`;
+  } else if (x.type === 'fib') {
+    body += `<input class="inp" id="pw-fib" placeholder="Type your answer">`;
+  }
+  setView(`<div class="wrap narrow"><div class="row between"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><div class="b">Practicing ${PW.idx + 1} of ${PW.items.length}</div><span class="badge ok">${PW.right}✓</span></div>
+    <div class="card gap" id="pw-card">${body}</div>
+    <div class="err" id="pw-err"></div>
+    <button class="btn brass block gap" id="pw-btn" data-act="pw-check">Check answer</button>
+  </div>`);
+}
+ACT['pw-pick'] = el => { PW.picked = el.dataset.id; $$('#pw-opts .opt').forEach(o => o.classList.toggle('on', o === el)); };
+ACT['pw-check'] = () => {
+  const btn = $('#pw-btn');
+  if (btn && btn.dataset.stage === 'next') { PW.idx++; PW.checked = false; PW.picked = null; pwRender(); return; }
+  const x = PW.items[PW.idx], k = PW.key[x.id] || { correct: [] };
+  let userAns, isRight;
+  if (x.type === 'fib') {
+    userAns = ($('#pw-fib') || {}).value || '';
+    if (!userAns.trim()) { $('#pw-err').textContent = 'Type an answer first.'; return; }
+    isRight = k.correct.some(c => String(c).trim().toLowerCase() === userAns.trim().toLowerCase());
+  } else {
+    if (!PW.picked) { $('#pw-err').textContent = 'Pick an option first.'; return; }
+    userAns = PW.picked;
+    isRight = k.correct.includes(userAns);
+  }
+  $('#pw-err').textContent = '';
+  PW.total++; if (isRight) PW.right++;
+  const opts = x.type === 'tf' ? [{ id: 'T', text: 'True' }, { id: 'F', text: 'False' }] : (x.type === 'mcq' ? x.options : null);
+  if (opts) {
+    $$('#pw-opts .opt').forEach(b => {
+      b.style.pointerEvents = 'none';
+      if (k.correct.includes(b.dataset.id)) b.classList.add('ok');
+      else if (b.dataset.id === userAns) b.classList.add('no');
+    });
+  } else {
+    const inp = $('#pw-fib'); if (inp) { inp.disabled = true; inp.insertAdjacentHTML('afterend', `<div class="sm gap0"><span class="mut">Correct:</span> <b>${esc(k.correct.join(' / '))}</b></div>`); }
+  }
+  if (k.explanation) $('#pw-card').insertAdjacentHTML('beforeend', `<div class="card tight gap0" style="border-left:3px solid var(--info);margin-top:10px"><div class="xs mut">Explanation</div><div class="qbody" style="font-size:15px;margin:2px 0 0">${clean(k.explanation)}</div></div>`);
+  const b = $('#pw-btn'); if (b) { b.textContent = PW.idx + 1 < PW.items.length ? 'Next question' : 'See results'; b.dataset.stage = 'next'; b.className = isRight ? 'btn block gap' : 'btn brass block gap'; }
+};
+ACT['pw-again'] = () => { PW.idx = 0; PW.checked = false; PW.picked = null; PW.right = 0; PW.total = 0; PW.items.sort(() => Math.random() - 0.5); pwRender(); };
 const RV = { d: null };
+ACT['or-health'] = async btn => {
+  busy(btn, true);
+  try {
+    const [ans, qs] = await Promise.all([
+      db(sb.from('attempt_answers').select('question_id,is_correct').eq('quiz_id', OR.quiz.id).not('is_correct', 'is', null)),
+      db(sb.from('questions').select('id,body,type,position,marks').eq('quiz_id', OR.quiz.id).neq('type', 'passage').order('position'))
+    ]);
+    const stat = {}; ans.forEach(a => { const s = stat[a.question_id] || (stat[a.question_id] = { right: 0, total: 0 }); s.total++; if (a.is_correct) s.right++; });
+    const rows = qs.map((q, i) => { const s = stat[q.id] || { right: 0, total: 0 }; return { n: i + 1, body: q.body, marks: q.marks, right: s.right, total: s.total, pct: s.total ? s.right / s.total * 100 : null }; })
+      .filter(r => r.total > 0).sort((a, b) => a.pct - b.pct);
+    const low = rows.filter(r => r.pct < 30 && r.total >= 3);
+    openSheet(`<h3 class="h2">Question health-check</h3><p class="mut sm gap0">Questions almost everyone gets wrong are usually a broken answer key, not a hard question. ${low.length ? `<b class="bad">${low.length} question${low.length === 1 ? '' : 's'} below 30% correct</b> — worth a look.` : 'Nothing looks suspicious so far.'}</p>
+      <div class="gap0" style="max-height:60vh;overflow-y:auto">${rows.length ? rows.map(r => `<div class="card tight gap0" style="margin-bottom:8px;${r.pct < 30 && r.total >= 3 ? 'border-color:var(--bad)' : ''}">
+        <div class="row between"><span class="xs mut">Q${r.n} · ${num(r.marks)} mark${+r.marks === 1 ? '' : 's'} · ${r.total} answered</span><span class="badge ${r.pct < 30 ? 'bad' : r.pct < 60 ? 'warn' : 'ok'}">${num(r.pct, 0)}% correct</span></div>
+        <div class="qbody" style="font-size:14px;margin-top:6px">${clean(r.body)}</div></div>`).join('') : '<div class="hint">No graded answers yet.</div>'}</div>`);
+  } catch (e) { toast(cleanErr(e), 'bad'); }
+  busy(btn, false);
+};
 ACT['rv-back-pv'] = () => resultScreen(RES.d);
 ACT.grade = async btn => {
   const qid = btn.dataset.q, v = parseFloat($('#gr-' + qid).value); if (isNaN(v)) return toast('Enter the marks', 'bad');
@@ -2927,6 +3071,7 @@ function orDraw() {
   setView(`<div class="wrap"><div class="row"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><div class="grow"><h1 class="h2 trunc">${esc(q.title)}</h1><div class="xs mut">All attempts, highest score first</div></div></div>
     <div class="stats gap"><div class="stat"><b>${all.length}</b><span>Attempts</span></div><div class="stat"><b>${num(avg, 1)}%</b><span>Average</span></div><div class="stat"><b>${num(pass, 0)}%</b><span>Pass rate</span></div></div>
     <div class="row gap wrapf"><button class="btn brass grow" data-act="or-xlsx">${ic('download', 18)} Excel spreadsheet</button><button class="btn grow" data-act="or-pdf">${ic('file', 18)} PDF report</button>${q.show_results && q.release_mode === 'manual' ? `<button class="btn grow" data-act="or-release">${q.results_released ? 'Hide results' : 'Release results'}</button>` : ''}</div>
+    <button class="btn block" data-act="or-health">${ic('shield', 18)} Question health-check</button>
     <div class="chips gap0">${[['all', 'All'], ['completed', 'Completed'], ['ongoing', 'Ongoing'], ['auto', 'Auto-submitted']].map(f => `<button class="chip ${OR.filter === f[0] ? 'on' : ''}" data-act="or-f" data-f="${f[0]}">${f[1]}</button>`).join('')}</div>
     <div class="gap0">${rows.length ? rows.map(r => {
     const rk = r.score != null ? ++rank : '-';
