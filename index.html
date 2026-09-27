@@ -433,14 +433,6 @@ const fmtClock = s => { s = Math.max(0, Math.floor(s)); const h = Math.floor(s /
 const fmtDur = s => { s = Math.round(+s || 0); const m = Math.floor(s / 60), x = s % 60; return m ? `${m}m ${x}s` : `${x}s`; };
 const fmtDate = d => d ? new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 const fmtDT = d => d ? new Date(d).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '';
-/* mirrors the server's results_visible(qid) SQL function — for UI display only, never a security gate */
-function resultsAreVisible(q) {
-  if (!q.show_results) return false;
-  if (q.results_released) return true;
-  if (q.release_mode === 'immediate') return true;
-  if (q.release_mode === 'scheduled' && q.release_at && new Date(q.release_at) <= new Date()) return true;
-  return false;
-}
 const toLocalInput = iso => { if (!iso) return ''; const d = new Date(iso); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; };
 const fromLocalInput = v => v ? new Date(v).toISOString() : null;
 const ago = d => { const s = (Date.now() - new Date(d)) / 1000; if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s / 60) + 'm ago'; if (s < 86400) return Math.floor(s / 3600) + 'h ago'; if (s < 2592000) return Math.floor(s / 86400) + 'd ago'; return fmtDate(d); };
@@ -956,7 +948,7 @@ ACT.reload = () => render();
 /* ============================================================
    SHARED LIST PIECES
    ============================================================ */
-const QCOLS = 'id,share_code,title,description,category,owner_id,owner_name,is_challenge,featured,visibility,status,duration_min,question_count,attempts_count,likes_count,comments_count,published_at,created_at';
+const QCOLS = 'id,share_code,title,description,category,owner_id,owner_name,is_challenge,featured,visibility,status,duration_min,question_count,attempts_count,likes_count,comments_count,published_at,created_at,show_results,release_mode,release_at,results_released,leaderboard_enabled';
 function slip(q, extra = '') {
   const b = [
     q.status === 'draft' ? '<span class="badge warn">Draft</span>' : '',
@@ -967,7 +959,7 @@ function slip(q, extra = '') {
   ].join(' ');
   return `<div class="slip"><a href="#/quiz/${esc(q.share_code)}" style="display:block"><div class="row wrapf" style="gap:6px">${b}</div>
     <h3>${esc(q.title)}</h3><div class="mut sm">by @${esc(q.owner_name || 'user')}</div>
-    <div class="meta"><span>${ic('help', 14)} ${q.question_count || 0} questions</span><span>${ic('clock', 14)} ${q.duration_min} min</span><span>${ic('users', 14)} ${q.attempts_count || 0}</span><span>${ic('heart', 14)} ${q.likes_count || 0}</span></div></a>${extra}</div>`;
+    <div class="meta"><span>${ic('help', 14)} ${q.question_count || 0} questions</span><span>${ic('clock', 14)} ${q.duration_min} min</span>${resultsPubliclyAvailable(q) ? `<span>${ic('users', 14)} ${q.attempts_count || 0}</span>` : ''}<span>${ic('heart', 14)} ${q.likes_count || 0}</span></div></a>${extra}</div>`;
 }
 const keyChip = code => `<button class="keychip" data-act="copy" data-v="${esc(code)}" aria-label="Copy quiz key">${ic('key', 13)}<span>${esc(String(code || '').toUpperCase())}</span>${ic('copy', 12)}</button>`;
 const emptyBox = (icon, title, sub = '') => `<div class="empty">${ic(icon, 32)}<div class="b" style="color:var(--tx)">${esc(title)}</div>${sub ? `<div class="sm gap0">${sub}</div>` : ''}</div>`;
@@ -1332,7 +1324,7 @@ const DEF = {
   anticheat: false, anticheat_voice: false, anticheat_voice_mode: 'aggressive', require_login: true, allow_guest: false, show_answers: true, show_results: true,
   release_mode: 'immediate', release_at: null, calculator: 'none', score_quotes: [], allow_likes: true, allow_comments: true,
   allow_sharing: true, leaderboard_enabled: true, schedule_enabled: false, starts_at: null, ends_at: null, fifty_fifty: false,
-  fifty_count: 2, auto_advance: false, exam_mode: false, intake_form: [], show_percentage: true, visibility: 'public',
+  fifty_count: 2, auto_advance: false, intake_form: [], show_percentage: true, visibility: 'public',
   is_paid: false, price_amount: null, price_currency: 'NGN',
   prize_enabled: false, prize_mode: 'top3', prize_text: { desc: '' }
 };
@@ -1411,7 +1403,6 @@ function edRenderDetails() {
     <div class="sub" id="sub-multi" ${q.allow_multiple_attempts ? '' : 'hidden'}><label class="lbl" for="d-maxatt">Maximum attempts</label><input class="inp" id="d-maxatt" type="number" min="1" value="${q.max_attempts || ''}" placeholder="Leave empty for unlimited"></div>
     ${swRow('d-resume', 'Allow resuming an unfinished attempt', 'If someone leaves, they can come back and continue while time has not run out. Not available with anti-cheat.', q.anticheat ? false : q.allow_resume, { dis: q.anticheat })}
     ${swRow('d-auto', 'Auto-advance', 'Tapping an answer moves to the next question. People can still go back.', q.auto_advance)}
-    ${swRow('d-exam', 'Mock exam layout', 'JAMB CBT style: an always-visible numbered question grid so people can jump around, same as the real exam interface.', q.exam_mode)}
     ${swRow('d-fifty', '50:50 lifeline', 'Removes two wrong options on a question.', q.fifty_fifty, { reveal: 'sub-fifty' })}
     <div class="sub" id="sub-fifty" ${q.fifty_fifty ? '' : 'hidden'}><label class="lbl" for="d-fc">Lifelines per attempt</label><input class="inp" id="d-fc" type="number" min="1" max="50" value="${q.fifty_count}"></div>
     ${swRow('d-calc', 'Show a calculator', 'A calculator button appears during the quiz.', q.calculator !== 'none', { reveal: 'sub-calc' })}
@@ -1568,7 +1559,7 @@ function edReadDetails() {
     release_mode: rel, release_at: rel === 'scheduled' ? fromLocalInput(v('d-relat')) : null,
     calculator: c('d-calc') ? v('d-calctype') : 'none', score_quotes: quotes, allow_likes: c('d-likes'), allow_comments: c('d-comm'),
     allow_sharing: c('d-shr'), leaderboard_enabled: c('d-lb'), schedule_enabled: sched, starts_at: sched ? st : null, ends_at: sched ? en : null,
-    fifty_fifty: c('d-fifty'), fifty_count: clamp(parseInt(v('d-fc'), 10) || 2, 1, 50), auto_advance: c('d-auto'), exam_mode: c('d-exam'), intake_form: intake, visibility: E.vis,
+    fifty_fifty: c('d-fifty'), fifty_count: clamp(parseInt(v('d-fc'), 10) || 2, 1, 50), auto_advance: c('d-auto'), intake_form: intake, visibility: E.vis,
     is_paid: c('d-paid'), price_amount: c('d-paid') ? (parseFloat(v('d-price')) || 0) : null, price_currency: v('d-curr'),
     prize_enabled: c('d-prize'), prize_mode: (($('#pz-seg .on') || {}).dataset || {}).v || 'top3', prize_text: { desc: $('#d-ptext') ? $('#d-ptext').value.trim() : '' }
   };
@@ -2010,6 +2001,32 @@ async function vQuiz([key], query, tok) {
   Q.sets = sets || []; Q.attempts = atts || []; Q.liked = !!(likes && likes.length);
   drawQuiz();
 }
+/* ---------- public result release gate ----------
+   One source of truth for every public surface that can expose a score,
+   ranking, or completed-attempt activity. Owners/admins can still use the
+   private Results & export area before release. Active attempts are never
+   blocked by this gate. */
+function resultsPubliclyAvailable(q) {
+  if (!q || q.show_results === false) return false;
+  const mode = q.release_mode || 'immediate';
+  if (mode === 'immediate') return true;
+  if (mode === 'manual') return q.results_released === true;
+  if (mode === 'scheduled') {
+    if (q.results_released === true) return true;
+    return !!q.release_at && Date.now() >= new Date(q.release_at).getTime();
+  }
+  return q.results_released === true;
+}
+function resultReleaseMessage(q) {
+  if (q && q.release_mode === 'scheduled' && q.release_at && Date.now() < new Date(q.release_at).getTime()) {
+    return `Results are not available yet. Check back later. They are scheduled to be released on ${fmtDT(q.release_at)}.`;
+  }
+  return 'Results are not available yet. Check back later.';
+}
+function resultsUnavailableBox(q) {
+  return `<div class="empty gap">${ic('clock', 38)}<h2 class="h2">Results not available</h2><p class="gap0">${esc(resultReleaseMessage(q))}</p></div>`;
+}
+
 function quizState() {
   const q = Q.quiz, now = Date.now();
   if (q.status !== 'published') return Q.isMgr ? { kind: 'draft' } : { kind: 'closed', msg: 'Not published yet' };
@@ -2043,12 +2060,12 @@ function drawQuiz() {
   else if (st.kind === 'resume') startBtn = `<a class="btn brass block big" href="#/take/${st.id}">${ic('play', 20)} Resume your attempt</a>`;
   else if (st.kind === 'draft') startBtn = `<a class="btn brass block big" href="#/preview/${q.id}">${ic('eye', 20)} Preview quiz</a><div class="hint center">This quiz is a draft. Publish it so others can take it.</div>`;
   else startBtn = `<button class="btn block big off" disabled>${esc(st.msg)}</button>`;
+  const publicResults = resultsPubliclyAvailable(q);
   const engage = `<div class="row wrapf gap">${q.allow_likes ? `<button class="btn sm ${Q.liked ? 'brass' : ''}" data-act="q-like" id="like-b">${ic('heart', 16)} <span id="like-n">${q.likes_count || 0}</span></button>` : ''}
     ${q.allow_comments ? `<button class="btn sm" data-act="q-jump-c">${ic('msg', 16)} ${q.comments_count || 0}</button>` : ''}
     ${q.allow_sharing || mgr ? `<button class="btn sm" data-act="q-share">${ic('share', 16)} Share</button>` : ''}
-    <span class="mut sm" style="margin-left:auto">${ic('users', 14)} ${q.attempts_count || 0} attempt${q.attempts_count === 1 ? '' : 's'}</span></div>`;
-  const lbOn = q.leaderboard_enabled || q.is_challenge;
-  const resVis = resultsAreVisible(q);
+    ${mgr || publicResults ? `<span class="mut sm" style="margin-left:auto">${ic('users', 14)} ${q.attempts_count || 0} attempt${q.attempts_count === 1 ? '' : 's'}</span>` : ''}</div>`;
+  const lbOn = publicResults && (q.leaderboard_enabled || q.is_challenge);
   const tools = mgr ? `<div class="card gap"><div class="b">${ic('gear' in ICONS ? 'gear' : 'edit', 16)} Manage this quiz</div><div class="tiles gap0">
       <a class="tile" href="#/edit/${q.id}/details">${ic('edit', 20)}Edit</a><a class="tile" href="#/results/${q.id}">${ic('chart', 20)}Results & export</a>
       <button class="tile" data-act="q-exportq">${ic('download', 20)}Export questions</button><button class="tile" data-act="q-dup">${ic('copy', 20)}Duplicate</button>
@@ -2065,15 +2082,15 @@ function drawQuiz() {
       ${Q.sets.length > 1 ? `<div class="row wrapf gap0" style="gap:6px">${Q.sets.map(s => `<span class="badge">${esc(s.name)}</span>`).join('')}</div>` : ''}</div>
     <div class="stats gap">${facts}</div>${feats ? `<div class="row wrapf gap0" style="gap:6px">${feats}</div>` : ''}
     <div class="gap">${startBtn}</div>${engage}${tools}
-    <div class="row gap0" style="gap:8px">
-      ${(resVis || mgr) ? `${lbOn ? `<a class="btn sm grow" href="#/leaderboard/${q.share_code}">${ic('trophy', 16)} Leaderboard${ic('right', 14)}</a>` : ''}<a class="btn sm grow" href="#/attempts/${q.share_code}">${ic('users' in ICONS ? 'users' : 'clock', 16)} Attempts${ic('right', 14)}</a>`
-        : `<div class="hint block" style="width:100%">${ic('lock', 14)} Results are not available now — check back later${q.release_mode === 'scheduled' && q.release_at ? `. They open on ${fmtDT(q.release_at)}` : ''}.</div>`}
-    </div>
+    ${mgr || publicResults ? `<div class="row gap0" style="gap:8px">
+      ${lbOn ? `<a class="btn sm grow" href="#/leaderboard/${q.share_code}">${ic('trophy', 16)} Leaderboard${ic('right', 14)}</a>` : ''}
+      <a class="btn sm grow" href="#/attempts/${q.share_code}">${ic('users' in ICONS ? 'users' : 'clock', 16)} Attempts${ic('right', 14)}</a>
+    </div>` : resultsUnavailableBox(q)}
     ${q.allow_comments ? `<details class="acc" id="cm-acc"><summary>${ic('msg', 20)}<span>Comments (${q.comments_count || 0})</span><span class="chev">${ic('down', 18)}</span></summary><div class="accb" id="cm-body"><div class="spin"></div></div></details>` : ''}
-    ${S.me && Q.attempts.length ? `<details class="acc" id="at-acc"><summary>${ic('clock', 20)}<span>Your attempts (${Q.attempts.length})</span><span class="chev">${ic('down', 18)}</span></summary><div class="accb">${Q.attempts.map(a => {
+    ${S.me && Q.attempts.length ? `<details class="acc" id="at-acc"><summary>${ic('clock', 20)}<span>Your attempts</span><span class="chev">${ic('down', 18)}</span></summary><div class="accb">${mgr || publicResults ? Q.attempts.map(a => {
       const rs = Array.isArray(a.attempt_results) ? a.attempt_results[0] : a.attempt_results;
       return `<a class="person" href="#/${a.status === 'ongoing' ? 'take' : 'result'}/${a.id}"><div class="grow"><div class="b">Attempt ${a.attempt_no}</div><div class="xs mut">${fmtDT(a.started_at)}</div></div>${rs ? `<span class="badge ${rs.passed ? 'ok' : 'bad'}">${num(rs.percentage, 1)}%</span>` : `<span class="badge">${a.status === 'ongoing' ? 'In progress' : 'Submitted'}</span>`}${ic('right', 16)}</a>`;
-    }).join('')}</div></details>` : ''}
+    }).join('') : `<div class="hint">${ic('lock', 14)} ${esc(resultReleaseMessage(q))}</div>`}</div></details>` : ''}
   </div>`);
   const cm = $('#cm-acc'); if (cm) cm.addEventListener('toggle', () => { if (cm.open && !cm.dataset.done) { cm.dataset.done = 1; cmLoad(); } });
 }
@@ -2311,7 +2328,7 @@ async function lbLoad(quiz) {
 function lbRender() {
   const d = LB.data, q = LB.quiz, pctView = LB.view === 'pct';
   if (!d.enabled) return '<div class="hint">The creator turned the leaderboard off.</div>';
-  if (!d.visible) return emptyBox('lock', 'Results are not available now', Q.quiz && Q.quiz.release_mode === 'scheduled' && Q.quiz.release_at ? `They open on ${fmtDT(Q.quiz.release_at)}.` : 'Check back later — the creator has not released results yet.');
+  if (!d.visible) return `<div class="hint">${ic('lock', 14)} The leaderboard opens when the creator releases the results.</div>`;
   if (!d.rows.length) return '<div class="hint">No completed attempts yet. Be the first on the board.</div>';
   const subs = []; d.rows.forEach(r => (r.subjects || []).forEach(s => { if (!subs.find(x => x.set_id === s.set_id)) subs.push({ set_id: s.set_id, name: s.name }); }));
   const fig = (score, total) => pctView ? num(total > 0 ? score / total * 100 : 0, 1) + '%' : num(score);
@@ -2351,6 +2368,10 @@ async function vLeaderboardFull([key], query, tok) {
   if (stale(tok)) return;
   if (!quiz) { setView(`<div class="wrap">${emptyBox('lock', 'Quiz not found')}</div>`); return; }
   Q.quiz = quiz; LB.search = '';
+  if (!resultsPubliclyAvailable(quiz)) {
+    setView(`<div class="wrap"><div class="row"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><h1 class="h2 grow">Leaderboard</h1></div>${resultsUnavailableBox(quiz)}</div>`);
+    return;
+  }
   setView(`<div class="wrap"><div class="row"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><h1 class="h2 grow">Leaderboard</h1>${quiz.allow_sharing ? `<button class="btn sm" data-act="q-share">${ic('share', 14)} Share</button>` : ''}</div>
     <input class="inp gap" id="lb-search" placeholder="Search participant by name">
     <div id="lb-body" class="gap"><div class="spin"></div></div></div>`);
@@ -2367,6 +2388,10 @@ async function vAttemptsFull([key], query, tok) {
   if (stale(tok)) return;
   if (!quiz) { setView(`<div class="wrap">${emptyBox('lock', 'Quiz not found')}</div>`); return; }
   Q.quiz = quiz; AF.filter = 'all'; AF.search = '';
+  if (!resultsPubliclyAvailable(quiz)) {
+    setView(`<div class="wrap"><div class="row"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><h1 class="h2 grow">Attempts</h1></div>${resultsUnavailableBox(quiz)}</div>`);
+    return;
+  }
   setView(`<div class="wrap"><div class="row"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><h1 class="h2 grow" id="af-title">Attempts</h1></div>
     <input class="inp gap" id="af-search" placeholder="Search…">
     <div class="chips gap" id="af-tabs"></div>
@@ -2386,7 +2411,7 @@ function afGroup(rows) {
 }
 function afRender() {
   const d = AF.data; if (!d) return;
-  if (!d.visible) { $('#af-body').innerHTML = emptyBox('lock', 'Results are not available now', Q.quiz && Q.quiz.release_mode === 'scheduled' && Q.quiz.release_at ? `They open on ${fmtDT(Q.quiz.release_at)}.` : 'Check back later — the creator has not released results yet.'); $('#af-tabs').innerHTML = ''; return; }
+  if (!d.visible) { $('#af-body').innerHTML = `<div class="hint">${ic('lock', 14)} Attempts open when the creator releases results.</div>`; $('#af-tabs').innerHTML = ''; return; }
   const groups = afGroup(d.rows || []);
   const cnt = { all: groups.length, completed: 0, cancelled: 0, ongoing: 0 };
   groups.forEach(g => cnt[afStatus(g[0])]++);
@@ -2508,9 +2533,7 @@ async function tkMount() {
       <div class="tk-timer" id="tk-timer">--:--</div></div>
       <div class="bar" style="margin-top:8px;height:5px"><i id="tk-prog" style="width:0"></i></div>
       ${T.preview ? `<div class="badge gold" style="margin-top:8px">${ic('eye', 12)} Preview. Nothing is saved.</div>` : (q.anticheat ? `<div class="acbadge" style="margin-top:8px">${ic('shield', 14)} Anti-cheat is on. Stay on this screen.</div>${q.anticheat_voice ? `<div class="microw"><span class="mic-ic">${ic('mic', 14)}</span><span class="micbar"><i id="mic-lvl"></i></span><span id="mic-txt" class="xs mut">Starting microphone…</span></div>` : ''}` : '')}</div>
-    <div class="tk-sets" id="tk-sets"></div>
-    ${q.exam_mode ? `<div class="card tight gap" id="tk-jamb" style="margin:0 16px 10px"></div>` : ''}
-    <div class="tk-body" id="tk-q"></div>
+    <div class="tk-sets" id="tk-sets"></div><div class="tk-body" id="tk-q"></div>
     <div class="tk-foot"><div class="in"><button class="btn" data-act="tk-prev" id="tk-prev">${ic('back', 18)}</button><button class="btn" data-act="tk-flag" id="tk-flag">${ic('flag', 18)}</button><button class="btn brass" style="flex:2" data-act="tk-next" id="tk-next">Next ${ic('next', 18)}</button></div></div></div>`;
   tkShow();
   T.timerId = setInterval(tkTick, 250); tkTick();
@@ -2546,11 +2569,6 @@ function tkOpts(it) {
   const m = {}; (it.options || []).forEach(o => m[o.id] = o);
   return ((T.layout.opts[it.id]) || (it.options || []).map(o => o.id)).map(id => m[id]).filter(Boolean);
 }
-function palGrid() {
-  const answered = T.items.filter(x => hasAns(x, T.answers)).length, fl = Object.keys(T.flags).length;
-  return `<div class="row wrapf gap0 xs mut" style="gap:14px;margin-bottom:8px"><span>${ic('check', 12)} ${answered} answered</span><span>${T.items.length - answered} unanswered</span>${fl ? `<span class="bad">${fl} flagged</span>` : ''}</div>
-    <div class="pal gap0">${T.items.map((x, i) => `<button class="${hasAns(x, T.answers) ? 'a' : ''} ${T.flags[x.id] ? 'f' : ''} ${i === T.idx ? 'cur' : ''}" data-act="tk-jump" data-i="${i}">${i + 1}</button>`).join('')}</div>`;
-}
 function tkShow() {
   if (!T) return;
   const it = tkCur(), n = T.items.length, a = T.answers[it.id], q = T.quiz;
@@ -2558,7 +2576,6 @@ function tkShow() {
   const answered = T.items.filter(x => hasAns(x, T.answers)).length;
   $('#tk-cnt').textContent = `${answered} of ${n} answered`;
   $('#tk-prog').style.width = (answered / n * 100) + '%';
-  const jamb = $('#tk-jamb'); if (jamb) jamb.innerHTML = palGrid();
   const setName = (T.sets.find(s => s.id === it.set_id) || {}).name;
   const sets = T.sets.slice().sort((x, y) => x.position - y.position).filter(s => T.items.some(z => z.set_id === s.id));
   $('#tk-sets').innerHTML = sets.length > 1 ? sets.map(s => `<button class="${s.id === it.set_id ? 'on' : ''}" data-act="tk-set" data-id="${s.id}">${esc(s.name)}</button>`).join('') : '';
@@ -2621,7 +2638,9 @@ ACT['tk-fifty'] = async () => {
   tkShow();
 };
 ACT['tk-pal'] = () => {
-  openSheet(`<h3 class="h2">Your questions</h3>${palGrid()}
+  const n = T.items.length, answered = T.items.filter(x => hasAns(x, T.answers)).length, fl = Object.keys(T.flags).length;
+  openSheet(`<h3 class="h2">Your questions</h3><div class="row wrapf gap0 xs mut" style="gap:14px"><span>${ic('check', 12)} ${answered} answered</span><span>${n - answered} unanswered</span>${fl ? `<span class="bad">${fl} flagged</span>` : ''}</div>
+    <div class="pal gap">${T.items.map((x, i) => `<button class="${hasAns(x, T.answers) ? 'a' : ''} ${T.flags[x.id] ? 'f' : ''} ${i === T.idx ? 'cur' : ''}" data-act="tk-jump" data-i="${i}">${i + 1}</button>`).join('')}</div>
     <div class="row gap"><button class="btn grow ghost" data-act="close">Keep going</button><button class="btn grow brass" data-act="tk-submit">Submit quiz</button></div>`);
 };
 ACT['tk-jump'] = el => { closeSheet(); tkGo(+el.dataset.i); };
@@ -2785,10 +2804,19 @@ function tkPreviewFinish() {
    ============================================================ */
 async function vResult([aid], query, tok) {
   if (!S.me) { S.returnTo = '/result/' + aid; nav('/auth/login'); return; }
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(aid || '')) { throw new Error('Invalid attempt ID.'); }
   setView(`<div class="wrap">${skel(3)}</div>`);
+  const att = await db(sb.from('attempts').select('id,quiz_id,status').eq('id', aid).maybeSingle());
+  if (!att) throw new Error('Attempt not found');
+  const quiz = await db(sb.from('quizzes').select('*').eq('id', att.quiz_id).single());
+  if (stale(tok)) return;
+  const mgr = S.me && (quiz.owner_id === S.me.id || isAdmin());
+  if (!mgr && !resultsPubliclyAvailable(quiz)) {
+    setView(`<div class="wrap narrow">${resultsUnavailableBox(quiz)}<div class="row gap"><a class="btn brass grow" href="#/quiz/${esc(quiz.share_code)}">Back to quiz</a></div></div>`);
+    return;
+  }
+  if (att.status === 'ongoing') { location.replace('#/take/' + aid); return; }
   const summary = await rpc('get_attempt_summary', { p_attempt_id: aid });
-  if (summary.attempt.status === 'ongoing') { location.replace('#/take/' + aid); return; }
-  const quiz = await db(sb.from('quizzes').select('*').eq('id', summary.attempt.quiz_id).single());
   if (stale(tok)) return;
   resultScreen({ quiz, summary, aid });
 }
@@ -2822,9 +2850,8 @@ function resultScreen(d) {
     <div class="col gap">
       ${canRev ? `<button class="btn block" data-act="${d.preview ? 'pv-review' : 'res-review'}" data-id="${esc(att.id)}">${ic('eye', 18)} Review answers</button>` : ''}
       ${canRev && !d.preview && pct < 100 ? `<button class="btn brass block" data-act="practice-weak" data-id="${esc(att.id)}">${ic('zap', 18)} Practice what I got wrong</button>` : ''}
-      ${!d.preview && (q.leaderboard_enabled || q.is_challenge) ? `<a class="btn block" href="#/leaderboard/${esc(q.share_code)}">${ic('trophy', 18)} See the leaderboard</a>` : ''}
+      ${!d.preview && (S.me && (q.owner_id === S.me.id || isAdmin()) || resultsPubliclyAvailable(q)) && (q.leaderboard_enabled || q.is_challenge) ? `<a class="btn block" href="#/leaderboard/${esc(q.share_code)}">${ic('trophy', 18)} See the leaderboard</a>` : ''}
       ${!d.preview && !other ? `<button class="btn block" data-act="res-share">${ic('share', 18)} Share my result</button>` : ''}
-      ${!d.preview && !other ? `<button class="btn brass block" data-act="res-cert">${ic('download', 18)} Get shareable certificate</button>` : ''}
       ${S.me && S.me.anon ? `<a class="btn brass block" href="#/auth/signup">Create an account to keep your results</a>` : ''}
       ${back}</div></div>`);
   RES.d = d;
@@ -2838,70 +2865,6 @@ ACT['res-share'] = async () => {
   const text = `I scored ${num(r.score)}/${num(r.total)} (${num(r.percentage, 1)}%) on "${q.title}" on QuizBuilt. Can you beat me?`;
   if (navigator.share) { try { await navigator.share({ title: q.title, text, url: quizUrl(q) }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
   copyText(text + ' ' + quizUrl(q));
-};
-/* ---------- shareable result certificate (canvas image, nothing server-side) ---------- */
-function drawCertificate(r, q, name) {
-  const W = 1080, H = 1350;
-  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-  const g = cv.getContext('2d');
-  const dark = document.documentElement.getAttribute('data-theme') !== 'light';
-  const bg1 = dark ? '#06070D' : '#F3F6FC', bg2 = dark ? '#151832' : '#EAF1FD';
-  const brass = dark ? '#4E8CFF' : '#2F6FED', violet = '#8B5CF6', teal = '#2DD4BF', gold = '#F5C044';
-  const tx = dark ? '#F1F2FA' : '#131A2C', mut = dark ? '#A4A8CC' : '#5C6785';
-
-  const grad = g.createLinearGradient(0, 0, W, H); grad.addColorStop(0, bg1); grad.addColorStop(1, bg2);
-  g.fillStyle = grad; g.fillRect(0, 0, W, H);
-
-  const ring = g.createLinearGradient(0, 0, W, 0); ring.addColorStop(0, brass); ring.addColorStop(.5, violet); ring.addColorStop(1, teal);
-  g.strokeStyle = ring; g.lineWidth = 10; g.strokeRect(30, 30, W - 60, H - 60);
-
-  g.fillStyle = brass; g.font = '700 44px Georgia, serif'; g.textAlign = 'center';
-  g.fillText('◆ QuizBuilt', W / 2, 140);
-
-  const pct = +r.percentage, passed = r.passed;
-  g.fillStyle = passed ? teal : gold; g.font = '700 28px Arial'; g.textAlign = 'center';
-  g.fillText(passed ? 'PASSED' : 'RESULT', W / 2, 210);
-
-  g.fillStyle = tx; g.font = '700 220px Georgia, serif'; g.textAlign = 'center';
-  g.fillText(num(pct, 0) + '%', W / 2, 500);
-
-  g.fillStyle = mut; g.font = '500 34px Arial'; g.textAlign = 'center';
-  g.fillText(`${num(r.score)} / ${num(r.total)} marks`, W / 2, 560);
-
-  g.fillStyle = tx; g.font = '700 46px Georgia, serif'; g.textAlign = 'center';
-  wrapText(g, q.title, W / 2, 700, 880, 56);
-
-  g.fillStyle = mut; g.font = '500 32px Arial'; g.textAlign = 'center';
-  g.fillText(esc_(name || 'A QuizBuilt user'), W / 2, 950);
-  g.font = '400 26px Arial'; g.fillText(new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }), W / 2, 995);
-
-  g.strokeStyle = mut; g.globalAlpha = .3; g.beginPath(); g.moveTo(140, 1080); g.lineTo(W - 140, 1080); g.stroke(); g.globalAlpha = 1;
-  g.fillStyle = brass; g.font = '700 30px Arial'; g.fillText('quizbuilt.pages.dev', W / 2, 1160);
-  g.fillStyle = mut; g.font = '400 24px Arial'; g.fillText('Take this quiz yourself →', W / 2, 1200);
-  return cv;
-}
-function wrapText(g, text, x, y, maxW, lh) {
-  const words = text.split(' '); let line = '', lines = [];
-  words.forEach(w => { const t = line + w + ' '; if (g.measureText(t).width > maxW && line) { lines.push(line); line = w + ' '; } else line = t; });
-  lines.push(line);
-  const startY = y - (lines.length - 1) * lh / 2;
-  lines.forEach((l, i) => g.fillText(l.trim(), x, startY + i * lh));
-}
-const esc_ = s => String(s || '');
-ACT['res-cert'] = async btn => {
-  busy(btn, true);
-  try {
-    const d = RES.d, r = d.summary.result, q = d.quiz;
-    const cv = drawCertificate(r, q, (S.me && S.me.username) || d.summary.attempt.display_name);
-    cv.toBlob(async blob => {
-      const file = new File([blob], 'quizbuilt-result.png', { type: 'image/png' });
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        try { await navigator.share({ files: [file], title: q.title, text: `I scored ${num(r.percentage, 0)}% on "${q.title}" — QuizBuilt` }); busy(btn, false); return; } catch (e) { if (e && e.name === 'AbortError') { busy(btn, false); return; } }
-      }
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'quizbuilt-result.png'; a.click();
-      busy(btn, false);
-    }, 'image/png');
-  } catch (e) { toast(cleanErr(e), 'bad'); busy(btn, false); }
 };
 ACT['res-review'] = el => nav('/review/' + el.dataset.id);
 ACT['pv-review'] = () => reviewScreen(Object.assign({}, RES.d, { mgr: true }));
@@ -2926,9 +2889,14 @@ ACT['pz-submit'] = async btn => {
 
 async function vReview([aid], query, tok) {
   if (!S.me) { nav('/auth/login'); return; }
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(aid || '')) { throw new Error('Invalid attempt ID.'); }
   setView(`<div class="wrap">${skel(4)}</div>`);
+  const att = await db(sb.from('attempts').select('id,quiz_id,status').eq('id', aid).maybeSingle());
+  if (!att) throw new Error('Attempt not found');
+  const quiz = await db(sb.from('quizzes').select('*').eq('id', att.quiz_id).single());
+  const mgr = S.me && (quiz.owner_id === S.me.id || isAdmin());
+  if (!mgr && !resultsPubliclyAvailable(quiz)) { setView(`<div class="wrap narrow">${resultsUnavailableBox(quiz)}</div>`); return; }
   const summary = await rpc('get_attempt_summary', { p_attempt_id: aid });
-  const quiz = await db(sb.from('quizzes').select('*').eq('id', summary.attempt.quiz_id).single());
   let review, questions;
   try { [questions, review] = await Promise.all([rpc('get_attempt_questions', { p_attempt_id: aid }), rpc('get_attempt_review', { p_attempt_id: aid })]); }
   catch (e) { setView(`<div class="wrap"><div class="empty">${ic('lock', 34)}<h3 class="h2">Review is not available</h3><p class="gap0">${esc(cleanErr(e))}</p><a class="btn gap" href="#/result/${aid}">Back to result</a></div></div>`); return; }
@@ -2980,6 +2948,9 @@ async function vPracticeWeak([aid], query, tok) {
   try {
     summary = await rpc('get_attempt_summary', { p_attempt_id: aid });
     quiz = await db(sb.from('quizzes').select('*').eq('id', summary.attempt.quiz_id).single());
+    if (!(S.me && (quiz.owner_id === S.me.id || isAdmin())) && !resultsPubliclyAvailable(quiz)) {
+      setView(`<div class="wrap narrow">${resultsUnavailableBox(quiz)}</div>`); return;
+    }
     [questions, review] = await Promise.all([rpc('get_attempt_questions', { p_attempt_id: aid }), rpc('get_attempt_review', { p_attempt_id: aid })]);
   } catch (e) { setView(`<div class="wrap"><div class="empty">${ic('lock', 34)}<h3 class="h2">Not available</h3><p class="gap0">${esc(cleanErr(e))}</p><a class="btn gap" href="#/result/${aid}">Back to result</a></div></div>`); return; }
   if (stale(tok)) return;
