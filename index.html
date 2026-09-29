@@ -82,7 +82,7 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:14px 0}
 .nav a{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--dim);padding:4px 10px;border-radius:14px;min-width:58px}
 .nav a.on{color:var(--brass)}
 .nav a.mk{background:linear-gradient(135deg,var(--brass),var(--violet));color:var(--onb);width:54px;height:54px;min-width:54px;border-radius:18px;justify-content:center;margin-top:-22px;box-shadow:0 10px 26px -6px color-mix(in srgb,var(--brass) 55%,transparent)}
-body.taking .top,body.taking .nav{display:none}
+body.taking .top,body.taking .nav,body.taking #wa-banner{display:none!important}
 
 /* surfaces */
 .card{background:var(--s1);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow-sm)}
@@ -191,7 +191,7 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xm
 
 /* modal / sheet */
 .ovl{position:fixed;inset:0;z-index:90;background:rgba(2,8,5,.66);display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px)}
-.sheet{width:100%;max-width:560px;max-height:92vh;overflow-y:auto;background:var(--s1);border:1px solid var(--line2);border-radius:24px 24px 0 0;padding:20px 18px calc(22px + env(safe-area-inset-bottom));animation:up .22s ease-out}
+.sheet{width:100%;max-width:560px;max-height:92vh;overflow-y:auto;background:var(--s1);border:1px solid var(--line2);border-radius:24px 24px 0 0;padding:20px 18px calc(22px + env(safe-area-inset-bottom));animation:up .12s ease-out}
 .sheet .grab{width:40px;height:4px;border-radius:4px;background:var(--line2);margin:-8px auto 14px}
 @keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
 @media(min-width:640px){.ovl{align-items:center}.sheet{border-radius:24px}}
@@ -241,6 +241,12 @@ select.inp{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xm
 .kbd{font-family:var(--mono);font-size:12px;background:var(--s3);padding:2px 6px;border-radius:5px}
 .pre{white-space:pre-wrap;font-family:var(--mono);font-size:12.5px;background:var(--s2);border:1px solid var(--line);border-radius:10px;padding:12px;color:var(--mut);max-height:230px;overflow:auto}
 .pcard{border-left:3px solid var(--info);background:var(--s2);border-radius:0 12px 12px 0;padding:12px 14px;margin-bottom:10px}
+/* Bulk import performance: isolate the long preview list and let the browser skip off-screen rows. */
+.bk-list{max-height:56vh;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-gutter:stable;contain:layout paint style}
+.bk-list .bk-row{content-visibility:auto;contain-intrinsic-size:auto 62px;contain:layout style;will-change:auto}
+#bk-prev{min-width:0;contain:layout style}
+#bk-text{spellcheck:false;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+
 
 /* taking a quiz */
 .tk{min-height:100vh;display:flex;flex-direction:column;max-width:760px;margin:0 auto}
@@ -380,9 +386,9 @@ select.inp option{background:var(--s1);color:var(--tx)}
 
 /* ---- calmer, premium motion ---- */
 *{scroll-behavior:smooth}
-.btn,.chip,.tab,.iconbtn,.opt,.tile,.card,.slip,.sw i,.sw i:before{transition:background-color .16s ease,border-color .16s ease,color .16s ease,transform .12s ease,box-shadow .16s ease}
+.btn,.chip,.tab,.iconbtn,.opt,.tile,.card,.slip,.sw i,.sw i:before{transition:background-color .1s ease,border-color .1s ease,color .1s ease,transform .08s ease,box-shadow .1s ease}
 .btn:active,.chip:active,.tile:active,.opt:active{transform:scale(.97)}
-#view{animation:viewin .22s cubic-bezier(.22,.8,.36,1)}
+#view{animation:viewin .12s cubic-bezier(.22,.8,.36,1)}
 @keyframes viewin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 
@@ -870,7 +876,7 @@ const setView = html => { const v = $('#view'); if (v) { v.innerHTML = html; win
 const skel = (n = 3) => Array.from({ length: n }, () => '<div class="skel"></div>').join('');
 const parseHash = () => { const h = location.hash.replace(/^#/, '') || '/'; const [path, qs] = h.split('?'); return { path: path || '/', query: Object.fromEntries(new URLSearchParams(qs || '')) }; };
 
-/* ---------- community banner (WhatsApp group + channel), always shown ---------- */
+/* ---------- community banner (WhatsApp group + channel), normal-menu only ---------- */
 const WA_GROUP = 'https://chat.whatsapp.com/FTuxUsr1VBB6rHEef4VuZK';
 const WA_CHANNEL = 'https://whatsapp.com/channel/0029VbDKSnjD38COOGynlN1I';
 function renderWaBanner() {
@@ -1272,7 +1278,7 @@ async function exLoad(more, tok) {
   if (more) list.insertAdjacentHTML('beforeend', h); else list.innerHTML = h || emptyBox('search', 'Nothing found', 'Try a different word or category.');
   $('#ex-more').innerHTML = rows.length === PS ? `<button class="btn" data-act="exmore">Load more</button>` : '';
 }
-INP.exsearch = debounce(el => { EX.term = el.value; EX.page = 0; $('#ex-list').innerHTML = skel(3); exLoad(false); }, 350);
+INP.exsearch = debounce(el => { EX.term = el.value; EX.page = 0; $('#ex-list').innerHTML = skel(3); exLoad(false); }, 140);
 ACT.excat = el => { EX.cat = el.dataset.c; EX.page = 0; exMarks(); $('#ex-list').innerHTML = skel(3); return exLoad(false); };
 ACT.exsort = el => { EX.sort = el.dataset.s; EX.page = 0; exMarks(); $('#ex-list').innerHTML = skel(3); return exLoad(false); };
 ACT.exmore = () => { EX.page++; return exLoad(true); };
@@ -1633,7 +1639,7 @@ ACT['inv-del'] = async el => { await db(sb.from('quiz_invites').delete().eq('qui
 /* ---------- questions ---------- */
 const TYPE_LBL = { mcq: 'Multiple choice', tf: 'True or false', passage: 'Passage', essay: 'Essay', fib: 'Fill in the blank' };
 function edDirty() {
-  E.dirty = true; E.rev++; edPill('Unsaved changes', 'warn'); clearTimeout(E.timer); E.timer = setTimeout(edSave, 2500);
+  E.dirty = true; E.rev++; edPill('Unsaved changes', 'warn'); clearTimeout(E.timer); E.timer = setTimeout(edSave, 1000);
   window.onbeforeunload = () => 'You have unsaved changes';
 }
 function edPill(t, cls) { const p = $('#save-pill'); if (p) { p.textContent = t; p.className = 'badge ' + (cls || ''); } }
@@ -1836,7 +1842,7 @@ async function edSave(manual) {
     const upd = await db(sb.from('quizzes').update({ question_count: ans.length, total_marks: ans.reduce((a, q) => a + (+q.marks || 0), 0) }).eq('id', qid).select().single());
     E.quiz = Object.assign(E.quiz, { question_count: upd.question_count, total_marks: upd.total_marks });
     if (E.rev === rev0) { E.dirty = false; window.onbeforeunload = null; edPill('All changes saved', 'ok'); }
-    else { E.dirty = true; edPill('Unsaved changes', 'warn'); clearTimeout(E.timer); E.timer = setTimeout(edSave, 800); }
+    else { E.dirty = true; edPill('Unsaved changes', 'warn'); clearTimeout(E.timer); E.timer = setTimeout(edSave, 400); }
     if (manual) toast('Saved', 'ok');
   } catch (e) { edPill('Not saved – tap Save', 'bad'); if (manual || true) toast('Could not save: ' + cleanErr(e), 'bad'); }
   E.saving = false;
@@ -1870,7 +1876,7 @@ Marks: 10
 Add [Section: Physics] on its own line to start a new set.
 Mark the correct option with * (like *B. Mercury) or with an Answer line.
 [Passage] text… then numbered questions after it.</div></details>
-    <textarea class="inp gap" id="bk-text" rows="9" placeholder="Paste your questions here…"></textarea>
+    <textarea class="inp gap" id="bk-text" rows="9" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="Paste your questions here…"></textarea>
     <div class="row gap0"><label class="btn sm" style="cursor:pointer">${ic('file', 14)} Choose file<input type="file" id="bk-file" accept=".txt,.md,.csv,.docx,.pdf,text/plain" hidden data-chg="bkfile"></label><span class="hint" id="bk-fn" style="margin:0"></span></div>
     <div class="row gap"><div class="grow"><label class="lbl" style="margin-top:0" for="bk-marks">Marks each</label><input class="inp" id="bk-marks" type="number" min="0" step="0.5" value="${E.lastMarks || 1}"></div>
       <div class="grow"><label class="lbl" style="margin-top:0" for="bk-set">Add to</label><select class="inp" id="bk-set">${E.sets.map(s => `<option value="${s.id}" ${s.id === E.active ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select></div></div>
@@ -2682,7 +2688,7 @@ ACT['tk-pick'] = el => {
   if (it.multi) a = a.includes(o) ? a.filter(x => x !== o) : [...a, o]; else a = a.includes(o) ? [] : [o];
   tkAnswered(it, a);
   $$('#tk-q .opt').forEach(b => b.classList.toggle('on', a.includes(b.dataset.o)));
-  if (T.quiz.auto_advance && !it.multi && a.length && T.idx < T.items.length - 1) { const at = T.idx; setTimeout(() => { if (T && T.idx === at && !T.done) tkGo(at + 1); }, 320); }
+  if (T.quiz.auto_advance && !it.multi && a.length && T.idx < T.items.length - 1) { const at = T.idx; setTimeout(() => { if (T && T.idx === at && !T.done) tkGo(at + 1); }, 35); }
 };
 INP.tkfib = el => { if (T) tkAnswered(tkCur(), el.value); };
 INP.tkessay = el => { if (T) { tkAnswered(tkCur(), el.value); const w = $('#tk-wc'); if (w) w.textContent = (el.value.trim() ? el.value.trim().split(/\s+/).length : 0) + ' words'; } };
@@ -3522,7 +3528,7 @@ function printHtml(html, title) {
   const old = document.title; document.title = title;
   const f = document.createElement('iframe'); f.style.cssText = 'position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0'; document.body.appendChild(f);
   f.onload = () => setTimeout(() => {
-    try { f.contentWindow.focus(); f.contentWindow.print(); }
+    try { if (f.contentDocument && f.contentDocument.fonts && f.contentDocument.fonts.ready) f.contentDocument.fonts.ready.catch(() => {}); f.contentWindow.focus(); f.contentWindow.print(); }
     catch (e) { download(title + '.html', html, 'text/html'); toast('Saved as a web page. Open it and print to PDF.'); }
     setTimeout(() => { document.title = old; }, 2500); setTimeout(() => f.remove(), 120000);
   }, 500);
@@ -3601,26 +3607,26 @@ function buildResultsXlsx(quiz, rows, sets) {
   S.push({ name: 'Results', rows: data, widths, freeze: 1, filter: `A1:${colName(head.length - 1)}${Math.max(2, data.length)}`, heights: { 0: 34 }, tab: '2A1F8F' });
   return xlsxBuild(S, XS);
 }
-const RES_CSS = `@page{size:A4 landscape;margin:12mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-body{font-family:Arial,Helvetica,sans-serif;color:#131A2C;font-size:10pt}
-.rp-head{background:linear-gradient(120deg,#1E56D6,#2F6FED 55%,#8B5CF6);color:#fff;border-radius:10pt;padding:10pt 16pt;display:flex;justify-content:space-between;align-items:flex-end;gap:16pt}
+const RES_CSS = `@page{size:A4 landscape;margin:8mm 9mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact;box-sizing:border-box}
+html,body{margin:0!important;padding:0!important;height:auto!important;min-height:0!important}body{font-family:Arial,Helvetica,sans-serif;color:#131A2C;font-size:9pt;line-height:1.25}
+.rp-head{background:linear-gradient(120deg,#1E56D6,#2F6FED 55%,#8B5CF6);color:#fff;border-radius:8pt;padding:10pt 14pt;display:flex;justify-content:space-between;align-items:flex-end;gap:12pt;break-inside:avoid;page-break-inside:avoid}
 .rp-brand{font-family:Georgia,serif;font-size:11pt;letter-spacing:.06em;opacity:.9;margin-bottom:6pt}
 .rp-head h1{color:#fff;font-size:22pt;margin:0;line-height:1.15;font-family:Georgia,serif}
 .rp-sub{font-size:9pt;opacity:.9;margin-top:5pt}
 .rp-tag{background:rgba(255,255,255,.18);border:.8pt solid rgba(255,255,255,.5);border-radius:20pt;padding:4pt 12pt;font-size:8.5pt;font-weight:700;letter-spacing:.06em;white-space:nowrap}
-.rp-kpis{display:flex;gap:8pt;margin:8pt 0 5pt}
-.rp-kpi{flex:1;border:.8pt solid #DCE5F7;border-radius:8pt;padding:6pt 8pt;text-align:center;background:#F5F8FE}
-.rp-kpi b{display:block;font-size:18pt;color:#1E56D6;font-family:Georgia,serif}.rp-kpi span{font-size:8pt;color:#5C6785;text-transform:uppercase;letter-spacing:.06em}
-.rp-subj{display:flex;gap:6pt;margin:4pt 0 3pt;flex-wrap:wrap}
+.rp-kpis{display:flex;gap:6pt;margin:7pt 0 4pt;break-inside:avoid}
+.rp-kpi{flex:1;border:.8pt solid #DCE5F7;border-radius:7pt;padding:5pt 6pt;text-align:center;background:#F5F8FE}
+.rp-kpi b{display:block;font-size:15pt;color:#1E56D6;font-family:Georgia,serif}.rp-kpi span{font-size:8pt;color:#5C6785;text-transform:uppercase;letter-spacing:.06em}
+.rp-subj{display:flex;gap:5pt;margin:4pt 0 3pt;flex-wrap:wrap}
 .rp-chip{border-radius:20pt;padding:3pt 10pt;font-size:8.5pt;font-weight:700;background:#EEF2FF;color:#3B4FCE}
-.rp-note{font-size:8pt;color:#5C6785;margin:5pt 0 4pt}
-table.rt{width:100%;border-collapse:collapse;font-size:9pt}
-table.rt th{background:#131A2C;color:#fff;text-align:center;padding:5pt 6pt;font-size:8pt;letter-spacing:.05em;text-transform:uppercase}
+.rp-note{font-size:7pt;color:#5C6785;margin:4pt 0 3pt}
+table.rt{width:100%;border-collapse:collapse;font-size:8pt;table-layout:auto;margin:0;break-before:auto;page-break-before:auto}table.rt thead{display:table-header-group}table.rt tfoot{display:table-footer-group}table.rt tbody{break-before:auto;page-break-before:auto}
+table.rt th{background:#131A2C;color:#fff;text-align:center;padding:4pt 4pt;font-size:7pt;letter-spacing:.03em;text-transform:uppercase}
 table.rt th.l,table.rt td.l{text-align:left}
 table.rt th.sub{background:#2F6FED}
-table.rt td{padding:4.5pt 6pt;text-align:center;border-bottom:.6pt solid #E3E9F6}
+table.rt td{padding:3.5pt 4pt;text-align:center;border-bottom:.5pt solid #E3E9F6;line-height:1.15}
 table.rt tr:nth-child(even) td{background:#F7F9FE}
-table.rt thead{display:table-header-group}
+table.rt tr{break-inside:avoid!important;page-break-inside:avoid!important} .rp-foot{margin-top:5pt;padding-top:3pt;break-inside:avoid} @media print{html,body{width:auto!important;height:auto!important;overflow:visible!important}.rp-head,.rp-kpis,.rp-subj,.rp-note{max-width:100%}table.rt{break-inside:auto!important;page-break-inside:auto!important}}
 .rk{display:inline-block;min-width:18pt;height:18pt;line-height:18pt;border-radius:50%;font-weight:700;font-size:8.5pt;background:#EEF2FF;color:#3B4FCE}
 .rk.r1{background:#F5C044;color:#4A3300}.rk.r2{background:#C9D2E6;color:#2A2E3A}.rk.r3{background:#E0995E;color:#3A1F0A}
 .pill{display:inline-block;border-radius:20pt;padding:2pt 9pt;font-size:8pt;font-weight:700}
