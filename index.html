@@ -435,6 +435,39 @@ select.inp option{background:var(--s1);color:var(--tx)}
 .lb-you{font-size:8px;color:var(--qb-accent);font-weight:900}
 @media(max-width:480px){.lb-summary{grid-template-columns:repeat(3,1fr)}.lb-row{grid-template-columns:28px 34px minmax(0,1fr) auto;gap:8px}.lb-avatar2{width:34px;height:34px}.lb-score2{min-width:48px}.lb-top3{gap:5px}.lb-card3{padding-left:5px;padding-right:5px}}
 </style>
+
+<style>
+/* ============================================================
+   QUIZBUILT — LEADERBOARD DESIGN ONLY
+   Scoped to .qb-lb so the rest of the app keeps its original UI.
+   ============================================================ */
+.qb-lb-wrap{max-width:900px;padding-bottom:100px}
+.qb-lb-page-head{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.qb-lb-page-head>div{min-width:0;flex:1}
+.qb-lb-page-head h1{font-family:var(--serif);font-size:31px;line-height:1.05;letter-spacing:-.045em;margin:5px 0 4px;font-weight:800}
+.qb-lb-page-head p{margin:0;color:var(--mut);font-size:14px;font-weight:600}
+.qb-lb-eyebrow{font-size:10.5px;font-weight:900;letter-spacing:.17em;color:var(--brass);text-transform:uppercase}
+.qb-lb-page-head .iconbtn{width:50px;height:50px;border-radius:18px;flex:none}
+.qb-lb-share{flex:none}
+.qb-lb-search{height:62px;border:1px solid color-mix(in srgb,var(--brass) 16%,var(--line2));background:linear-gradient(180deg,color-mix(in srgb,var(--s2) 95%,transparent),var(--s1));border-radius:19px;display:flex;align-items:center;gap:12px;padding:0 18px;margin-bottom:26px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 14px 32px -24px #000;transition:border-color .2s,box-shadow .2s}
+.qb-lb-search:focus-within{border-color:var(--brass);box-shadow:0 0 0 4px color-mix(in srgb,var(--brass) 12%,transparent),0 18px 36px -26px var(--brass)}
+.qb-lb-search span{color:var(--mut);display:grid;place-items:center}.qb-lb-search input{flex:1;min-width:0;border:0!important;outline:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;font:600 15px var(--sans);color:var(--tx)}.qb-lb-search input::placeholder{color:var(--dim)}
+.qb-lb{font-family:var(--sans)}
+.qb-lb-hero{position:relative;overflow:hidden;border-radius:28px;padding:22px 25px 24px;border:1px solid color-mix(in srgb,var(--brass) 34%,var(--line));background:radial-gradient(120% 150% at 0% 0%,color-mix(in srgb,var(--brass) 21%,transparent),transparent 55%),radial-gradient(100% 130% at 100% 100%,color-mix(in srgb,var(--violet) 22%,transparent),transparent 58%),linear-gradient(180deg,var(--s2),var(--s1));box-shadow:0 30px 70px -35px color-mix(in srgb,var(--brass) 65%,transparent);animation:qbLbRise .5s cubic-bezier(.22,.8,.36,1) both}
+.qb-lb-hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.qb-lb-hero h2{font-family:var(--serif);font-size:30px;font-weight:800;letter-spacing:-.045em;line-height:1.02;margin:8px 0 7px;text-transform:uppercase}.qb-lb-hero p{margin:0;color:var(--mut);font-size:14px;font-weight:600}
+.qb-lb-live{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:99px;border:1px solid color-mix(in srgb,var(--ok) 55%,transparent);background:color-mix(in srgb,var(--ok) 10%,transparent);color:var(--ok);font-size:10.5px;font-weight:900;letter-spacing:.13em;flex:none}.qb-lb-live i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 color-mix(in srgb,var(--ok) 45%,transparent);animation:qbLbPing 1.8s infinite}
+.qb-lb-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 22px}.qb-lb-stats>div{position:relative;overflow:hidden;padding:16px 15px 14px;border-radius:20px;border:1px solid var(--line);background:linear-gradient(180deg,var(--s2),var(--s1));box-shadow:inset 0 1px 0 rgba(255,255,255,.04);animation:qbLbRise .55s cubic-bezier(.22,.8,.36,1) both}.qb-lb-stats>div::after{content:"";position:absolute;left:14px;right:14px;bottom:0;height:2px;background:var(--brass);opacity:.55}.qb-lb-stats>div:nth-child(2){--c:var(--gold)}.qb-lb-stats>div:nth-child(2)::after{background:var(--gold)}.qb-lb-stats>div:nth-child(3){--c:var(--violet)}.qb-lb-stats>div:nth-child(3)::after{background:var(--violet)}.qb-lb-stats b{display:block;font-family:var(--serif);font-size:23px;line-height:1.05;letter-spacing:-.04em;color:var(--c,var(--brass));font-weight:800;font-variant-numeric:tabular-nums}.qb-lb-stats span{display:block;margin-top:7px;font-size:9.5px;font-weight:900;letter-spacing:.13em;color:var(--dim)}
+.qb-lb-tabs{display:flex;gap:9px;overflow-x:auto;padding:2px 1px 8px;margin-bottom:5px;scrollbar-width:none}.qb-lb-tabs::-webkit-scrollbar{display:none}.qb-lb-tab{border:1px solid var(--line2);background:var(--s1);color:var(--mut);padding:11px 17px;border-radius:14px;font:800 13px var(--sans);white-space:nowrap;transition:.2s}.qb-lb-tab.on{background:linear-gradient(135deg,var(--brass),var(--brass2));color:var(--onb);border-color:transparent;box-shadow:0 9px 24px -12px var(--brass)}
+.qb-lb-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 15px;color:var(--dim);font-size:12px;font-weight:700}.qb-lb-seg{display:flex;padding:3px;border:1px solid var(--line);border-radius:13px;background:var(--s1)}.qb-lb-seg button{border:0;background:transparent;color:var(--mut);padding:7px 13px;border-radius:10px;font:800 12px var(--sans);transition:.18s}.qb-lb-seg button.on{background:linear-gradient(135deg,var(--brass),var(--brass2));color:var(--onb);box-shadow:0 6px 16px -9px var(--brass)}
+.qb-lb-podium-card{padding:17px 12px 13px;border:1px solid var(--line);border-radius:26px;background:linear-gradient(180deg,color-mix(in srgb,var(--s2) 88%,transparent),var(--s1));box-shadow:inset 0 1px 0 rgba(255,255,255,.04);margin-bottom:16px}.qb-lb-section-title,.qb-lb-allhead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 5px 13px;font-size:10.5px;font-weight:900;letter-spacing:.15em;color:var(--dim)}.qb-lb-section-title b,.qb-lb-allhead b{font-size:11px;letter-spacing:.02em;text-transform:none;color:var(--mut);font-weight:700}.qb-lb-podium{display:grid;grid-template-columns:1fr 1.13fr 1fr;gap:9px;align-items:end}.qb-lb-pod{--c:var(--bronze);position:relative;min-width:0;text-align:center;padding:20px 6px 15px;border:1px solid color-mix(in srgb,var(--c) 42%,var(--line));border-radius:22px;background:radial-gradient(100% 90% at 50% 0%,color-mix(in srgb,var(--c) 16%,transparent),transparent 65%),linear-gradient(180deg,var(--s2),var(--s1));animation:qbLbRise .65s cubic-bezier(.22,.8,.36,1) both;transition:transform .25s,border-color .25s,box-shadow .25s}.qb-lb-pod.gold{--c:var(--gold);padding-top:31px;padding-bottom:20px;box-shadow:0 26px 55px -28px color-mix(in srgb,var(--gold) 75%,transparent)}.qb-lb-pod.silver{--c:var(--silver)}.qb-lb-pod.me{box-shadow:0 0 0 2px color-mix(in srgb,var(--brass) 70%,transparent),0 24px 50px -26px var(--brass)}
+.qb-lb-ring{width:62px;height:62px;margin:0 auto 11px;padding:3px;border-radius:50%;background:conic-gradient(var(--c),color-mix(in srgb,var(--c) 22%,transparent),var(--c));}.qb-lb-pod.gold .qb-lb-ring{width:77px;height:77px}.qb-lb-avatar{width:100%;height:100%;display:grid;place-items:center;border-radius:50%;border:3px solid var(--s1);font-family:var(--serif);font-weight:800;font-size:21px;color:#090A12;background:linear-gradient(135deg,hsl(var(--h) 88% 67%),hsl(calc(var(--h) + 52) 82% 56%))}.qb-lb-pod.gold .qb-lb-avatar{font-size:27px}.qb-lb-avatar.small{width:43px;height:43px;flex:none;border:0;font-size:15px}.qb-lb-place{font-size:9.5px;font-weight:900;color:var(--c);letter-spacing:.12em}.qb-lb-name{margin-top:6px;font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.qb-lb-you{display:inline-block;margin-top:4px;padding:3px 8px;border-radius:99px;background:linear-gradient(135deg,var(--brass),var(--brass2));color:var(--onb);font-size:8.5px;font-weight:900;letter-spacing:.1em;vertical-align:middle}.qb-lb-score{margin-top:8px;font-family:var(--serif);font-size:25px;line-height:1;color:var(--c);font-weight:800;letter-spacing:-.045em;font-variant-numeric:tabular-nums}.qb-lb-pod.gold .qb-lb-score{font-size:31px}.qb-lb-sub{margin-top:6px;font-size:10.5px;color:var(--mut);font-weight:700}.qb-lb-crown{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:25px;color:var(--gold);filter:drop-shadow(0 6px 10px color-mix(in srgb,var(--gold) 75%,transparent));animation:qbLbBob 3.2s ease-in-out infinite}
+.qb-lb-position{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 18px;border:1px solid color-mix(in srgb,var(--brass) 70%,var(--line));border-radius:20px;background:radial-gradient(100% 180% at 0 50%,color-mix(in srgb,var(--brass) 12%,transparent),transparent 65%),var(--s1);margin:0 0 18px;box-shadow:0 0 0 1px color-mix(in srgb,var(--brass) 16%,transparent)}.qb-lb-position span{display:block;font-size:10px;font-weight:900;letter-spacing:.14em;color:var(--brass);margin-bottom:6px}.qb-lb-position b{display:block;font-size:16px;font-weight:800}.qb-lb-position strong{font-family:var(--serif);font-size:25px;color:var(--brass);white-space:nowrap}.qb-lb-position strong small{font-family:var(--sans);font-size:13px;color:var(--brass);margin-left:3px}
+.qb-lb-allhead{padding:2px 5px 11px}.qb-lb-list{display:grid;gap:9px}.qb-lb-row{position:relative;display:flex;align-items:center;gap:12px;min-width:0;padding:14px 13px 14px 15px;border:1px solid var(--line);border-radius:21px;background:linear-gradient(180deg,var(--s2),var(--s1));transition:transform .22s,border-color .22s,box-shadow .22s;overflow:hidden}.qb-lb-row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ok);opacity:.72}.qb-lb-row.failed::before{background:var(--bad)}.qb-lb-row.me{border-color:color-mix(in srgb,var(--brass) 58%,var(--line));box-shadow:0 0 0 1px color-mix(in srgb,var(--brass) 20%,transparent),0 18px 38px -28px var(--brass)}.qb-lb-rank{width:26px;flex:none;text-align:center;font-family:var(--serif);font-size:19px;font-weight:800;color:var(--dim);font-variant-numeric:tabular-nums}.qb-lb-row-main{min-width:0;flex:1}.qb-lb-row-name{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.qb-lb-meta{display:flex;align-items:center;gap:7px;margin-top:7px;font-size:10.5px;color:var(--dim);font-weight:700}.qb-lb-meta>b{color:var(--brass);font-variant-numeric:tabular-nums}.qb-lb-meta>i{display:block;height:6px;flex:1;min-width:45px;max-width:170px;border-radius:99px;background:color-mix(in srgb,var(--brass) 13%,var(--s3));overflow:hidden}.qb-lb-meta>i em{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--brass),var(--violet));box-shadow:0 0 10px color-mix(in srgb,var(--brass) 45%,transparent)}.qb-lb-row-score{text-align:right;flex:none;min-width:55px}.qb-lb-row-score b{display:block;font-family:var(--serif);font-size:19px;line-height:1;font-weight:800;color:var(--tx);font-variant-numeric:tabular-nums}.qb-lb-row-score small{display:block;margin-top:5px;font-size:8.5px;font-weight:900;letter-spacing:.09em;color:var(--ok)}.qb-lb-row.failed .qb-lb-row-score small{color:var(--bad)}
+@keyframes qbLbRise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes qbLbPing{70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}@keyframes qbLbBob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,-4px)}}
+@media(hover:hover){.qb-lb-pod:hover{transform:translateY(-5px)}.qb-lb-row:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--brass) 42%,var(--line));box-shadow:0 18px 36px -28px color-mix(in srgb,var(--brass) 60%,transparent)}}
+@media(max-width:600px){.qb-lb-wrap{padding-left:10px;padding-right:10px}.qb-lb-page-head{gap:10px}.qb-lb-page-head h1{font-size:27px}.qb-lb-page-head p{font-size:12.5px}.qb-lb-page-head .iconbtn{width:45px;height:45px;border-radius:16px}.qb-lb-share{font-size:0!important;width:45px;padding:0!important}.qb-lb-share svg{margin:0}.qb-lb-hero{padding:20px 18px 21px}.qb-lb-hero h2{font-size:26px}.qb-lb-stats{gap:7px}.qb-lb-stats>div{padding:14px 10px}.qb-lb-stats b{font-size:20px}.qb-lb-stats span{font-size:8.5px}.qb-lb-podium-card{padding-left:7px;padding-right:7px}.qb-lb-podium{gap:6px}.qb-lb-pod{padding-left:4px;padding-right:4px;border-radius:18px}.qb-lb-pod.gold{padding-top:27px}.qb-lb-name{font-size:11.5px}.qb-lb-score{font-size:21px}.qb-lb-pod.gold .qb-lb-score{font-size:25px}.qb-lb-sub{font-size:9px}.qb-lb-ring{width:54px;height:54px}.qb-lb-pod.gold .qb-lb-ring{width:67px;height:67px}.qb-lb-avatar{font-size:18px}.qb-lb-pod.gold .qb-lb-avatar{font-size:23px}.qb-lb-row{gap:9px;padding:13px 10px 13px 12px}.qb-lb-rank{width:22px;font-size:17px}.qb-lb-avatar.small{width:39px;height:39px;font-size:13px}.qb-lb-row-name{font-size:13px}.qb-lb-meta{gap:5px;font-size:9.5px}.qb-lb-row-score{min-width:48px}.qb-lb-row-score b{font-size:17px}.qb-lb-row-score small{font-size:7.5px}.qb-lb-position{padding:14px}.qb-lb-position b{font-size:14px}.qb-lb-position strong{font-size:22px}}
+@media(prefers-reduced-motion:reduce){.qb-lb *{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
 <div id="app"><div style="min-height:100vh;display:grid;place-items:center;text-align:center"><div><div style="font-family:var(--serif);font-size:30px">QuizBuilt</div><div class="spin"></div></div></div></div>
@@ -482,6 +515,11 @@ const pad = n => String(n).padStart(2, '0');
 const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
 const num = (n, dp = 2) => { n = +n || 0; return Number.isInteger(n) ? String(n) : n.toFixed(dp).replace(/\.?0+$/, ''); };
 const pct2 = n => { n = Number(n); return Number.isFinite(n) ? n.toFixed(2) : '0.00'; };
+const pctSmart = n => {
+  const x = Number(n);
+  if (!Number.isFinite(x)) return '—';
+  return Number.isInteger(x) ? String(x) : x.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+};
 const fmtClock = s => { s = Math.max(0, Math.floor(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? `${h}:${pad(m)}:${pad(x)}` : `${pad(m)}:${pad(x)}`; };
 const fmtDur = s => { s = Math.round(+s || 0); const m = Math.floor(s / 60), x = s % 60; return m ? `${m}m ${x}s` : `${x}s`; };
 const fmtDate = d => d ? new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
@@ -1365,7 +1403,7 @@ async function vMe([tab], q, tok) {
     body.innerHTML = rows.length ? rows.map(r => {
       const rs = Array.isArray(r.attempt_results) ? r.attempt_results[0] : r.attempt_results;
       const st = r.status === 'ongoing' ? '<span class="badge ok">In progress</span>' : r.status === 'auto_submitted' ? '<span class="badge bad">Auto-submitted</span>' : '<span class="badge">Completed</span>';
-      return `<a class="slip" href="#/${r.status === 'ongoing' ? 'take' : 'result'}/${r.id}">${st}<h3>${esc((r.quizzes || {}).title || 'Quiz')}</h3><div class="meta"><span>${ic('calendar', 14)} ${fmtDT(r.started_at)}</span>${rs ? `<span>${ic('check', 14)} ${num(rs.score)}/${num(rs.total)} (${pct2(rs.percentage)}%)</span>` : ''}</div></a>`;
+      return `<a class="slip" href="#/${r.status === 'ongoing' ? 'take' : 'result'}/${r.id}">${st}<h3>${esc((r.quizzes || {}).title || 'Quiz')}</h3><div class="meta"><span>${ic('calendar', 14)} ${fmtDT(r.started_at)}</span>${rs ? `<span>${ic('check', 14)} ${num(rs.score)}/${num(rs.total)} (${pctSmart(rs.percentage)}%)</span>` : ''}</div></a>`;
     }).join('') : emptyBox('clock', 'No attempts yet', 'Quizzes you take will show up here.');
   } else {
     body.innerHTML = `<div class="card"><div class="b">${ic('palette', 16)} Appearance</div><div class="seg gap0"><button class="${document.documentElement.dataset.theme === 'dark' ? 'on' : ''}" data-act="settheme" data-t="dark">Dark</button><button class="${document.documentElement.dataset.theme === 'light' ? 'on' : ''}" data-act="settheme" data-t="light">Light</button></div>
@@ -2187,7 +2225,7 @@ function drawQuiz() {
     ${q.allow_comments ? `<details class="acc" id="cm-acc"><summary>${ic('msg', 20)}<span>Comments (${q.comments_count || 0})</span><span class="chev">${ic('down', 18)}</span></summary><div class="accb" id="cm-body"><div class="spin"></div></div></details>` : ''}
     ${S.me && Q.attempts.length ? `<details class="acc" id="at-acc"><summary>${ic('clock', 20)}<span>Your attempts (${Q.attempts.length})</span><span class="chev">${ic('down', 18)}</span></summary><div class="accb">${Q.attempts.map(a => {
       const rs = Array.isArray(a.attempt_results) ? a.attempt_results[0] : a.attempt_results;
-      return `<a class="person" href="#/${a.status === 'ongoing' ? 'take' : 'result'}/${a.id}"><div class="grow"><div class="b">Attempt ${a.attempt_no}</div><div class="xs mut">${fmtDT(a.started_at)}</div></div>${rs ? `<span class="badge ${rs.passed ? 'ok' : 'bad'}">${pct2(rs.percentage)}%</span>` : `<span class="badge">${a.status === 'ongoing' ? 'In progress' : 'Submitted'}</span>`}${ic('right', 16)}</a>`;
+      return `<a class="person" href="#/${a.status === 'ongoing' ? 'take' : 'result'}/${a.id}"><div class="grow"><div class="b">Attempt ${a.attempt_no}</div><div class="xs mut">${fmtDT(a.started_at)}</div></div>${rs ? `<span class="badge ${rs.passed ? 'ok' : 'bad'}">${pctSmart(rs.percentage)}%</span>` : `<span class="badge">${a.status === 'ongoing' ? 'In progress' : 'Submitted'}</span>`}${ic('right', 16)}</a>`;
     }).join('')}</div></details>` : ''}
   </div>`);
   const cm = $('#cm-acc'); if (cm) cm.addEventListener('toggle', () => { if (cm.open && !cm.dataset.done) { cm.dataset.done = 1; cmLoad(); } });
@@ -2249,7 +2287,7 @@ async function vGroupRank([key], query, tok) {
     <div class="mut sm gap0">${esc(quiz.title)}</div>
     <div class="gap">${!d.visible ? emptyBox('lock', 'Results are not available now', quiz.release_mode === 'scheduled' && quiz.release_at ? `They open on ${fmtDT(quiz.release_at)}.` : 'Check back later — the creator has not released results yet.')
       : (d.groups.length ? d.groups.map((g, i) => `<div class="card gap0" style="margin-bottom:10px">
-          <div class="row between"><div class="row" style="gap:10px"><span class="badge ${i === 0 ? 'gold' : ''}">#${i + 1}</span><b>Group ${esc(g.code)}</b></div><span class="badge ${g.percentage >= 50 ? 'ok' : 'bad'}">${pct2(g.percentage)}% · ${num(g.total_score)}/${num(g.total_possible)}</span></div>
+          <div class="row between"><div class="row" style="gap:10px"><span class="badge ${i === 0 ? 'gold' : ''}">#${i + 1}</span><b>Group ${esc(g.code)}</b></div><span class="badge ${g.percentage >= 50 ? 'ok' : 'bad'}">${pctSmart(g.percentage)}% · ${num(g.total_score)}/${num(g.total_possible)}</span></div>
           <div class="xs mut" style="margin:6px 0 8px">${g.finished_count} of ${g.member_count} finished</div>
           ${(g.members || []).map(m => `<div class="row between" style="padding:6px 0;border-top:1px solid var(--line)"><span class="sm">${esc(m.name)} <span class="xs mut">· ${esc(m.set_name)}</span></span><span class="xs">${m.score != null ? `${num(m.score)}/${num(m.total)}` : '—'} ${m.subject_rank ? `<span class="mut">(rank ${m.subject_rank} in subject)</span>` : ''}</span></div>`).join('')}
         </div>`).join('') : emptyBox('users', 'No groups yet'))}</div>
@@ -2483,6 +2521,7 @@ async function lbLoad(quiz) {
   if (!S.me) { box.innerHTML = '<div class="hint"><a class="link" href="#/auth/login">Sign in</a> to see the leaderboard.</div>'; return; }
   try {
     LB.data = await rpc('get_leaderboard', { p_quiz_id: q.id });
+    try { LB.attempts = await rpc('get_attempt_feed', { p_quiz_id: q.id }); } catch (_) { LB.attempts = null; }
   } catch (e) { box.innerHTML = `<div class="hint bad">${esc(cleanErr(e))}</div>`; return; }
   box.innerHTML = lbRender();
 }
@@ -2494,73 +2533,92 @@ function lbRender() {
 
   const subs = [];
   d.rows.forEach(r => (r.subjects || []).forEach(s => {
-    if (!subs.find(x => x.set_id === s.set_id)) subs.push({ set_id: s.set_id, name: s.name });
+    if (!subs.find(x => x.set_id === s.set_id)) subs.push({ set_id:s.set_id, name:s.name });
   }));
-
   const initials = n => (n || '?').trim().split(/\s+/).slice(0,2).map(x => x[0]).join('').toUpperCase();
-  const fig = (score, total) => pctView ? pct2(total > 0 ? score / total * 100 : 0) + '%' : num(score);
   const percent = (score,total) => total > 0 ? Math.max(0,Math.min(100,score/total*100)) : 0;
+  const fig = (score,total) => pctView ? pctSmart(percent(score,total)) + '%' : num(score);
 
   let rows;
   if (LB.mode === 'all') {
-    rows = d.rows.map(r => ({
-      rank:r.rank, name:r.name, score:+r.score, total:+r.total, pct:+r.percentage,
-      me:r.me, time:r.time, pass:r.passed
-    }));
+    rows = d.rows.map(r => ({rank:r.rank,name:r.name,score:+r.score,total:+r.total,pct:percent(+r.score,+r.total),me:r.me,time:r.time,pass:r.passed,subjects:r.subjects||[]}));
   } else {
     rows = d.rows.map(r => {
       const x = (r.subjects || []).find(z => z.set_id === LB.mode);
-      return x ? {name:r.name, score:+x.score, total:+x.total, pct:x.total>0?x.score/x.total*100:0, me:r.me, time:r.time, pass:null} : null;
+      return x ? {name:r.name,score:+x.score,total:+x.total,pct:percent(+x.score,+x.total),me:r.me,time:r.time,pass:null,subjects:[]} : null;
     }).filter(Boolean)
-      .sort((a,b)=>b.score/b.total-a.score/a.total || (a.time||1e9)-(b.time||1e9))
-      .map((r,i,arr)=>Object.assign(r,{rank:1+arr.filter(x => x.score/x.total > r.score/r.total).length}));
+      .sort((a,b)=>b.pct-a.pct || (a.time||1e9)-(b.time||1e9))
+      .map((r,i,arr)=>Object.assign(r,{rank:1+arr.filter(x=>x.pct>r.pct).length}));
   }
-
   if (LB.search) rows = rows.filter(r => (r.name || '').toLowerCase().includes(LB.search));
   if (!rows.length) return '<div class="hint">No one matches that search.</div>';
 
-  const tabs = subs.length > 1
-    ? `<div class="lb-tabs">${[['all','Overall'],...subs.map(s=>[s.set_id,s.name])].map(([m,n]) =>
-        `<button class="lb-tab ${LB.mode===m?'on':''}" data-act="lb-mode" data-m="${esc(m)}">${esc(n)}</button>`).join('')}</div>` : '';
+  const top = rows[0];
+  // Stats are intentionally calculated from ALL completed attempts when the
+  // attempt feed is available, not from the leaderboard rows/search results.
+  const allAttempts = (LB.attempts && Array.isArray(LB.attempts.rows))
+    ? LB.attempts.rows.filter(r => r.status === 'submitted' || r.status === 'completed')
+    : [];
+  const overallStatsRows = allAttempts.length
+    ? allAttempts.map(r => ({ pct: Number(r.percentage), passed: !!r.passed })).filter(r => Number.isFinite(r.pct))
+    : rows.map(r => ({ pct: r.pct, passed: r.pass === true }));
+  const avg = overallStatsRows.length ? overallStatsRows.reduce((a,r)=>a+r.pct,0)/overallStatsRows.length : 0;
+  const passedCount = overallStatsRows.filter(r=>r.passed).length;
+  const failedCount = overallStatsRows.length - passedCount;
+  const tabs = subs.length > 1 ? `<div class="qb-lb-tabs">${[['all','Overall'],...subs.map(s=>[s.set_id,s.name])].map(([m,n])=>`<button class="qb-lb-tab ${LB.mode===m?'on':''}" data-act="lb-mode" data-m="${esc(m)}">${esc(n)}</button>`).join('')}</div>` : '';
+  const toggle = `<div class="qb-lb-tools"><span>Ranked by ${LB.mode==='all'?'overall performance':'subject performance'}</span><div class="qb-lb-seg"><button class="${pctView?'':'on'}" data-act="lb-view" data-v="score">Score</button><button class="${pctView?'on':''}" data-act="lb-view" data-v="pct">%</button></div></div>`;
 
-  const top3 = rows.slice(0,3);
-  const podium = top3.length ? `<div class="lb-top3">${top3.map((r,i) => `
-    <div class="lb-card3 ${i===0?'first':''} ${r.me?'lb-me':''}">
-      <div class="avatar">${esc(initials(r.name))}</div>
-      <div class="place">${i===0?'🥇 1ST':i===1?'🥈 2ND':'🥉 3RD'}</div>
-      <div class="name" title="${esc(r.name)}">${esc(r.name)}</div>
-      ${r.me ? '<div class="lb-you">YOU</div>' : ''}
-      <div class="score">${fig(r.score,r.total)}</div>
-      <div class="xs mut">${pct2(percent(r.score,r.total))}% • ${r.time ? fmtDur(r.time) : '—'}</div>
-    </div>`).join('')}</div>` : '';
+  const podiumRows = rows.slice(0,3);
+  const podium = podiumRows.length ? `<section class="qb-lb-podium-card">
+    <div class="qb-lb-section-title">TOP PERFORMERS <b>${rows.length} participant${rows.length===1?'':'s'}</b></div>
+    <div class="qb-lb-podium">${[1,0,2].map((idx,pos)=>{
+      const r = podiumRows[idx]; if(!r) return '<div></div>';
+      const cls = pos===1?'gold':pos===0?'silver':'bronze';
+      return `<div class="qb-lb-pod ${cls} ${r.me?'me':''}">
+        ${pos===1?'<div class="qb-lb-crown">♛</div>':''}
+        <div class="qb-lb-ring"><div class="qb-lb-avatar" style="--h:${(r.name||'').length*37%360}">${esc(initials(r.name))}</div></div>
+        <div class="qb-lb-place">${r.rank===1?'1ST':r.rank===2?'2ND':'3RD'}</div>
+        <div class="qb-lb-name" title="${esc(r.name)}">${esc(r.name)}</div>
+        ${r.me?'<span class="qb-lb-you">YOU</span>':''}
+        <div class="qb-lb-score">${fig(r.score,r.total)}</div>
+        <div class="qb-lb-sub">${pctSmart(r.pct)}% · ${r.time?fmtDur(r.time):'—'}</div>
+      </div>`;
+    }).join('')}</div>
+  </section>` : '';
 
-  const rest = rows.map((r,i) => {
-    const rank = r.rank || i+1;
-    return `<div class="lb-row ${r.me?'me':''}">
-      <div class="lb-rank ${rank<=3?'top'+rank:''}">${rank}</div>
-      <div class="lb-avatar2">${esc(initials(r.name))}</div>
-      <div class="lb-main">
-        <div class="lb-name2">${esc(r.name)}${r.me ? ' <span class="lb-you">YOU</span>' : ''}</div>
-        <div class="lb-meta"><span>${pct2(percent(r.score,r.total))}%</span><span class="lb-bar"><i style="width:${percent(r.score,r.total)}%"></i></span><span>${r.time ? fmtDur(r.time) : '—'}</span></div>
+  const position = rows.find(r=>r.me);
+  const positionCard = position ? `<div class="qb-lb-position"><div><span>YOUR POSITION</span><b>#${position.rank} · ${esc(position.name)}</b></div><strong>${num(position.score)} <small>${pctSmart(position.pct)}%</small></strong></div>` : '';
+
+  const rest = rows.map((r,i)=>{
+    const rank=r.rank||i+1, bar=Math.min(100,r.pct);
+    return `<div class="qb-lb-row ${r.me?'me':''} ${r.pass===false?'failed':''}">
+      <div class="qb-lb-rank">${rank}</div>
+      <div class="qb-lb-avatar small" style="--h:${(r.name||'').length*37%360}">${esc(initials(r.name))}</div>
+      <div class="qb-lb-row-main">
+        <div class="qb-lb-row-name">${esc(r.name)}${r.me?' <span class="qb-lb-you">YOU</span>':''}</div>
+        <div class="qb-lb-meta"><b>${pctSmart(r.pct)}%</b><i><em style="width:${bar}%"></em></i><span>${r.time?fmtDur(r.time):'—'}</span>${LB.mode==='all'&&r.subjects.length?`<span>${r.subjects.length} subjects</span>`:''}</div>
       </div>
-      <div class="lb-score2"><b>${fig(r.score,r.total)}</b><small>${r.pass === true ? 'PASSED' : r.pass === false ? 'FAILED' : 'SCORE'}</small></div>
+      <div class="qb-lb-row-score"><b>${fig(r.score,r.total)}</b><small>${r.pass===true?'PASSED':r.pass===false?'FAILED':LB.mode==='all'?'SCORE':'SCORE'}</small></div>
     </div>`;
   }).join('');
 
-  const toggle = `<div class="row between">
-    <div><b class="sm">${rows.length} participant${rows.length===1?'':'s'}</b><div class="xs mut">Ranked by ${LB.mode==='all'?'overall performance':'subject performance'}</div></div>
-    <div class="seg sm"><button class="${pctView?'':'on'}" data-act="lb-view" data-v="score">Score</button><button class="${pctView?'on':''}" data-act="lb-view" data-v="pct">%</button></div>
-  </div>`;
-
-  return `<div class="lb-page">
-    ${tabs}
-    <div class="card lb-head-card">
-      <div class="lb-title-row"><div class="avatar">${ic('trophy',20)}</div><div class="grow"><div class="b">Leaderboard</div><div class="xs mut">${esc(q.title || 'Quiz')} • Live ranking</div></div></div>
-      <div class="lb-summary"><div class="lb-stat"><b>${rows.length}</b><small>Players</small></div><div class="lb-stat"><b>${fig(rows[0].score,rows[0].total)}</b><small>Top score</small></div><div class="lb-stat"><b>${pct2(rows.reduce((a,r)=>a+percent(r.score,r.total),0)/rows.length)}%</b><small>Average</small></div></div>
+  return `<div class="qb-lb">
+    <div class="qb-lb-hero">
+      <div class="qb-lb-hero-top"><div><div class="qb-lb-eyebrow">QUIZBUILT · LIVE RANKING</div><h2>${esc(q.title || 'Quiz')}</h2><p>Compete, climb and see where you stand.</p></div><span class="qb-lb-live"><i></i> LIVE</span></div>
     </div>
-    ${podium}
+    <div class="qb-lb-stats">
+      <div><b>${rows.length}</b><span>LEADERBOARD</span><em>${overallStatsRows.length} completed attempts</em></div>
+      <div><b>${pctSmart(top.pct)}%</b><span>TOP SCORE</span></div>
+      <div><b>${pctSmart(avg)}%</b><span>OVERALL AVERAGE</span></div>
+      <div><b>${passedCount}</b><span>PASSED</span><em>${overallStatsRows.length ? pctSmart(passedCount/overallStatsRows.length*100) : '0'}%</em></div>
+      <div><b>${failedCount}</b><span>FAILED</span><em>${overallStatsRows.length ? pctSmart(failedCount/overallStatsRows.length*100) : '0'}%</em></div>
+    </div>
+    ${tabs}
     ${toggle}
-    <div class="lb-list">${rest}</div>
+    ${podium}
+    ${positionCard}
+    <div class="qb-lb-allhead"><span>ALL RANKINGS</span><b>${rows.length} participants</b></div>
+    <div class="qb-lb-list">${rest}</div>
   </div>`;
 }
 ACT['lb-mode'] = el => { LB.mode = el.dataset.m; $('#lb-body').innerHTML = lbRender(); };
@@ -2614,9 +2672,9 @@ async function vLeaderboardFull([key], query, tok) {
   if (stale(tok)) return;
   if (!quiz) { setView(`<div class="wrap">${emptyBox('lock', 'Quiz not found')}</div>`); return; }
   Q.quiz = quiz; LB.search = '';
-  setView(`<div class="wrap"><div class="row"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><h1 class="h2 grow">Leaderboard</h1>${quiz.allow_sharing ? `<button class="btn sm" data-act="q-share">${ic('share', 14)} Share</button>` : ''}</div>
-    <input class="inp gap" id="lb-search" placeholder="Search participant by name">
-    <div id="lb-body" class="gap"><div class="spin"></div></div></div>`);
+  setView(`<div class="wrap qb-lb-wrap"><div class="qb-lb-page-head"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><div><div class="qb-lb-eyebrow">QUIZBUILT · LIVE RANKING</div><h1>Leaderboard</h1><p>Compete, climb and see where you stand.</p></div>${quiz.allow_sharing ? `<button class="btn sm qb-lb-share" data-act="q-share">${ic('share', 14)} Share</button>` : ''}</div>
+    <div class="qb-lb-search"><span>${ic('search', 19)}</span><input id="lb-search" placeholder="Search participant by name"></div>
+    <div id="lb-body"><div class="spin"></div></div></div>`);
   await lbLoad(quiz);
   const s = $('#lb-search'); if (s) s.addEventListener('input', debounce(() => { LB.search = s.value.trim().toLowerCase(); $('#lb-body').innerHTML = lbRender(); }, 150));
 }
@@ -2663,7 +2721,7 @@ function afRender() {
 function afCard(group) {
   const latest = group[0], st = afStatus(latest);
   const badge = st === 'ongoing' ? `<span class="badge teal">ONGOING</span>` : st === 'completed' ? `<span class="badge ok">COMPLETED${latest.time ? ' ' + fmtDur(latest.time) : ''}</span>` : `<span class="badge bad">CANCELLED</span>`;
-  const score = st === 'ongoing' ? `<span class="badge"><span class="xs">SCORE</span> --</span>` : `<span class="badge ${latest.passed ? 'ok' : 'bad'}"><span class="xs">SCORE</span> ${num(latest.percentage, 0)}%</span>`;
+  const score = st === 'ongoing' ? `<span class="badge"><span class="xs">SCORE</span> --</span>` : `<span class="badge ${latest.passed ? 'ok' : 'bad'}"><span class="xs">SCORE</span> ${pctSmart(latest.percentage)}%</span>`;
   const gid = 'afg-' + String(latest.user_id || latest.name).replace(/[^a-z0-9]/gi, '');
   return `<div class="card tight gap0"><div class="row between" style="align-items:flex-start">
       <div class="row" style="gap:10px"><span class="avatar">${esc(initial(latest.name))}</span><div><div class="b">${esc(latest.name || 'Anonymous')}${latest.guest ? ' <span class="xs mut">(guest)</span>' : ''}</div><div class="xs mut">${fmtDT(latest.started_at)}</div></div></div>
@@ -2674,7 +2732,7 @@ function afCard(group) {
 }
 function afMini(r) {
   const st = afStatus(r);
-  const badge = st === 'ongoing' ? `<span class="badge teal">ONGOING</span>` : st === 'completed' ? `<span class="badge ${r.passed ? 'ok' : 'bad'}">${pct2(r.percentage)}%</span>` : `<span class="badge bad">CANCELLED</span>`;
+  const badge = st === 'ongoing' ? `<span class="badge teal">ONGOING</span>` : st === 'completed' ? `<span class="badge ${r.passed ? 'ok' : 'bad'}">${pctSmart(r.percentage)}%</span>` : `<span class="badge bad">CANCELLED</span>`;
   return `<div class="row between" style="padding:8px 0;border-top:1px solid var(--line)"><span class="xs mut">Attempt ${r.attempt_no} · ${fmtDT(r.started_at)}</span>${badge}</div>`;
 }
 ACT['af-filter'] = el => { AF.filter = el.dataset.f; afRender(); };
@@ -3099,7 +3157,7 @@ const RES = { d: null };
 ACT['pv-back'] = () => nav(`/edit/${RES.d.quiz.id}/publish`);
 ACT['res-share'] = async () => {
   const d = RES.d, r = d.summary.result, q = d.quiz;
-  const text = `I scored ${num(r.score)}/${num(r.total)} (${pct2(r.percentage)}%) on "${q.title}" on QuizBuilt. Can you beat me?`;
+  const text = `I scored ${num(r.score)}/${num(r.total)} (${pctSmart(r.percentage)}%) on "${q.title}" on QuizBuilt. Can you beat me?`;
   if (navigator.share) { try { await navigator.share({ title: q.title, text, url: quizUrl(q) }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
   copyText(text + ' ' + quizUrl(q));
 };
@@ -3160,7 +3218,7 @@ ACT['res-cert'] = async btn => {
     cv.toBlob(async blob => {
       const file = new File([blob], 'quizbuilt-result.png', { type: 'image/png' });
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        try { await navigator.share({ files: [file], title: q.title, text: `I scored ${pct2(r.percentage)}% on "${q.title}" — QuizBuilt` }); busy(btn, false); return; } catch (e) { if (e && e.name === 'AbortError') { busy(btn, false); return; } }
+        try { await navigator.share({ files: [file], title: q.title, text: `I scored ${pctSmart(r.percentage)}% on "${q.title}" — QuizBuilt` }); busy(btn, false); return; } catch (e) { if (e && e.name === 'AbortError') { busy(btn, false); return; } }
       }
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'quizbuilt-result.png'; a.click();
       busy(btn, false);
@@ -3328,7 +3386,7 @@ ACT['or-health'] = async btn => {
     const low = rows.filter(r => r.pct < 30 && r.total >= 3);
     openSheet(`<h3 class="h2">Question health-check</h3><p class="mut sm gap0">Questions almost everyone gets wrong are usually a broken answer key, not a hard question. ${low.length ? `<b class="bad">${low.length} question${low.length === 1 ? '' : 's'} below 30% correct</b> — worth a look.` : 'Nothing looks suspicious so far.'}</p>
       <div class="gap0" style="max-height:60vh;overflow-y:auto">${rows.length ? rows.map(r => `<div class="card tight gap0" style="margin-bottom:8px;${r.pct < 30 && r.total >= 3 ? 'border-color:var(--bad)' : ''}">
-        <div class="row between"><span class="xs mut">Q${r.n} · ${num(r.marks)} mark${+r.marks === 1 ? '' : 's'} · ${r.total} answered</span><span class="badge ${r.pct < 30 ? 'bad' : r.pct < 60 ? 'warn' : 'ok'}">${pct2(r.pct)}% correct</span></div>
+        <div class="row between"><span class="xs mut">Q${r.n} · ${num(r.marks)} mark${+r.marks === 1 ? '' : 's'} · ${r.total} answered</span><span class="badge ${r.pct < 30 ? 'bad' : r.pct < 60 ? 'warn' : 'ok'}">${pctSmart(r.pct)}% correct</span></div>
         <div class="qbody" style="font-size:14px;margin-top:6px">${clean(r.body)}</div></div>`).join('') : '<div class="hint">No graded answers yet.</div>'}</div>`);
   } catch (e) { toast(cleanErr(e), 'bad'); }
   busy(btn, false);
@@ -3379,7 +3437,7 @@ function orDraw() {
     return `<div class="lbrow" style="display:block"><div class="row" style="gap:12px;align-items:flex-start"><div class="rk">${rk}</div><div class="grow" style="min-width:0"><div class="b trunc">${esc(r.name)}${r.guest ? ' <span class="badge">guest</span>' : ''}</div>
       <div class="row wrapf" style="gap:6px;margin-top:5px"><span class="badge ${r.status === 'completed' ? 'ok' : r.status === 'auto_submitted' ? 'bad' : 'warn'}">${statusLbl(r)}</span>${r.cheats ? `<span class="badge bad">${ic('shield', 11)} ${r.cheats} flag${r.cheats === 1 ? '' : 's'}</span>` : ''}${r.pending ? '<span class="badge warn">essay to mark</span>' : ''}</div>
       <div class="xs mut" style="margin-top:5px">Attempt ${r.no}${r.time != null ? ' · ' + fmtDur(r.time) : ''} · ${fmtDT(r.started)}</div></div>
-      <div style="text-align:right;flex:none"><div class="b brass" style="font-size:17px">${r.score != null ? num(r.score) + '/' + num(r.total) : '-'}</div>${r.pct != null ? `<div class="xs ${r.passed ? 'ok' : 'bad'} b">${pct2(r.pct)}%</div>` : ''}</div></div>
+      <div style="text-align:right;flex:none"><div class="b brass" style="font-size:17px">${r.score != null ? num(r.score) + '/' + num(r.total) : '-'}</div>${r.pct != null ? `<div class="xs ${r.passed ? 'ok' : 'bad'} b">${pctSmart(r.pct)}%</div>` : ''}</div></div>
       <div class="row gap0" style="gap:8px">${r.status !== 'ongoing' ? `<a class="btn sm" href="#/review/${r.id}">${ic('eye', 14)} Review</a>` : ''}<button class="btn sm" data-act="or-info" data-id="${r.id}">${ic('info', 14)} Details</button><button class="btn sm danger" data-act="or-del" data-id="${r.id}" aria-label="Delete attempt">${ic('trash', 14)}</button></div></div>`;
   }).join('') : emptyBox('users', 'No attempts to show yet')}</div></div>`);
 }
@@ -3441,7 +3499,7 @@ async function vAdmin([tab], query, tok) {
     </div>`;
   } else {
     const rows = await db(sb.from('attempts').select('id,display_name,status,started_at,quizzes(title,share_code),attempt_results(score,total,percentage)').order('started_at', { ascending: false }).limit(80)); if (stale(tok)) return;
-    body.innerHTML = rows.length ? rows.map(r => { const rs = Array.isArray(r.attempt_results) ? r.attempt_results[0] : r.attempt_results; return `<a class="slip" href="#/result/${r.id}"><span class="badge ${r.status === 'completed' ? 'ok' : r.status === 'auto_submitted' ? 'bad' : 'warn'}">${r.status.replace('_', '-')}</span><h3>@${esc(r.display_name)}</h3><div class="mut sm">${esc((r.quizzes || {}).title || 'Quiz')}</div><div class="meta"><span>${ic('calendar', 14)} ${fmtDT(r.started_at)}</span>${rs ? `<span>${num(rs.score)}/${num(rs.total)} (${pct2(rs.percentage)}%)</span>` : ''}</div></a>`; }).join('') : emptyBox('clock', 'No attempts yet');
+    body.innerHTML = rows.length ? rows.map(r => { const rs = Array.isArray(r.attempt_results) ? r.attempt_results[0] : r.attempt_results; return `<a class="slip" href="#/result/${r.id}"><span class="badge ${r.status === 'completed' ? 'ok' : r.status === 'auto_submitted' ? 'bad' : 'warn'}">${r.status.replace('_', '-')}</span><h3>@${esc(r.display_name)}</h3><div class="mut sm">${esc((r.quizzes || {}).title || 'Quiz')}</div><div class="meta"><span>${ic('calendar', 14)} ${fmtDT(r.started_at)}</span>${rs ? `<span>${num(rs.score)}/${num(rs.total)} (${pctSmart(rs.percentage)}%)</span>` : ''}</div></a>`; }).join('') : emptyBox('clock', 'No attempts yet');
   }
 }
 ACT['adm-paystack-save'] = async btn => {
@@ -3825,7 +3883,7 @@ function resultsHtml(quiz, rows, sets) {
   const rk = r => r.rank ? `<span class="rk ${r.rank <= 3 ? 'r' + r.rank : ''}">${r.rank}</span>` : '<span class="mut">-</span>';
   const result = r => r.passed == null ? `<span class="pill w">${statusLbl(r)}</span>` : `<span class="pill ${r.passed ? 'ok' : 'no'}">${r.passed ? 'Passed' : 'Failed'}</span>`;
   const subCell = (r, n) => { const s = r.subs.find(x => x.name === n); if (!s) return '<td>-</td>'; const p = s.total > 0 ? s.score / s.total * 100 : 0; return `<td class="sc"><b>${num(s.score)}/${num(s.total)}</b><small>${num(p, 0)}%</small></td>`; };
-  const trs = rows.map(r => `<tr><td>${rk(r)}</td><td class="l"><b>${esc(r.name)}</b>${r.guest ? ' <small>(guest)</small>' : ''}</td><td class="tot">${r.score != null ? `<b>${num(r.score)}/${num(r.total)}</b>` : '-'}</td><td class="tot">${r.pct != null ? `<b>${pct2(r.pct)}%</b>` : '-'}</td><td>${result(r)}</td>${multi ? subNames.map(n => subCell(r, n)).join('') : ''}<td>${r.time != null ? fmtDur(r.time) : '-'}</td></tr>`).join('');
+  const trs = rows.map(r => `<tr><td>${rk(r)}</td><td class="l"><b>${esc(r.name)}</b>${r.guest ? ' <small>(guest)</small>' : ''}</td><td class="tot">${r.score != null ? `<b>${num(r.score)}/${num(r.total)}</b>` : '-'}</td><td class="tot">${r.pct != null ? `<b>${pctSmart(r.pct)}%</b>` : '-'}</td><td>${result(r)}</td>${multi ? subNames.map(n => subCell(r, n)).join('') : ''}<td>${r.time != null ? fmtDur(r.time) : '-'}</td></tr>`).join('');
   return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(quiz.title)} results</title><style>${PRINT_CSS}${RES_CSS}</style></head><body>
   <div class="rp-head"><div><div class="rp-brand">&#9670; QUIZBUILT</div><h1>${esc(quiz.title)}</h1><div class="rp-sub">Results report &nbsp;&bull;&nbsp; ${new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })} &nbsp;&bull;&nbsp; Quiz key ${esc(String(quiz.share_code).toUpperCase())}</div></div><div class="rp-tag">FIRST ATTEMPTS &bull; RANKED</div></div>
   <div class="rp-kpis"><div class="rp-kpi"><b>${st.n}</b><span>Participants</span></div><div class="rp-kpi"><b>${num(st.avg, 1)}%</b><span>Average</span></div><div class="rp-kpi"><b>${num(st.hi, 1)}%</b><span>Highest</span></div><div class="rp-kpi"><b>${num(st.pass, 0)}%</b><span>Pass rate</span></div><div class="rp-kpi"><b>${esc(quiz.pass_mark)}%</b><span>Pass mark</span></div></div>
