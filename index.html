@@ -521,7 +521,7 @@ const pctSmart = n => {
   return Number.isInteger(x) ? String(x) : x.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
 };
 const fmtClock = s => { s = Math.max(0, Math.floor(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? `${h}:${pad(m)}:${pad(x)}` : `${pad(m)}:${pad(x)}`; };
-const fmtDur = s => { s = Math.round(+s || 0); const m = Math.floor(s / 60), x = s % 60; return m ? `${m}m ${x}s` : `${x}s`; };
+const fmtDur = s => { if (+s < 120 && !Number.isInteger(+s)) return (+s).toFixed(2) + 's'; s = Math.round(+s || 0); const m = Math.floor(s / 60), x = s % 60; return m ? `${m}m ${x}s` : `${x}s`; };
 const fmtDate = d => d ? new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 const fmtDT = d => d ? new Date(d).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '';
 /* mirrors the server's results_visible(qid) SQL function — for UI display only, never a security gate */
@@ -1007,6 +1007,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('mousedown', e => { if (e.target.closest && e.target.closest('.tb button,.syms button')) e.preventDefault(); });
 document.addEventListener('change', e => { const el = e.target.closest && e.target.closest('[data-chg]'); if (el && CHG[el.dataset.chg]) Promise.resolve().then(() => CHG[el.dataset.chg](el, e)).catch(errHandler); });
+document.addEventListener('change', e => { if (e.target && e.target.id === 'd-negmode') { const box = $('#sub-negcustom'); if (box) box.hidden = e.target.value !== 'custom'; } });
 document.addEventListener('input', e => { const el = e.target.closest && e.target.closest('[data-inp]'); if (el && INP[el.dataset.inp]) INP[el.dataset.inp](el, e); });
 document.addEventListener('paste', e => {
   const ed = e.target.closest && e.target.closest('.rt'); if (!ed) return;
@@ -1057,7 +1058,7 @@ ACT.reload = () => render();
 /* ============================================================
    SHARED LIST PIECES
    ============================================================ */
-const QCOLS = 'id,share_code,title,description,category,owner_id,owner_name,is_challenge,featured,visibility,status,duration_min,question_count,attempts_count,likes_count,comments_count,published_at,created_at';
+const QCOLS = 'id,share_code,title,description,category,owner_id,owner_name,is_challenge,featured,visibility,status,duration_min,duration_sec,question_count,attempts_count,likes_count,comments_count,published_at,created_at';
 function slip(q, extra = '') {
   const b = [
     q.status === 'draft' ? '<span class="badge warn">Draft</span>' : '',
@@ -1068,7 +1069,7 @@ function slip(q, extra = '') {
   ].join(' ');
   return `<div class="slip"><a href="#/quiz/${esc(q.share_code)}" style="display:block"><div class="row wrapf" style="gap:6px">${b}</div>
     <h3>${esc(q.title)}</h3><div class="mut sm">by @${esc(q.owner_name || 'user')}</div>
-    <div class="meta"><span>${ic('help', 14)} ${q.question_count || 0} questions</span><span>${ic('clock', 14)} ${q.duration_min} min</span><span>${ic('users', 14)} ${q.attempts_count || 0}</span><span>${ic('heart', 14)} ${q.likes_count || 0}</span></div></a>${extra}</div>`;
+    <div class="meta"><span>${ic('help', 14)} ${q.question_count || 0} questions</span><span>${ic('clock', 14)} ${q.duration_sec ? q.duration_sec + 's' : q.duration_min + ' min'}</span><span>${ic('users', 14)} ${q.attempts_count || 0}</span><span>${ic('heart', 14)} ${q.likes_count || 0}</span></div></a>${extra}</div>`;
 }
 const keyChip = code => `<button class="keychip" data-act="copy" data-v="${esc(code)}" aria-label="Copy quiz key">${ic('key', 13)}<span>${esc(String(code || '').toUpperCase())}</span>${ic('copy', 12)}</button>`;
 const emptyBox = (icon, title, sub = '') => `<div class="empty">${ic(icon, 32)}<div class="b" style="color:var(--tx)">${esc(title)}</div>${sub ? `<div class="sm gap0">${sub}</div>` : ''}</div>`;
@@ -1460,14 +1461,15 @@ ACT.savepw = async btn => {
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const E = { rev: 0, quiz: null, sets: [], qs: [], active: null, deleted: [], delSets: [], dirty: false, saving: false, timer: null, leaveAt: 0, vis: 'public', tab: 'details', lastMarks: 1 };
 const DEF = {
-  title: '', description: '', instructions: '', category: 'general', is_challenge: false, duration_min: 30, pass_mark: 50,
+  title: '', description: '', instructions: '', category: 'general', is_challenge: false, duration_min: 30, duration_sec: null, pass_mark: 50,
   shuffle_questions: false, shuffle_options: false, allow_multiple_attempts: true, max_attempts: null, allow_resume: true,
   anticheat: false, anticheat_voice: false, anticheat_voice_mode: 'aggressive', require_login: true, allow_guest: false, show_answers: true, show_results: true,
   release_mode: 'immediate', release_at: null, calculator: 'none', score_quotes: [], allow_likes: true, allow_comments: true,
   allow_sharing: true, leaderboard_enabled: true, schedule_enabled: false, starts_at: null, ends_at: null, fifty_fifty: false,
   fifty_count: 2, auto_advance: false, exam_mode: false, group_challenge: false, intake_form: [], show_percentage: true, visibility: 'public',
   is_paid: false, price_amount: null, price_currency: 'NGN',
-  prize_enabled: false, prize_mode: 'top3', prize_text: { desc: '' }
+  prize_enabled: false, prize_mode: 'top3', prize_text: { desc: '' },
+  time_decay_enabled: false, negative_marking_mode: 'none', negative_marking_fraction: 0.25
 };
 const edQ = id => E.qs.find(x => x.id === id);
 const numOf = q => { let n = 0; for (const x of E.qs) { if (x.type !== 'passage') n++; if (x === q) return x.type === 'passage' ? 'P' : n; } return '?'; };
@@ -1486,7 +1488,10 @@ async function edLoad(id) {
   E.sets = sets.map(s => ({ id: s.id, name: s.name, position: s.position }));
   E.qs = qs.map(q => ({
     id: q.id, set_id: q.set_id, parent_id: q.parent_id, type: q.type, body: q.body || '', options: q.options || [], multi: !!q.multi,
-    marks: +q.marks, correct: km[q.id] ? (km[q.id].correct || []) : [], explanation: km[q.id] ? (km[q.id].explanation || '') : '', _open: false
+    marks: +q.marks, time_limit_sec: q.time_limit_sec == null ? null : +q.time_limit_sec,
+    decay_start_sec: q.decay_start_sec == null ? 5 : +q.decay_start_sec,
+    decay_per_sec: q.decay_per_sec == null ? 0.25 : +q.decay_per_sec,
+    correct: km[q.id] ? (km[q.id].correct || []) : [], explanation: km[q.id] ? (km[q.id].explanation || '') : '', _open: false
   }));
   if (!E.sets.length) { E.sets = [{ id: uid(), name: 'Section 1', position: 0 }]; E.dirty = true; }
   E.active = E.sets[0].id;
@@ -1534,9 +1539,21 @@ function edRenderDetails() {
     <label class="lbl" for="d-inst">Instructions</label><textarea class="inp" id="d-inst" maxlength="2000" placeholder="Rules and tips shown before the quiz starts">${esc(q.instructions)}</textarea>
     ${swRow('d-chal', 'Make this a challenge', 'A competition. The leaderboard is always shown.', q.is_challenge)}`, true)}
   ${accSec('clock', 'Time and scoring', `
+    <div class="gap0"><label class="lbl" for="d-dursec">Quick drill: duration in seconds (optional)</label><input class="inp" id="d-dursec" type="number" min="5" max="600" value="${q.duration_sec||''}" placeholder="Leave empty for a normal timed quiz"><div class="hint">If set, this replaces the minutes below.</div></div>
     <div class="row"><div class="grow"><label class="lbl" for="d-dur">Duration (minutes)</label><input class="inp" id="d-dur" type="number" min="1" max="600" value="${q.duration_min}"></div>
     <div class="grow"><label class="lbl" for="d-pass">Pass mark (%)</label><input class="inp" id="d-pass" type="number" min="0" max="100" value="${q.pass_mark}"></div></div>
-    <div class="hint">Duration is how long the quiz stays open once someone starts it.</div>`)}
+    <div class="hint">Duration is how long the quiz stays open once someone starts it.</div>
+    ${swRow('d-decay', 'Enable per-question timer and mark decay', 'Configure a time limit, grace threshold, and deduction per extra second on each question.', q.time_decay_enabled, { reveal: 'sub-decay' })}
+    <div class="sub" id="sub-decay" ${q.time_decay_enabled ? '' : 'hidden'}><div class="hint">Open each question in the Questions tab to configure its timer and decay. Questions with no time limit are not affected.</div></div>
+    <label class="lbl" for="d-negmode">Negative marking for wrong answers</label>
+    <select class="inp" id="d-negmode">
+      <option value="none" ${q.negative_marking_mode === 'none' ? 'selected' : ''}>Off — no penalty</option>
+      <option value="quarter" ${q.negative_marking_mode === 'quarter' ? 'selected' : ''}>1/4 of question marks</option>
+      <option value="half" ${q.negative_marking_mode === 'half' ? 'selected' : ''}>1/2 of question marks</option>
+      <option value="full" ${q.negative_marking_mode === 'full' ? 'selected' : ''}>Full question marks</option>
+      <option value="custom" ${q.negative_marking_mode === 'custom' ? 'selected' : ''}>Custom fraction × question marks</option>
+    </select>
+    <div id="sub-negcustom" class="sub" ${q.negative_marking_mode === 'custom' ? '' : 'hidden'}><label class="lbl" for="d-negfrac">Custom penalty fraction</label><input class="inp" id="d-negfrac" type="number" min="0" max="10" step="0.01" value="${q.negative_marking_fraction ?? 0.25}"><div class="hint">Example: 0.36 means a wrong answer deducts 0.36 × the question's marks. Final scores can be negative.</div></div>`)}
   ${accSec('refresh', 'Attempts and behaviour', `
     ${swRow('d-shq', 'Shuffle questions', 'Every person gets a different order.', q.shuffle_questions)}
     ${swRow('d-sho', 'Shuffle answer options', 'Options are mixed for each person.', q.shuffle_options)}
@@ -1689,8 +1706,12 @@ ACT['row-del'] = el => el.closest('.qrow,.irow').remove();
 function edReadDetails() {
   const v = id => $('#' + id).value, c = id => $('#' + id).checked;
   const title = v('d-title').trim(); if (!title) throw new Error('Give your quiz a title');
-  const dur = parseInt(v('d-dur'), 10); if (!(dur >= 1 && dur <= 600)) throw new Error('Duration must be between 1 and 600 minutes');
+  const dsec = parseInt(v('d-dursec'), 10) || null; if (dsec && !(dsec >= 5 && dsec <= 600)) throw new Error('Drill duration must be between 5 and 600 seconds');
+  const dur = dsec ? Math.max(1, Math.ceil(dsec / 60)) : parseInt(v('d-dur'), 10); if (!(dur >= 1 && dur <= 600)) throw new Error('Duration must be between 1 and 600 minutes');
   const pass = parseInt(v('d-pass'), 10); if (!(pass >= 0 && pass <= 100)) throw new Error('Pass mark must be between 0 and 100');
+  const negMode = v('d-negmode'), negFrac = parseFloat(v('d-negfrac'));
+  if (!['none','quarter','half','full','custom'].includes(negMode)) throw new Error('Choose a valid negative-marking mode');
+  if (negMode === 'custom' && !(Number.isFinite(negFrac) && negFrac >= 0 && negFrac <= 10)) throw new Error('Custom penalty fraction must be between 0 and 10');
   const ac = c('d-ac');
   const quotes = $$('.qrow').map(r => ({ min: clamp(parseInt($('.q-min', r).value, 10) || 0, 0, 100), text: $('.q-txt', r).value.trim() })).filter(x => x.text).sort((a, b) => b.min - a.min);
   const intake = $$('.irow').map(r => ({
@@ -1703,7 +1724,7 @@ function edReadDetails() {
   if (rel === 'scheduled' && !v('d-relat')) throw new Error('Choose when results are released');
   return {
     title, description: v('d-desc').trim(), instructions: v('d-inst').trim(), category: v('d-cat'), is_challenge: c('d-chal'),
-    duration_min: dur, pass_mark: pass, shuffle_questions: c('d-shq'), shuffle_options: c('d-sho'),
+    duration_min: dur, duration_sec: dsec, pass_mark: pass, shuffle_questions: c('d-shq'), shuffle_options: c('d-sho'),
     allow_multiple_attempts: c('d-multi'), max_attempts: c('d-multi') ? (parseInt(v('d-maxatt'), 10) || null) : null,
     allow_resume: ac ? false : c('d-resume'), anticheat: ac, anticheat_voice: ac && c('d-voice'),
     anticheat_voice_mode: ($('input[name=d-vmode]:checked') || {}).value || 'aggressive',
@@ -1713,7 +1734,8 @@ function edReadDetails() {
     allow_sharing: c('d-shr'), leaderboard_enabled: c('d-lb'), schedule_enabled: sched, starts_at: sched ? st : null, ends_at: sched ? en : null,
     fifty_fifty: c('d-fifty'), fifty_count: clamp(parseInt(v('d-fc'), 10) || 2, 1, 50), auto_advance: c('d-auto'), exam_mode: c('d-exam'), group_challenge: c('d-group'), intake_form: intake, visibility: E.vis,
     is_paid: c('d-paid'), price_amount: c('d-paid') ? (parseFloat(v('d-price')) || 0) : null, price_currency: v('d-curr'),
-    prize_enabled: c('d-prize'), prize_mode: (($('#pz-seg .on') || {}).dataset || {}).v || 'top3', prize_text: { desc: $('#d-ptext') ? $('#d-ptext').value.trim() : '' }
+    prize_enabled: c('d-prize'), prize_mode: (($('#pz-seg .on') || {}).dataset || {}).v || 'top3', prize_text: { desc: $('#d-ptext') ? $('#d-ptext').value.trim() : '' },
+    time_decay_enabled: c('d-decay'), negative_marking_mode: negMode, negative_marking_fraction: negMode === 'custom' ? negFrac : 0.25
   };
 }
 async function edSaveDetails(silent) {
@@ -1830,6 +1852,13 @@ function qCard(q) {
     } else if (q.type === 'essay') {
       inner += `<div class="hint">Essays are marked by you after the person submits. Open the quiz results to give marks.</div>`;
     }
+    if (!isP) {
+      inner += `<div class="card tight gap" style="margin-top:12px"><div class="b sm">Per-question timer and mark decay</div>
+        <div class="row gap0"><div class="grow"><label class="lbl">Time limit (sec)</label><input class="inp" type="number" min="1" max="3600" step="1" data-qf="time_limit_sec" data-q="${q.id}" value="${q.time_limit_sec == null ? '' : q.time_limit_sec}" placeholder="Off"></div>
+        <div class="grow"><label class="lbl">Grace period (sec)</label><input class="inp" type="number" min="0" max="3600" step="1" data-qf="decay_start_sec" data-q="${q.id}" value="${q.decay_start_sec ?? 5}"></div>
+        <div class="grow"><label class="lbl">Deduct per sec</label><input class="inp" type="number" min="0" max="100000" step="0.01" data-qf="decay_per_sec" data-q="${q.id}" value="${q.decay_per_sec ?? 0.25}"></div></div>
+        <div class="hint">When enabled in Time and scoring, the question auto-advances at its time limit. Correct answers lose the configured marks for each extra second after the grace period.</div></div>`;
+    }
     if (isP) {
       const kids = E.qs.filter(x => x.parent_id === q.id);
       inner += `<div class="sec-t" style="margin:18px 0 8px"><b>Questions on this passage</b></div>${kids.map(k => qCard(k)).join('') || '<div class="hint">None yet.</div>'}
@@ -1851,6 +1880,13 @@ document.addEventListener('input', e => {
     else if (t.dataset.f === 'explanation') q.explanation = html;
     edDirty();
   } else if (t.dataset.qf === 'marks') { const q = edQ(t.dataset.q); if (q) { q.marks = Math.max(0, parseFloat(t.value) || 0); E.lastMarks = q.marks || E.lastMarks; edDirty(); edTotals(); } }
+  else if (['time_limit_sec','decay_start_sec','decay_per_sec'].includes(t.dataset.qf)) {
+    const q = edQ(t.dataset.q); if (!q) return;
+    if (t.dataset.qf === 'time_limit_sec') q.time_limit_sec = t.value.trim() === '' ? null : clamp(parseInt(t.value, 10) || 1, 1, 3600);
+    if (t.dataset.qf === 'decay_start_sec') q.decay_start_sec = clamp(parseFloat(t.value) || 0, 0, 3600);
+    if (t.dataset.qf === 'decay_per_sec') q.decay_per_sec = clamp(parseFloat(t.value) || 0, 0, 100000);
+    edDirty();
+  }
   else if (t.dataset.qa !== undefined && t.dataset.q) { const q = edQ(t.dataset.q); if (q) { q.correct[+t.dataset.qa] = t.value; edDirty(); } }
 });
 CHG['opt-ok'] = el => {
@@ -1888,7 +1924,7 @@ ACT['set-del'] = async () => {
 ACT['q-toggle'] = el => { const q = edQ(el.dataset.id); if (q) { q._open = !q._open; edRenderQs(); } };
 ACT['q-add'] = el => {
   const type = el.dataset.t, pid = el.dataset.p || null; const parent = pid ? edQ(pid) : null;
-  const q = { id: uid(), set_id: parent ? parent.set_id : E.active, parent_id: pid, type, body: '', options: [], multi: false, marks: E.lastMarks || 1, correct: [], explanation: '', _open: true };
+  const q = { id: uid(), set_id: parent ? parent.set_id : E.active, parent_id: pid, type, body: '', options: [], multi: false, marks: E.lastMarks || 1, time_limit_sec: null, decay_start_sec: 5, decay_per_sec: 0.25, correct: [], explanation: '', _open: true };
   if (type === 'mcq') q.options = [0, 1, 2, 3].map(() => ({ id: sid(), text: '' }));
   if (type === 'tf') q.options = [{ id: 'T', text: 'True' }, { id: 'F', text: 'False' }];
   if (type === 'fib') q.correct = [''];
@@ -1954,7 +1990,10 @@ async function edSave(manual) {
       else if (q.type === 'fib') correct = q.correct.map(a => String(a).trim()).filter(Boolean);
       else correct = [];
       return {
-        row: { id: q.id, quiz_id: qid, set_id: q.set_id, parent_id: q.parent_id || null, position: i * 10, type: q.type, body: clean(q.body), options, multi: q.type === 'mcq' && !!q.multi, multi_count: q.type === 'mcq' && q.multi ? correct.length : 1, marks: q.type === 'passage' ? 0 : Math.max(0, +q.marks || 0) },
+        row: { id: q.id, quiz_id: qid, set_id: q.set_id, parent_id: q.parent_id || null, position: i * 10, type: q.type, body: clean(q.body), options, multi: q.type === 'mcq' && !!q.multi, multi_count: q.type === 'mcq' && q.multi ? correct.length : 1, marks: q.type === 'passage' ? 0 : Math.max(0, +q.marks || 0),
+          time_limit_sec: q.type === 'passage' || q.time_limit_sec == null ? null : clamp(parseInt(q.time_limit_sec, 10) || 1, 1, 3600),
+          decay_start_sec: q.type === 'passage' ? 5 : clamp(parseFloat(q.decay_start_sec) || 0, 0, 3600),
+          decay_per_sec: q.type === 'passage' ? 0.25 : clamp(parseFloat(q.decay_per_sec) || 0, 0, 100000) },
         key: q.type === 'passage' ? null : { question_id: q.id, quiz_id: qid, correct, explanation: clean(q.explanation) }
       };
     });
@@ -2178,7 +2217,7 @@ function drawQuiz() {
   const badges = [q.status === 'draft' ? '<span class="badge warn">Draft</span>' : '', q.is_challenge ? `<span class="badge gold">${ic('zap', 12)} Challenge</span>` : '',
     q.visibility === 'private' ? `<span class="badge">${ic('lock', 12)} Private</span>` : `<span class="badge">${ic('globe', 12)} Public</span>`, `<span class="badge">${esc(catName(q.category))}</span>`].join(' ');
   const facts = [
-    [`${q.question_count || 0}`, 'Questions'], [`${q.duration_min} min`, 'Time'], [`${q.pass_mark}%`, 'Pass mark']
+    [`${q.question_count || 0}`, 'Questions'], [q.duration_sec ? `${q.duration_sec}s` : `${q.duration_min} min`, 'Time'], [`${q.pass_mark}%`, 'Pass mark']
   ].map(x => `<div class="stat"><b>${esc(x[0])}</b><span>${x[1]}</span></div>`).join('');
   const feats = [
     q.anticheat ? `<span class="badge bad">${ic('shield', 12)} Anti-cheat on</span>` : '', q.calculator !== 'none' ? `<span class="badge">${ic('calc', 12)} ${q.calculator} calculator</span>` : '',
@@ -2366,7 +2405,7 @@ function intakeField(f) {
   return `<label class="lbl" for="${id}">${esc(f.label)}${req}</label>${inp}`;
 }
 function preStart(q) {
-  const rules = [`You have <b>${q.duration_min} minute${q.duration_min === 1 ? '' : 's'}</b> once you start.`, `Pass mark is <b>${q.pass_mark}%</b>.`];
+  const rules = [(q.duration_sec ? `You have <b>${q.duration_sec} seconds</b> once you start. Faster finishes rank higher.` : `You have <b>${q.duration_min} minute${q.duration_min === 1 ? '' : 's'}</b> once you start.`), `Pass mark is <b>${q.pass_mark}%</b>.`];
   if (q.anticheat) rules.push(`<b class="bad">Anti-cheat is ON.</b> Leaving this screen, switching apps, or the screen turning off gives a ${AC.GRACE_SEC}-second warning and then submits your quiz. ${AC.MAX_STRIKES} warnings submit it at once. Do not touch anything else while you take it.`);
   if (q.anticheat_voice) rules.push('Your <b>microphone</b> will be used to detect talking. Stay quiet during the quiz.');
   if (q.is_paid) rules.push(`This is a <b>paid quiz</b> — ${esc(q.price_currency || 'NGN')} ${num(q.price_amount || 0)} to start.`);
@@ -2536,7 +2575,7 @@ function lbRender() {
     if (!subs.find(x => x.set_id === s.set_id)) subs.push({ set_id:s.set_id, name:s.name });
   }));
   const initials = n => (n || '?').trim().split(/\s+/).slice(0,2).map(x => x[0]).join('').toUpperCase();
-  const percent = (score,total) => total > 0 ? Math.max(0,Math.min(100,score/total*100)) : 0;
+  const percent = (score,total) => total > 0 ? score/total*100 : 0;
   const fig = (score,total) => pctView ? pctSmart(percent(score,total)) + '%' : num(score);
 
   let rows;
@@ -2590,7 +2629,7 @@ function lbRender() {
   const positionCard = position ? `<div class="qb-lb-position"><div><span>YOUR POSITION</span><b>#${position.rank} · ${esc(position.name)}</b></div><strong>${num(position.score)} <small>${pctSmart(position.pct)}%</small></strong></div>` : '';
 
   const rest = rows.map((r,i)=>{
-    const rank=r.rank||i+1, bar=Math.min(100,r.pct);
+    const rank=r.rank||i+1, bar=Math.max(0,Math.min(100,r.pct));
     return `<div class="qb-lb-row ${r.me?'me':''} ${r.pass===false?'failed':''}">
       <div class="qb-lb-rank">${rank}</div>
       <div class="qb-lb-avatar small" style="--h:${(r.name||'').length*37%360}">${esc(initials(r.name))}</div>
@@ -2762,6 +2801,7 @@ function buildLayout(t) {
   return { order, opts };
 }
 function tkPrepare(t) {
+  t.qElapsed = t.qElapsed || {}; t.qAnswerElapsed = t.qAnswerElapsed || {};
   const byId = {}; t.all.forEach(x => byId[x.id] = x); t.byId = byId;
   if (!t.layout || !t.layout.order || !t.layout.order.length) { t.layout = buildLayout(t); t.layoutDirty = true; }
   else {
@@ -2792,7 +2832,9 @@ async function vTake([aid], query, tok) {
   }
   T = {
     aid, att, quiz, offset, expiresMs: Date.parse(att.expires_at), sets: data.sets, all: data.questions, preview: false,
-    answers: Object.assign({}, (bk && bk.answers) || {}, prog.answers || {}), flags: Object.assign({}, prog.flags || {}), idx: att.current_index || 0,
+    answers: Object.assign({}, (bk && bk.answers) || {}, prog.answers || {}), flags: Object.assign({}, prog.flags || {}),
+    qElapsed: Object.assign({}, (bk && bk.qElapsed) || {}, prog.qElapsed || {}), qAnswerElapsed: Object.assign({}, (bk && bk.qAnswerElapsed) || {}, prog.qAnswerElapsed || {}),
+    idx: att.current_index || 0,
     hidden: att.fifty_used || {}, cheat: att.cheat_log || [], strikes: (att.cheat_log || []).filter(c => c.n && c.n < 90).length,
     layout: att.layout, done: false, submitting: false, vio: null
   };
@@ -2812,7 +2854,7 @@ async function vPreview([qid], query, tok) {
   const [sets, qs, keys] = await Promise.all([db(sb.from('question_sets').select('*').eq('quiz_id', qid).order('position')), db(sb.from('questions').select('*').eq('quiz_id', qid).order('position')), db(sb.from('question_keys').select('*').eq('quiz_id', qid))]);
   if (stale(tok)) return;
   const km = {}; keys.forEach(k => km[k.question_id] = k);
-  T = { aid: 'preview', att: { id: 'preview' }, quiz: Object.assign({}, quiz, { anticheat: false, anticheat_voice: false }), offset: 0, expiresMs: Date.now() + quiz.duration_min * 60000, sets, all: qs, preview: true, keys: km, answers: {}, flags: {}, idx: 0, hidden: {}, cheat: [], strikes: 0, layout: null, done: false, submitting: false, vio: null };
+  T = { aid: 'preview', att: { id: 'preview' }, quiz: Object.assign({}, quiz, { anticheat: false, anticheat_voice: false }), offset: 0, expiresMs: Date.now() + (quiz.duration_sec ? quiz.duration_sec * 1000 : quiz.duration_min * 60000), sets, all: qs, preview: true, keys: km, answers: {}, flags: {}, qElapsed: {}, qAnswerElapsed: {}, idx: 0, hidden: {}, cheat: [], strikes: 0, layout: null, done: false, submitting: false, vio: null };
   tkPrepare(T);
   if (!T.items.length) throw new Error('Add some questions first.');
   onLeave(tkTeardown); tkMount();
@@ -2821,6 +2863,7 @@ async function vPreview([qid], query, tok) {
 /* ---------- screen ---------- */
 async function tkMount() {
   document.body.classList.add('taking'); if (T.quiz.anticheat) document.body.classList.add('noselect');
+  T.qStartedAtMs = Date.now();
   const q = T.quiz;
   $('#view').innerHTML = `<div class="tk">
     <div class="tk-bar"><div class="row"><button class="iconbtn" data-act="tk-pal" aria-label="Question list">${ic('grid', 18)}</button>
@@ -2834,7 +2877,7 @@ async function tkMount() {
     <div class="tk-body" id="tk-q"></div>
     <div class="tk-foot"><div class="in"><button class="btn" data-act="tk-prev" id="tk-prev">${ic('back', 18)}</button><button class="btn" data-act="tk-flag" id="tk-flag">${ic('flag', 18)}</button><button class="btn brass" style="flex:2" data-act="tk-next" id="tk-next">Next ${ic('next', 18)}</button></div></div></div>`;
   tkShow();
-  T.timerId = setInterval(tkTick, 250); tkTick();
+  T.timerId = setInterval(tkTick, T.quiz.duration_sec ? 50 : 250); tkTick();
   if (!T.preview) {
     T.saveId = setInterval(() => tkSave(), 15000);
     T.popGuard = () => { if (T && !T.done) { history.pushState({ tk: 1 }, '', location.href); toast('Use the Submit button when you are done', ''); } };
@@ -2872,6 +2915,34 @@ function palGrid() {
   return `<div class="row wrapf gap0 xs mut" style="gap:14px;margin-bottom:8px"><span>${ic('check', 12)} ${answered} answered</span><span>${T.items.length - answered} unanswered</span>${fl ? `<span class="bad">${fl} flagged</span>` : ''}</div>
     <div class="pal gap0">${T.items.map((x, i) => `<button class="${hasAns(x, T.answers) ? 'a' : ''} ${T.flags[x.id] ? 'f' : ''} ${i === T.idx ? 'cur' : ''}" data-act="tk-jump" data-i="${i}">${i + 1}</button>`).join('')}</div>`;
 }
+function tkCurrentSpent() {
+  if (!T) return 0;
+  const it = tkCur(); if (!it) return 0;
+  const base = Math.max(0, +(T.qElapsed && T.qElapsed[it.id]) || 0);
+  const live = T.qStartedAtMs ? Math.max(0, (Date.now() - T.qStartedAtMs) / 1000) : 0;
+  return base + live;
+}
+function tkElapsedSnapshot() {
+  if (!T) return {};
+  const out = Object.assign({}, T.qElapsed || {});
+  const cur = tkCur(); if (cur) out[cur.id] = tkCurrentSpent();
+  return out;
+}
+function tkTimingSnapshot() {
+  if (!T) return {};
+  const out = tkElapsedSnapshot();
+  T.items.forEach(it => {
+    if (T.qAnswerElapsed && Number.isFinite(T.qAnswerElapsed[it.id])) out[it.id] = T.qAnswerElapsed[it.id];
+  });
+  return out;
+}
+function tkRecordCurrent() {
+  if (!T) return;
+  const it = tkCur(); if (!it) return;
+  T.qElapsed = T.qElapsed || {};
+  T.qElapsed[it.id] = Math.max(0, tkCurrentSpent());
+  T.qStartedAtMs = Date.now();
+}
 function tkShow() {
   if (!T) return;
   const it = tkCur(), n = T.items.length, a = T.answers[it.id], q = T.quiz;
@@ -2883,7 +2954,7 @@ function tkShow() {
   const setName = (T.sets.find(s => s.id === it.set_id) || {}).name;
   const sets = T.sets.slice().sort((x, y) => x.position - y.position).filter(s => T.items.some(z => z.set_id === s.id));
   $('#tk-sets').innerHTML = sets.length > 1 ? sets.map(s => `<button class="${s.id === it.set_id ? 'on' : ''}" data-act="tk-set" data-id="${s.id}">${esc(s.name)}</button>`).join('') : '';
-  let body = `<div class="row between"><div class="b">Question ${T.idx + 1} <span class="mut" style="font-weight:500">of ${n}</span></div><div class="row" style="gap:6px">${T.flags[it.id] ? `<span class="badge bad">${ic('flag', 12)} Flagged</span>` : ''}</div></div>`;
+  let body = `<div class="row between"><div class="b">Question ${T.idx + 1} <span class="mut" style="font-weight:500">of ${n}</span></div><div class="row" style="gap:6px">${T.quiz.time_decay_enabled && +it.time_limit_sec > 0 ? `<span class="badge warn" id="tk-qtimer">${Math.max(0, +it.time_limit_sec - tkCurrentSpent()).toFixed(1)}s</span>` : ''}${T.flags[it.id] ? `<span class="badge bad">${ic('flag', 12)} Flagged</span>` : ''}</div></div>`;
   if (sets.length > 1 && setName) body += `<div class="xs mut" style="margin-top:2px">${esc(setName)}</div>`;
   if (passage) body += `<div class="pcard gap"><div class="xs mut" style="margin-bottom:4px">Read the passage</div><div class="qbody" style="font-size:15.5px;margin:0">${clean(passage.body)}</div></div>`;
   body += `<div class="qbody">${clean(it.body)}</div>`;
@@ -2907,7 +2978,10 @@ function tkShow() {
   window.scrollTo(0, 0);
 }
 function tkAnswered(it, val) {
-  T.answers[it.id] = val; try { localStorage.setItem('qb_bk_' + T.aid, JSON.stringify({ answers: T.answers, flags: T.flags })); } catch (e) { }
+  T.answers[it.id] = val;
+  T.qAnswerElapsed = T.qAnswerElapsed || {};
+  if (hasAns(it, T.answers)) T.qAnswerElapsed[it.id] = tkCurrentSpent(); else delete T.qAnswerElapsed[it.id];
+  try { localStorage.setItem('qb_bk_' + T.aid, JSON.stringify({ answers: T.answers, flags: T.flags, qElapsed: tkElapsedSnapshot(), qAnswerElapsed: T.qAnswerElapsed || {} })); } catch (e) { }
   tkSaveSoon();
   const answered = T.items.filter(x => hasAns(x, T.answers)).length;
   $('#tk-cnt').textContent = `${answered} of ${T.items.length} answered`; $('#tk-prog').style.width = (answered / T.items.length * 100) + '%';
@@ -2915,7 +2989,7 @@ function tkAnswered(it, val) {
 const tkSaveSoon = debounce(() => tkSave(), 1500);
 async function tkSave() {
   if (!T || T.preview || T.done || T.submitting) return;
-  try { await sb.rpc('save_progress', { p_attempt_id: T.aid, p_progress: { answers: T.answers, flags: T.flags }, p_layout: T.layoutDirty ? T.layout : null, p_index: T.idx, p_cheat: T.cheat.length ? T.cheat : null }); T.layoutDirty = false; } catch (e) { }
+  try { await sb.rpc('save_progress', { p_attempt_id: T.aid, p_progress: { answers: T.answers, flags: T.flags, qElapsed: tkElapsedSnapshot(), qAnswerElapsed: T.qAnswerElapsed || {} }, p_layout: T.layoutDirty ? T.layout : null, p_index: T.idx, p_cheat: T.cheat.length ? T.cheat : null }); T.layoutDirty = false; } catch (e) { }
 }
 ACT['tk-pick'] = el => {
   const it = tkCur(), o = el.dataset.o; let a = Array.isArray(T.answers[it.id]) ? T.answers[it.id].slice() : [];
@@ -2926,7 +3000,7 @@ ACT['tk-pick'] = el => {
 };
 INP.tkfib = el => { if (T) tkAnswered(tkCur(), el.value); };
 INP.tkessay = el => { if (T) { tkAnswered(tkCur(), el.value); const w = $('#tk-wc'); if (w) w.textContent = (el.value.trim() ? el.value.trim().split(/\s+/).length : 0) + ' words'; } };
-function tkGo(i) { if (!T) return; T.idx = clamp(i, 0, T.items.length - 1); tkShow(); tkSaveSoon(); }
+function tkGo(i) { if (!T) return; tkRecordCurrent(); T.idx = clamp(i, 0, T.items.length - 1); T.qStartedAtMs = Date.now(); tkShow(); tkSaveSoon(); }
 ACT['tk-next'] = () => tkGo(T.idx + 1);
 ACT['tk-prev'] = () => tkGo(T.idx - 1);
 ACT['tk-set'] = el => { const i = T.items.findIndex(x => x.set_id === el.dataset.id); if (i >= 0) tkGo(i); };
@@ -2953,7 +3027,18 @@ ACT['tk-submit'] = async () => {
 };
 function tkTick() {
   if (!T) return; const left = (T.expiresMs - (Date.now() + T.offset)) / 1000; const el = $('#tk-timer'); if (!el) return;
-  el.textContent = fmtClock(left); el.classList.toggle('low', left < 60);
+  if (T.quiz.duration_sec) { el.textContent = Math.max(0, left).toFixed(2) + 's'; el.classList.toggle('low', left < 10); } else { el.textContent = fmtClock(left); el.classList.toggle('low', left < 60); }
+  const cur = tkCur();
+  if (cur && T.quiz.time_decay_enabled && +cur.time_limit_sec > 0) {
+    const qleft = +cur.time_limit_sec - tkCurrentSpent();
+    const qtimer = $('#tk-qtimer'); if (qtimer) { qtimer.textContent = Math.max(0, qleft).toFixed(1) + 's'; qtimer.classList.toggle('bad', qleft <= 3); }
+    if (qleft <= 0 && !T.qAutoMoving && !T.submitting) {
+      T.qAutoMoving = true;
+      if (T.idx < T.items.length - 1) { tkGo(T.idx + 1); T.qAutoMoving = false; }
+      else { tkSubmit('question_time_up'); }
+      return;
+    }
+  }
   if (!T.w5 && T.quiz.duration_min > 10 && left <= 300 && left > 60) { T.w5 = 1; toast('5 minutes left'); }
   if (!T.w1 && T.quiz.duration_min > 3 && left <= 60) { T.w1 = 1; toast('1 minute left', 'bad'); }
   if (left <= 0 && !T.submitting) tkSubmit('time_up');
@@ -2969,7 +3054,7 @@ async function tkSubmit(reason) {
   document.body.appendChild(box);
   let res = null, err = null;
   for (let i = 0; i < 5 && !res; i++) {
-    try { res = await rpc('submit_attempt', { p_attempt_id: t.aid, p_answers: t.answers, p_reason: reason, p_cheat: t.cheat.length ? t.cheat : null }); }
+    try { res = await rpc('submit_attempt', { p_attempt_id: t.aid, p_answers: Object.assign({}, t.answers, { __qb_timing: tkTimingSnapshot() }), p_reason: reason, p_cheat: t.cheat.length ? t.cheat : null }); }
     catch (e) { err = e; if (/not found|not signed/i.test(cleanErr(e))) break; await sleep(1200 * (i + 1)); }
   }
   if (!res) {
@@ -3084,13 +3169,25 @@ ACT['calc-deg'] = el => { CALC.deg = !CALC.deg; el.textContent = CALC.deg ? 'DEG
 
 /* ---------- preview result (local marking) ---------- */
 function tkPreviewFinish() {
-  const t = T; let sc = 0, tot = 0; const rev = [], bySet = {};
+  const t = T; let sc = 0, tot = 0; const rev = [], bySet = {}, timing = tkTimingSnapshot();
   t.items.forEach(it => {
     const k = t.keys[it.id] || { correct: [], explanation: '' }, a = t.answers[it.id]; let ok = null, mk = 0;
     if (it.type === 'mcq' || it.type === 'tf') { ok = false; if (Array.isArray(a) && a.length) { const s = [...a].sort(), c = [...(k.correct || [])].sort(); ok = s.length === c.length && s.every((x, i) => x === c[i]); } }
     else if (it.type === 'fib') { ok = false; if (typeof a === 'string' && a.trim()) ok = (k.correct || []).some(x => String(x).trim() && String(x).trim().toLowerCase() === a.trim().toLowerCase()); }
-    if (ok) mk = +it.marks; tot += +it.marks; sc += mk;
-    const b = bySet[it.set_id] || (bySet[it.set_id] = { set_id: it.set_id, name: (t.sets.find(s => s.id === it.set_id) || {}).name || 'General', score: 0, total: 0 }); b.score += mk; b.total += +it.marks;
+    const answered = hasAns(it, t.answers), marks = +it.marks || 0, elapsed = Math.max(0, +timing[it.id] || 0);
+    if (ok) {
+      mk = marks;
+      if (t.quiz.time_decay_enabled && +it.time_limit_sec > 0) {
+        const extra = Math.ceil(Math.max(0, Math.min(elapsed, +it.time_limit_sec) - Math.max(0, +it.decay_start_sec || 0)));
+        mk = Math.max(0, marks - extra * Math.max(0, +it.decay_per_sec || 0));
+      }
+    } else if (answered && ['mcq','tf','fib'].includes(it.type)) {
+      const mode = t.quiz.negative_marking_mode || 'none';
+      const fraction = mode === 'quarter' ? 0.25 : mode === 'half' ? 0.5 : mode === 'full' ? 1 : mode === 'custom' ? Math.max(0, +t.quiz.negative_marking_fraction || 0) : 0;
+      mk = -marks * fraction;
+    }
+    tot += marks; sc += mk;
+    const b = bySet[it.set_id] || (bySet[it.set_id] = { set_id: it.set_id, name: (t.sets.find(s => s.id === it.set_id) || {}).name || 'General', score: 0, total: 0 }); b.score += mk; b.total += marks;
     rev.push({ question_id: it.id, answer: a === undefined ? null : a, is_correct: ok, marks_awarded: mk, graded: it.type !== 'essay', correct: k.correct, explanation: k.explanation });
   });
   const pct = tot > 0 ? Math.round(sc / tot * 10000) / 100 : 0;
@@ -3138,7 +3235,7 @@ function resultScreen(d) {
     ${auto}
     ${r.pending_review ? `<div class="card gap" style="border-color:var(--warn)"><b class="warnc">Essay answers waiting</b><div class="sm mut">Your essay marks will be added when the quiz creator marks them.</div></div>` : ''}
     <div class="stats gap"><div class="stat"><b>${r.time_taken_sec != null ? fmtDur(r.time_taken_sec) : '-'}</b><span>Time used</span></div><div class="stat"><b>${num(r.score)}</b><span>Marks</span></div><div class="stat"><b>${num(r.total)}</b><span>Total</span></div></div>
-    ${subs.length > 1 ? `<div class="card gap"><div class="b">By subject</div>${subs.map(x => { const p = x.total > 0 ? x.score / x.total * 100 : 0; return `<div class="gap0"><div class="row between sm"><span>${esc(x.name)}</span><span class="b">${num(x.score)} / ${num(x.total)}${q.show_percentage ? ` (${pct2(p)}%)` : ''}</span></div><div class="bar" style="margin-top:5px"><i style="width:${p}%"></i></div></div>`; }).join('')}<div class="row between gap0 b" style="border-top:1px solid var(--line);padding-top:10px"><span>Aggregate</span><span class="brass">${num(r.score)} / ${num(r.total)}</span></div></div>` : ''}
+    ${subs.length > 1 ? `<div class="card gap"><div class="b">By subject</div>${subs.map(x => { const p = x.total > 0 ? x.score / x.total * 100 : 0; return `<div class="gap0"><div class="row between sm"><span>${esc(x.name)}</span><span class="b">${num(x.score)} / ${num(x.total)}${q.show_percentage ? ` (${pct2(p)}%)` : ''}</span></div><div class="bar" style="margin-top:5px"><i style="width:${Math.max(0,Math.min(100,p))}%"></i></div></div>`; }).join('')}<div class="row between gap0 b" style="border-top:1px solid var(--line);padding-top:10px"><span>Aggregate</span><span class="brass">${num(r.score)} / ${num(r.total)}</span></div></div>` : ''}
     ${!d.preview && r.passed && q.prize_enabled ? `<div class="card gap" id="pz-card"><div class="b">${ic('zap', 16)} ${esc((q.prize_text && q.prize_text.desc) || 'Prize')}</div><div class="sm mut gap0">${q.prize_mode === 'passmark' ? 'Everyone who passes qualifies. ' : 'Only the top 3 win. '}Submit your bank details to claim it if you win.</div><button class="btn brass sm gap" data-act="pz-open" data-aid="${esc(att.id)}">Claim prize</button></div>` : ''}
     <div class="col gap">
       ${canRev ? `<button class="btn block" data-act="${d.preview ? 'pv-review' : 'res-review'}" data-id="${esc(att.id)}">${ic('eye', 18)} Review answers</button>` : ''}
