@@ -434,6 +434,7 @@ select.inp option{background:var(--s1);color:var(--tx)}
 .lb-card3 .score{font:800 20px var(--serif);margin-top:4px}
 .lb-you{font-size:8px;color:var(--qb-accent);font-weight:900}
 @media(max-width:480px){.lb-summary{grid-template-columns:repeat(3,1fr)}.lb-row{grid-template-columns:28px 34px minmax(0,1fr) auto;gap:8px}.lb-avatar2{width:34px;height:34px}.lb-score2{min-width:48px}.lb-top3{gap:5px}.lb-card3{padding-left:5px;padding-right:5px}}
+.ceab{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.1;margin:0 .3em}.ceab small{font-size:.7em}
 </style>
 
 <style>
@@ -778,7 +779,46 @@ function rteCmd(btn) {
 /* ---------- bulk question parser ---------- */
 const SYM = { alpha:'α',beta:'β',gamma:'γ',delta:'δ',epsilon:'ε',theta:'θ',lambda:'λ',mu:'μ',pi:'π',rho:'ρ',sigma:'σ',phi:'φ',omega:'ω',tau:'τ',Delta:'Δ',Sigma:'Σ',Omega:'Ω',Theta:'Θ',Phi:'Φ',Pi:'Π',
   deg:'°',pm:'±',times:'×',div:'÷',neq:'≠',leq:'≤',geq:'≥',approx:'≈',infty:'∞',sqrt:'√',rarr:'→',larr:'←',eq:'⇌',
-  schwa:'ə',ae:'æ',sh:'ʃ',zh:'ʒ',eth:'ð',ng:'ŋ',ipai:'ɪ',ipau:'ʊ',ipao:'ɔ',ipaa:'ɑ',ipae:'ɛ',wedge:'ʌ',len:'ː',stress:'ˈ',tsh:'tʃ',dzh:'dʒ' };
+  schwa:'ə',ae:'æ',sh:'ʃ',zh:'ʒ',eth:'ð',ng:'ŋ',ipai:'ɪ',ipau:'ʊ',ipao:'ɔ',ipaa:'ɑ',ipae:'ɛ',wedge:'ʌ',len:'ː',stress:'ˈ',tsh:'tʃ',dzh:'dʒ',down:'↓',up:'↑',rev:'⇌',degC:'°C' };
+/* chemistry: \ce{H2SO4 + 2NaOH -> Na2SO4 + 2H2O(l)} */
+function ceHtml(src) {
+  const E = x => String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const sup = x => `<sup>${x}</sup>`, sub = x => `<sub>${x}</sub>`;
+  const coef = c => /^\d+\/\d+$/.test(c) ? c.replace(/(\d+)\/(\d+)/, (m, a, b) => sup(a) + '&frasl;' + sub(b)) : c;
+  const chg = (n, s) => sup((n || '') + (s === '-' ? '\u2212' : '+'));
+  const seg = f => { const m = f.match(/^(\d+\/\d+|\d+(?:\.\d+)?)?(.*)$/); return coef(m[1] || '') + m[2].replace(/([A-Za-z\)\]])(\d+)/g, (x, a, d) => a + sub(d)); };
+  const form = t => {
+    let st = '', m = t.match(/^(.+?)(\((?:l|g|s|aq)\))$/); if (m) { t = m[1]; st = m[2]; }
+    let c = '', b = t, q;
+    if ((q = b.match(/^(.*?)\^\{?(\d*)([+-])\}?$/))) { b = q[1]; c = chg(q[2], q[3]); }
+    else if ((q = b.match(/^([A-Z][a-z]?)(\d)([+-])$/))) { b = q[1]; c = chg(q[2], q[3]); }
+    else if ((q = b.match(/^(.*\d)(\d)([+-])$/))) { b = q[1]; c = chg(q[2], q[3]); }
+    else if ((q = b.match(/^(.*[A-Za-z\)\]\d])([+-])$/)) && q[1].length) { b = q[1]; c = chg('', q[2]); }
+    b = b.replace(/([A-Za-z\)\]\d])[.*](?=\d|[A-Z])/g, '$1\u00b7');
+    return b.split('\u00b7').map(seg).join('\u00b7') + c + st;
+  };
+  const text = s => {
+    let out = '';
+    s.split(/(\s+)/).forEach(tok => {
+      if (!tok.trim()) { out += tok; return; }
+      if (/^\((?:l|g|s|aq)\)$/.test(tok)) { out = out.replace(/\s+$/, '') + tok; return; }
+      if (tok === 'v') { out += '\u2193'; return; } if (tok === '^') { out += '\u2191'; return; }
+      if (tok === '+' || tok === '-') { out += tok; return; }
+      out += form(E(tok));
+    });
+    return out;
+  };
+  const AR = /(<=>|<->|<-->|-->|->|<-|=>)(?:\[([^\]]*)\])?(?:\[([^\]]*)\])?/g;
+  let html = '', last = 0, m;
+  src = src.replace(/\\([A-Za-z]+)/g, (x, n) => SYM[n] !== undefined ? SYM[n] : x);
+  while ((m = AR.exec(src))) {
+    html += text(src.slice(last, m.index)); last = AR.lastIndex;
+    const ch = (m[1] === '<=>' || m[1] === '<->' || m[1] === '<-->') ? '\u21cc' : m[1] === '<-' ? '\u2190' : '\u2192';
+    html += (m[2] || m[3]) ? `<span class="ceab">${m[2] ? `<small>${text(m[2])}</small>` : ''}<span>${ch}</span>${m[3] ? `<small>${text(m[3])}</small>` : ''}</span>` : ch;
+  }
+  return html + text(src.slice(last));
+}
+
 function fmtNotation(html) {
   return html
     .replace(/\\([A-Za-z]+)/g, (m, n) => SYM[n] !== undefined ? SYM[n] : m)
@@ -790,7 +830,7 @@ function fmtNotation(html) {
 }
 function parseQuestions(text, opt = {}) {
   const conv = opt.notation !== false, defMarks = opt.marks || 1;
-  const T = s => { let h = esc(String(s).trim()); if (conv) h = fmtNotation(h); return h; };
+  const T = s => { const cx = []; s = String(s).trim(); if (conv) s = s.replace(/\\ce\{((?:[^{}]|\{[^{}]*\})*)\}/g, (m, c) => { cx.push(ceHtml(c)); return '\u0001' + (cx.length - 1) + '\u0002'; }); let h = esc(s); if (conv) { h = fmtNotation(h); h = h.replace(/\u0001(\d+)\u0002/g, (m, i) => cx[+i]); } return h; };
   let src = String(text || '').replace(/\r/g, '').replace(/\t/g, ' ').replace(/\u00a0/g, ' ').replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
   const keyMap = {};
   const kb = src.match(/\n[ \t]*(?:answers?(?:[ \t]*key)?|answer[ \t]*sheet|key)[ \t]*[:\-]?[ \t]*\n([\s\S]+)$/i);
@@ -2084,9 +2124,17 @@ Mark the correct option with * (like *B. Mercury) or with an Answer line.
 Per question: [Marks: 2] [Time: 30s] [Decay: 10s, 0.5]
 Per section: [Section: Physics | 2 marks | 30s]
 Answer key at the end: Answers: 1.B 2.C
-Symbols: \alpha \beta \pi \theta \Delta \deg \pm
-English sounds: \ae \schwa \sh \zh \ng \eth \ipai \ipau
-Bold: **word**   Italic: //word//</div></details>
+Symbols: \\alpha \\beta \\pi \\theta \\Delta \\deg \\pm
+English sounds: \\ae \\schwa \\sh \\zh \\ng \\eth \\ipai \\ipau
+Bold: **word**   Italic: //word//
+
+Chemistry (wrap it in \\ce{ }):
+\\ce{H2SO4 + 2NaOH -> Na2SO4 + 2H2O(l)}
+\\ce{N2(g) + 3H2(g) <=> 2NH3(g)}
+\\ce{H+ + OH- -> H2O}   \\ce{Cu^2+ + 2e- -> Cu}
+\\ce{SO4^2- + Ba^2+ -> BaSO4 v}   (v = precipitate, ^ = gas)
+\\ce{CaCO3 ->[heat][800\\degC] CaO + CO2 ^}
+\\ce{[Fe(CN)6]^3-}   \\ce{CuSO4.5H2O}</div></details>
     <textarea class="inp gap" id="bk-text" rows="9" placeholder="Paste your questions here…"></textarea>
     <div class="row gap0"><label class="btn sm" style="cursor:pointer">${ic('file', 14)} Choose file<input type="file" id="bk-file" accept=".txt,.md,.csv,.docx,.pdf,text/plain" hidden data-chg="bkfile"></label><span class="hint" id="bk-fn" style="margin:0"></span></div>
     <div class="row gap"><div class="grow"><label class="lbl" style="margin-top:0" for="bk-marks">Marks each</label><input class="inp" id="bk-marks" type="number" min="0" step="0.5" value="${E.lastMarks || 1}"></div>
@@ -2178,6 +2226,7 @@ const GUIDE = [
  { h: 'Bulk import: what it understands', l: ['- Numbers: 1.  1)  (1)  Q1)  Question 1:  No. 1, or no numbers at all with blank lines between questions.', '- Options: A.  A)  (A)  a.  and all options on one line (A. bat B. beat C. boot).', '- Correct answer: Answer:  Ans:  Correct option:  Right answer:  or the option text. Several letters (A, C) make a multi-answer question.', '- Mark the correct option with a star: *B. Mercury, or put a tick after it.', '- Answer key at the end: write Answers: on its own line, then 1. B  2. C ...', '- Explanation:  Solution:  Reason:  Working:', '- Passage: write [Passage] then the text, then the numbered questions. Close with [End passage].'] },
  { h: 'Bulk import: marks, time and sections', l: ['`[Section: Physics | 2 marks | 30s]   (new section, marks and time for all its questions)', '`Each question: 2 marks', '`1. What is speed? [Marks: 3] [Time: 20s] [Decay: 5s, 0.5]', '`Marks: 4        (on its own line under a question)', '- Decay: first number is the second deduction starts, second number is marks lost per second.', '- After reading, use the fill tool to set marks and/or seconds for all questions, MCQ only, True/False only, Fill-in only, Essay only, or one section.', '- Times only work if the per-question timer is switched on in the quiz settings.'] },
  { h: 'Symbols, English sounds and bold', l: ['Keep "Convert" switched on in Bulk import, then type:', '`x^2 gives x squared     H_2O gives H with a small 2     [1/2] gives a fraction', '`**word** gives bold     //word// gives italic', '- Greek: \\alpha \\beta \\gamma \\delta \\epsilon \\theta \\lambda \\mu \\pi \\rho \\sigma \\phi \\omega \\tau, capitals \\Delta \\Sigma \\Omega \\Theta \\Phi \\Pi', '- Maths: \\deg \\pm \\times \\div \\neq \\leq \\geq \\approx \\infty \\sqrt \\rarr \\larr \\eq', '- English sounds: \\ae \\schwa \\sh \\zh \\ng \\eth \\ipai \\ipau \\ipao \\ipaa \\ipae \\wedge \\len \\stress \\tsh \\dzh', '  Example: write /\\ae/ to show the sound in cat, and \\schwa for the first sound in about.'] },
+{ h: 'Chemistry equations', l: ['Wrap the equation in \\ce{ } in Bulk import (Convert must be on). Numbers after letters become subscripts, charges become superscripts, and arrows are drawn for you.', '`\\ce{H2SO4 + 2NaOH -> Na2SO4 + 2H2O(l)}', '`\\ce{N2(g) + 3H2(g) <=> 2NH3(g)}', '`\\ce{H+ + OH- -> H2O}', '`\\ce{Cu^2+ + 2e- -> Cu}', '`\\ce{SO4^2- + Ba^2+ -> BaSO4 v}', '`\\ce{CuSO4.5H2O ->[\\Delta] CuSO4 + 5H2O}', '`\\ce{CaCO3 ->[heat][800\\degC] CaO + CO2 ^}', '`\\ce{[Fe(CN)6]^3-  [Cu(NH3)4]^2+}', '- Arrows: -> gives a forward arrow, <=> gives the reversible sign, <- gives a backward arrow. Text in [ ] after an arrow goes above it, and a second [ ] goes below it.', '- Charges: H+ and OH- work directly. For bigger charges write ^ first: Cu^2+, SO4^2-, Fe^3+. Common ones like Cu2+, SO42- and PO43- are also understood.', '- States: write (l), (g), (s) or (aq) after the formula, with or without a space.', '- Leading numbers are coefficients and stay normal size: 2NaOH, 3H2, 1/2O2.', '- Hydrates use a dot: CuSO4.5H2O. Electrons: e-. Precipitate: v. Gas given off: ^ on its own. Heat: \\Delta.', '- Complex ions work in square brackets, for example [Fe(CN)6]^3-.', '- Only text inside \\ce{ } is changed, so ordinary words like CO or NO in a sentence are left alone.'] },
  { h: 'Tips', l: ['- Check the answers shown after Read questions. Anything marked "Answer?" still needs one.', '- Preview the quiz before publishing, especially timed ones.', '- Use sign-in (not guest) for quizzes that decide rankings or prizes.', '- Keep quick drills short, for example 5 questions in 30 seconds.'] },
  { a: 'admin', h: 'Admin tools', l: ['- Users: rename, change role, suspend or restore accounts. Suspended users can browse but cannot take or create quizzes.', '- Quizzes: feature on Home, unpublish, or delete any quiz. Attempts and payments are listed under their own tabs.', '- Paystack settings (payment keys) are saved by admins.'] }
 ];
