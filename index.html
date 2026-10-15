@@ -776,8 +776,14 @@ function rteCmd(btn) {
 }
 
 /* ---------- bulk question parser ---------- */
+const SYM = { alpha:'α',beta:'β',gamma:'γ',delta:'δ',epsilon:'ε',theta:'θ',lambda:'λ',mu:'μ',pi:'π',rho:'ρ',sigma:'σ',phi:'φ',omega:'ω',tau:'τ',Delta:'Δ',Sigma:'Σ',Omega:'Ω',Theta:'Θ',Phi:'Φ',Pi:'Π',
+  deg:'°',pm:'±',times:'×',div:'÷',neq:'≠',leq:'≤',geq:'≥',approx:'≈',infty:'∞',sqrt:'√',rarr:'→',larr:'←',eq:'⇌',
+  schwa:'ə',ae:'æ',sh:'ʃ',zh:'ʒ',eth:'ð',ng:'ŋ',ipai:'ɪ',ipau:'ʊ',ipao:'ɔ',ipaa:'ɑ',ipae:'ɛ',wedge:'ʌ',len:'ː',stress:'ˈ',tsh:'tʃ',dzh:'dʒ' };
 function fmtNotation(html) {
   return html
+    .replace(/\\([A-Za-z]+)/g, (m, n) => SYM[n] !== undefined ? SYM[n] : m)
+    .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    .replace(/(^|[^:\w])\/\/(.+?)\/\//g, '$1<i>$2</i>')
     .replace(/\[([^\]\/\s][^\]\/]*)\/([^\]\/]+)\]/g, (m, a, b) => `<sup>${a}</sup>&frasl;<sub>${b}</sub>`)
     .replace(/\^(\{[^}]*\}|[+\-]?[0-9A-Za-z]+)/g, (m, x) => `<sup>${x.replace(/^\{|\}$/g, '')}</sup>`)
     .replace(/_(\{[^}]*\}|\d+)/g, (m, x) => `<sub>${x.replace(/^\{|\}$/g, '')}</sub>`);
@@ -785,63 +791,94 @@ function fmtNotation(html) {
 function parseQuestions(text, opt = {}) {
   const conv = opt.notation !== false, defMarks = opt.marks || 1;
   const T = s => { let h = esc(String(s).trim()); if (conv) h = fmtNotation(h); return h; };
-  let src = String(text || '').replace(/\r/g, '').replace(/\t/g, ' ').replace(/\u00a0/g, ' ');
-  const NUMQ = /^\s*(?:q(?:uestion)?\s*)?(\d{1,4})\s*[\.\):\-]\s+(.*)$/i;
+  let src = String(text || '').replace(/\r/g, '').replace(/\t/g, ' ').replace(/\u00a0/g, ' ').replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+  const keyMap = {};
+  const kb = src.match(/\n[ \t]*(?:answers?(?:[ \t]*key)?|answer[ \t]*sheet|key)[ \t]*[:\-]?[ \t]*\n([\s\S]+)$/i);
+  if (kb) {
+    const pairs = [...kb[1].matchAll(/(\d{1,4})\s*[\.\)\-:=]?\s*\(?([A-Ha-h](?:\s*[,&+\/]\s*[A-Ha-h])*|true|false)(?![A-Za-z])/gi)];
+    if (pairs.length >= 2) { pairs.forEach(p => keyMap[+p[1]] = p[2]); src = src.slice(0, kb.index); }
+  }
+  const NUMQ = /^\s*(?:(?:q(?:uestion)?|no)\.?\s*\(?(\d{1,4})\)?\s*[\.\):\-]?|\(?(\d{1,4})[\.\):\-])\s+(.*)$/i;
   if (!src.split('\n').some(l => NUMQ.test(l))) {
     src = src.split(/\n\s*\n/).map((b, i) => b.trim() ? `${i + 1}. ${b.trim()}` : '').filter(Boolean).join('\n');
   }
-  const OPT = /^\s*(\*?)\s*\(?([A-Ha-h])[\.\)]\s+(.*)$/, ANS = /^\s*(?:ans(?:wer)?|correct(?:\s*answer)?|key)\s*[:=\-]\s*(.+)$/i,
-    EXP = /^\s*(?:explanation|solution|reason|rationale|working)\s*[:\-]\s*(.*)$/i, MRK = /^\s*[\[\(]?\s*(?:marks?|score|points?)\s*[:=]\s*(\d+(?:\.\d+)?)\s*(?:marks?)?\s*[\]\)]?\s*$/i, MRK2 = /^\s*[\[\(]\s*(\d+(?:\.\d+)?)\s*(?:marks?|mks?|pts?|points?)\s*[\]\)]\s*$/i, INL = /[\[\(]\s*(\d+(?:\.\d+)?)\s*(?:marks?|mks?|pts?|points?)\s*[\]\)]/i, MEACH = /^\s*(?:marks?\s+each|default\s+marks?|each\s+question(?:\s+carries)?)\s*[:=\-]?\s*(\d+(?:\.\d+)?)\s*(?:marks?)?\s*$/i,
-    SEC = /^\s*(?:\[section\s*:\s*(.+?)\]|#{1,3}\s+(.+))\s*$/i, PAS = /^\s*(?:\[passage\]|passage\s*:)\s*(.*)$/i, PASEND = /^\s*(?:\[\/passage\]|\[end passage\]|end passage)\s*$/i;
-  const out = []; let cur = null, section = null, passage = null, inPassage = false, mode = 'body', ctxMarks = 0;
-  const takeMarks = (s, c) => { const mm = s.match(INL); if (mm) { c.marks = +mm[1]; return s.replace(INL, '').replace(/\s{2,}/g, ' ').trim(); } return s; };
+  const OPT = /^\s*(\*?)\s*\(?([A-Ha-h])[\.\)]\s+(.*)$/, ANS = /^\s*(?:ans(?:wer)?|correct(?:\s*(?:answer|option))?|right\s*answer|key)\s*[:=\-]\s*(.+)$/i,
+    EXP = /^\s*(?:explanation|solution|reason|rationale|working|why)\s*[:\-]\s*(.*)$/i,
+    LTAG = /^\s*(?:marks?|score|points?|time(?:\s*limit)?|decay|deduct(?:ion)?)\s*[:=]\s*\d/i,
+    SEC = /^\s*(?:\[section\s*:\s*(.+?)\]|#{1,3}\s+(.+))\s*$/i, PAS = /^\s*(?:\[passage\]|passage\s*:)\s*(.*)$/i, PASEND = /^\s*(?:\[\/passage\]|\[end passage\]|end passage)\s*$/i,
+    MEACH = /^\s*\[?\s*(?:each(?:\s*question)?|every\s*question|all\s*questions)[^\d\n]*?(\d+(?:\.\d+)?)\s*(?:marks?|mks?|pts?|points?)?\s*\]?\s*$/i;
+  const out = []; let cur = null, section = null, passage = null, inPassage = false, mode = 'body', ctx = {}, pcount = 0;
+  const takeTags = (s, c) => {
+    s = s.replace(/\s*[\[\(]\s*(\d+(?:\.\d+)?)\s*(?:marks?|mks?|pts?|points?)\s*[\]\)]/ig, (m, n) => { c.marks = +n; return ''; });
+    return s.replace(/\s*[\[\(]\s*(marks?|score|points?|time(?:\s*limit)?|decay|deduct(?:ion)?)\s*[:=]\s*(\d[^\]\)]*?)\s*[\]\)]/ig, (m, k, v) => {
+      k = k.toLowerCase(); const n = v.match(/\d+(?:\.\d+)?/g).map(Number);
+      if (/^(mark|score|point)/.test(k)) c.marks = n[0]; else if (/^time/.test(k)) c.time = n[0];
+      else { c.dstart = n[0]; if (n[1] != null) c.dper = n[1]; }
+      return '';
+    }).replace(/\s{2,}/g, ' ').trim();
+  };
+  const pick = (txt, o) => {
+    const t = txt.trim().replace(/^\(\s*|\s*\)$/g, '');
+    if (/^[A-Ha-h]{2,4}$/.test(t)) return t.toUpperCase().split('');
+    const m = t.match(/^([A-Ha-h](?:\s*(?:,|&|\+|\/|and)\s*[A-Ha-h])*)(?![A-Za-z])/i);
+    if (m) return m[1].toUpperCase().match(/[A-H]/g);
+    const hit = o.find(x => x.raw.trim().toLowerCase() === t.toLowerCase()); return hit ? [hit.letter] : [];
+  };
   const finish = () => {
     if (!cur) return;
     const o = cur.options.filter(x => x.raw.trim());
     let type, options = [], correct = [], multi = false;
-    const ansTxt = (cur.answer || '').trim();
+    let ansTxt = (cur.answer || '').trim(); if (!ansTxt && keyMap[cur.num]) ansTxt = keyMap[cur.num];
     if (o.length >= 2) {
       const isTF = o.length === 2 && o.every(x => /^(true|false)$/i.test(x.raw.trim()));
       if (isTF) {
         type = 'tf'; options = [{ id: 'T', text: 'True' }, { id: 'F', text: 'False' }];
-        const ci = o.findIndex(x => x.ok); const pick = ci >= 0 ? o[ci].raw.trim().toLowerCase() : ansTxt.toLowerCase();
-        if (pick) correct = [pick.startsWith('t') ? 'T' : 'F'];
+        const ci = o.findIndex(x => x.ok); let p = ci >= 0 ? o[ci].raw.trim().toLowerCase() : ansTxt.toLowerCase();
+        if (ci < 0 && /^[ab]\b/i.test(p)) p = o['ab'.indexOf(p[0].toLowerCase())].raw.trim().toLowerCase();
+        if (p) correct = [p.startsWith('t') ? 'T' : 'F'];
       } else {
         type = 'mcq'; options = o.map(x => ({ id: sid(), text: T(x.raw), _l: x.letter }));
         options.forEach((op, i) => { if (o[i].ok) correct.push(op.id); });
-        if (!correct.length && ansTxt) {
-          const ls = ansTxt.toUpperCase().match(/\b[A-H]\b/g) || (/^[A-H]{1,4}$/.test(ansTxt.toUpperCase()) ? ansTxt.toUpperCase().split('') : []);
-          ls.forEach(l => { const op = options.find(z => z._l === l); if (op && !correct.includes(op.id)) correct.push(op.id); });
-        }
+        if (!correct.length && ansTxt) pick(ansTxt, o).forEach(l => { const op = options.find(z => z._l === l); if (op && !correct.includes(op.id)) correct.push(op.id); });
         multi = correct.length > 1; options.forEach(z => delete z._l);
       }
     } else if (/^(true|false)$/i.test(ansTxt)) {
       type = 'tf'; options = [{ id: 'T', text: 'True' }, { id: 'F', text: 'False' }]; correct = [ansTxt.toLowerCase() === 'true' ? 'T' : 'F'];
     } else if (ansTxt) { type = 'fib'; correct = ansTxt.split(/\s*[|;]\s*/).filter(Boolean); }
     else type = 'essay';
+    const c = cur, x = c.ctx;
     out.push({
-      section: cur.section, _p: cur.pid, type, body: T(cur.body).replace(/\n/g, '<br>'), options, correct, multi,
-      explanation: T(cur.exp).replace(/\n/g, '<br>'), marks: cur.marks || cur.ctx || defMarks
+      section: c.section, _p: c.pid, type, body: T(c.body).replace(/\n/g, '<br>'), options, correct, multi,
+      explanation: T(c.exp).replace(/\n/g, '<br>'), marks: c.marks ?? x.marks ?? defMarks,
+      time_limit_sec: c.time ?? x.time ?? null, decay_start_sec: c.dstart ?? x.dstart ?? 5, decay_per_sec: c.dper ?? x.dper ?? 0.25
     });
     cur = null; mode = 'body';
   };
-  const flushPassage = () => { if (passage && passage.body.trim()) { out.push({ section: passage.section, _pid: passage.id, type: 'passage', body: T(passage.body).replace(/\n/g, '<br>'), options: [], correct: [], multi: false, explanation: '', marks: 0 }); } };
-  let pcount = 0;
-  src.split('\n').forEach(line => {
+  const flushPassage = () => { if (passage && passage.body.trim()) out.push({ section: passage.section, _pid: passage.id, type: 'passage', body: T(passage.body).replace(/\n/g, '<br>'), options: [], correct: [], multi: false, explanation: '', marks: 0 }); };
+  const lines = [];
+  src.split('\n').forEach(l => {
+    if (/^\s*\*?\(?a[\.\)]\s/i.test(l) && /\s\(?[b-h][\.\)]\s/i.test(l)) l.split(/\s+(?=\*?\(?[B-Hb-h][\.\)]\s)/).forEach(p => lines.push(p)); else lines.push(l);
+  });
+  lines.forEach(line => {
     let m;
     if (!line.trim()) { if (cur && mode === 'exp') cur.exp += '\n'; else if (passage && inPassage) passage.body += '\n'; return; }
-    if ((m = line.match(SEC))) { finish(); if (inPassage) { flushPassage(); inPassage = false; } passage = null; const sp = (m[1] || m[2]).trim().split('|'); section = sp[0].trim(); if (sp[1]) { const mm = sp[1].match(/(\d+(?:\.\d+)?)/); if (mm) ctxMarks = +mm[1]; } return; }
-    if ((m = line.match(MEACH))) { finish(); ctxMarks = +m[1]; return; }
+    if ((m = line.match(SEC))) {
+      finish(); if (inPassage) { flushPassage(); inPassage = false; } passage = null;
+      const sp = (m[1] || m[2]).trim().split('|'); section = sp[0].trim(); ctx = {};
+      sp.slice(1).forEach(s => { takeTags('[' + (/mark|mks|pts|point/i.test(s) ? 'marks' : /\d\s*(s|sec)/i.test(s) ? 'time' : 'x') + ':' + s + ']', ctx); });
+      return;
+    }
+    if ((m = line.match(MEACH))) { finish(); ctx.marks = +m[1]; return; }
     if (PASEND.test(line)) { finish(); if (inPassage) { flushPassage(); inPassage = false; } passage = null; return; }
     if ((m = line.match(PAS))) { finish(); if (inPassage) flushPassage(); passage = { id: 'p' + (++pcount), body: m[1] || '', section }; inPassage = true; return; }
     if ((m = line.match(NUMQ))) {
-      finish();
-      if (inPassage) { flushPassage(); inPassage = false; }
-      cur = { section, pid: passage ? passage.id : null, body: '', options: [], exp: '', answer: '', marks: 0, ctx: ctxMarks }; cur.body = takeMarks(m[2], cur); mode = 'body'; return;
+      finish(); if (inPassage) { flushPassage(); inPassage = false; }
+      cur = { section, pid: passage ? passage.id : null, body: '', options: [], exp: '', answer: '', num: +(m[1] || m[2]), ctx: { ...ctx } };
+      cur.body = takeTags(m[3], cur); mode = 'body'; return;
     }
     if (inPassage) { passage.body += (passage.body ? '\n' : '') + line.trim(); return; }
     if (!cur) return;
-    if ((m = line.match(MRK)) || (m = line.match(MRK2))) { cur.marks = +m[1]; return; }
+    if (LTAG.test(line)) { takeTags('[' + line.trim() + ']', cur); return; }
     if ((m = line.match(EXP))) { cur.exp = m[1]; mode = 'exp'; return; }
     if ((m = line.match(ANS))) { cur.answer = m[1]; mode = 'ans'; return; }
     if (mode !== 'exp' && (m = line.match(OPT))) {
@@ -853,7 +890,7 @@ function parseQuestions(text, opt = {}) {
     if (mode === 'exp') cur.exp += (cur.exp ? '\n' : '') + line.trim();
     else if (mode === 'opt' && cur.options.length) cur.options[cur.options.length - 1].raw += ' ' + line.trim();
     else if (mode === 'ans') cur.answer += ' ' + line.trim();
-    else cur.body += '\n' + takeMarks(line.trim(), cur);
+    else cur.body += '\n' + takeTags(line.trim(), cur);
   });
   finish(); if (inPassage) flushPassage();
   return out;
@@ -2039,7 +2076,14 @@ Marks: 10
 
 Add [Section: Physics] on its own line to start a new set.
 Mark the correct option with * (like *B. Mercury) or with an Answer line.
-[Passage] text… then numbered questions after it.</div></details>
+[Passage] text… then numbered questions after it.
+
+Per question: [Marks: 2] [Time: 30s] [Decay: 10s, 0.5]
+Per section: [Section: Physics | 2 marks | 30s]
+Answer key at the end: Answers: 1.B 2.C
+Symbols: \alpha \beta \pi \theta \Delta \deg \pm
+English sounds: \ae \schwa \sh \zh \ng \eth \ipai \ipau
+Bold: **word**   Italic: //word//</div></details>
     <textarea class="inp gap" id="bk-text" rows="9" placeholder="Paste your questions here…"></textarea>
     <div class="row gap0"><label class="btn sm" style="cursor:pointer">${ic('file', 14)} Choose file<input type="file" id="bk-file" accept=".txt,.md,.csv,.docx,.pdf,text/plain" hidden data-chg="bkfile"></label><span class="hint" id="bk-fn" style="margin:0"></span></div>
     <div class="row gap"><div class="grow"><label class="lbl" style="margin-top:0" for="bk-marks">Marks each</label><input class="inp" id="bk-marks" type="number" min="0" step="0.5" value="${E.lastMarks || 1}"></div>
@@ -2083,12 +2127,19 @@ ACT['bulk-parse'] = () => {
     return `<div class="bk-row"><div class="qn">${n}</div><div class="grow" style="min-width:0"><div class="trunc">${esc(snippet(it.body, 40))}</div><div class="xs mut">${TYPE_LBL[it.type]}${it.section ? ' · ' + esc(it.section) : ''}</div></div>${ans}<label class="mk-in"><input type="number" inputmode="decimal" min="0" step="0.5" value="${it.marks}" data-inp="bkmarks" data-i="${i}" aria-label="Marks"><span>marks</span></label></div>`;
   }).join('');
   $('#bk-prev').innerHTML = `<div class="card tight gap"><b>${real.length} question${real.length === 1 ? '' : 's'} found</b><div class="hint" style="margin-top:2px">Check the answers and set each question's marks here, or change them later on the cards.${noAns ? ` <span class="warnc">${noAns} still need an answer.</span>` : ''}</div>
-    <div class="row gap0"><input class="inp" id="bk-all" type="number" inputmode="decimal" min="0" step="0.5" placeholder="Marks for all" style="max-width:150px"><button class="btn sm" data-act="bk-all">Apply to all</button></div><div class="bk-list gap0">${rowsH}</div></div>`;
+    <div class="row gap0"><input class="inp" id="bk-all" type="number" inputmode="decimal" min="0" step="0.5" placeholder="Marks" style="max-width:90px"><input class="inp" id="bk-time" type="number" inputmode="decimal" min="1" step="1" placeholder="Seconds" style="max-width:90px"><select class="inp" id="bk-scope" style="max-width:150px"><option value="all">All questions</option><option value="t:mcq">MCQ only</option><option value="t:tf">True/False only</option><option value="t:fib">Fill-in only</option><option value="t:essay">Essay only</option>${[...new Set(real.map(i => i.section || ''))].filter(Boolean).map(sn => `<option value="s:${esc(sn)}">Section: ${esc(sn)}</option>`).join('')}</select><button class="btn sm" data-act="bk-all">Apply</button></div><div class="bk-list gap0">${rowsH}</div></div>`;
   const b = $('.btn.brass[data-act=bulk-parse]'); b.textContent = `Add ${real.length} question${real.length === 1 ? '' : 's'}`; b.dataset.act = 'bulk-add';
 };
 INP.bkmarks = el => { const it = BK.items[+el.dataset.i]; if (it) it.marks = Math.max(0, parseFloat(el.value) || 0); };
 CHG.bkans = el => { const it = BK.items[+el.dataset.i]; if (it) { it.correct = el.value ? [el.value] : []; el.classList.toggle('miss', !el.value); } };
-ACT['bk-all'] = () => { const v = parseFloat($('#bk-all').value); if (isNaN(v) || v < 0) return toast('Type the marks first', 'bad'); BK.items.forEach(it => { if (it.type !== 'passage') it.marks = v; }); $$('[data-inp=bkmarks]').forEach(i => i.value = v); };
+ACT['bk-all'] = () => {
+  const mv = parseFloat($('#bk-all').value), tv = parseFloat($('#bk-time').value), sc = $('#bk-scope').value;
+  if (isNaN(mv) && isNaN(tv)) return toast('Type the marks or the seconds first', 'bad');
+  const hit = it => it.type !== 'passage' && (sc === 'all' || sc === 't:' + it.type || sc === 's:' + (it.section || ''));
+  BK.items.forEach(it => { if (!hit(it)) return; if (!isNaN(mv) && mv >= 0) it.marks = mv; if (!isNaN(tv) && tv > 0) it.time_limit_sec = tv; });
+  $$('[data-inp=bkmarks]').forEach(i => { const it = BK.items[+i.dataset.i]; if (it && hit(it)) i.value = it.marks; });
+  toast('Applied', 'ok');
+};
 ACT['bulk-add'] = () => {
   const target = $('#bk-set').value; const marksEach = parseFloat($('#bk-marks').value) || 1; E.lastMarks = marksEach;
   const setByName = {}; E.sets.forEach(s => setByName[s.name.trim().toLowerCase()] = s.id);
@@ -2100,7 +2151,7 @@ ACT['bulk-add'] = () => {
   };
   BK.items.forEach(it => {
     const set_id = setFor(it.section); lastSet = set_id;
-    const q = { id: uid(), set_id, parent_id: null, type: it.type, body: it.body, options: it.options, multi: it.multi, marks: it.marks, correct: it.correct, explanation: it.explanation, _open: false };
+    const q = { id: uid(), set_id, parent_id: null, type: it.type, body: it.body, options: it.options, multi: it.multi, marks: it.marks, correct: it.correct, explanation: it.explanation, time_limit_sec: it.time_limit_sec ?? null, decay_start_sec: it.decay_start_sec ?? 5, decay_per_sec: it.decay_per_sec ?? 0.25, _open: false };
     if (it.type === 'passage') { pmap[it._pid] = q.id; q.marks = 0; }
     if (it._p && pmap[it._p]) q.parent_id = pmap[it._p];
     E.qs.push(q);
@@ -3191,7 +3242,7 @@ function tkPreviewFinish() {
     rev.push({ question_id: it.id, answer: a === undefined ? null : a, is_correct: ok, marks_awarded: mk, graded: it.type !== 'essay', correct: k.correct, explanation: k.explanation });
   });
   const pct = tot > 0 ? Math.round(sc / tot * 10000) / 100 : 0;
-  const result = { score: sc, total: tot, percentage: pct, passed: pct >= t.quiz.pass_mark, subject_scores: t.sets.map(s => bySet[s.id]).filter(Boolean), pending_review: t.items.some(x => x.type === 'essay' && hasAns(x, t.answers)), time_taken_sec: Math.round((Date.now() - (t.expiresMs - t.quiz.duration_min * 60000)) / 1000) };
+  const result = { score: sc, total: tot, percentage: pct, passed: pct >= t.quiz.pass_mark, subject_scores: t.sets.map(s => bySet[s.id]).filter(Boolean), pending_review: t.items.some(x => x.type === 'essay' && hasAns(x, t.answers)), time_taken_sec: Math.round((Date.now() - (t.expiresMs - (t.quiz.duration_sec ? t.quiz.duration_sec * 1000 : t.quiz.duration_min * 60000))) / 1000) };
   const data = { quiz: t.quiz, summary: { attempt: { status: 'completed', id: 'preview' }, visible: true, result }, questions: { sets: t.sets, questions: t.all }, review: rev, preview: true };
   document.body.classList.remove('taking', 'noselect'); clearInterval(t.timerId);
   resultScreen(data);
