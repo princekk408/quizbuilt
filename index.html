@@ -1108,6 +1108,7 @@ const ROUTES = [
   [/^\/(?:quiz|q)\/([\w-]+)$/, vQuiz],
   [/^\/leaderboard\/([\w-]+)$/, vLeaderboardFull], [/^\/global-leaderboard$/, vGlobalLeaderboard], [/^\/attempts\/([\w-]+)$/, vAttemptsFull],
   [/^\/practice\/([\w-]+)$/, vPracticeWeak],
+  [/^\/access\/([\w-]+)$/, vAccess], [/^\/team\/([\w-]+)$/, vTeamRank],
   [/^\/group\/([\w-]+)$/, vGroupLobby], [/^\/grouprank\/([\w-]+)$/, vGroupRank],
   [/^\/take\/([\w-]+)$/, vTake], [/^\/preview\/([\w-]+)$/, vPreview],
   [/^\/result\/([\w-]+)$/, vResult], [/^\/review\/([\w-]+)$/, vReview],
@@ -1548,7 +1549,7 @@ const DEF = {
   fifty_count: 2, auto_advance: false, exam_mode: false, group_challenge: false, intake_form: [], show_percentage: true, visibility: 'public',
   is_paid: false, price_amount: null, price_currency: 'NGN',
   prize_enabled: false, prize_mode: 'top3', prize_text: { desc: '' },
-  time_decay_enabled: false, negative_marking_mode: 'none', negative_marking_fraction: 0.25, waec_mode: false
+  time_decay_enabled: false, negative_marking_mode: 'none', negative_marking_fraction: 0.25, waec_mode: false, access_code_required: false, team_challenge: false, team_names: ['Boys', 'Girls']
 };
 const edQ = id => E.qs.find(x => x.id === id);
 const numOf = q => { let n = 0; for (const x of E.qs) { if (x.type !== 'passage') n++; if (x === q) return x.type === 'passage' ? 'P' : n; } return '?'; };
@@ -1636,6 +1637,9 @@ function edRenderDetails() {
   ${accSec('refresh', 'Attempts and behaviour', `
     ${swRow('d-waec', 'WAEC exam mode', 'Each question set is a subject. Objective questions come first, then essay. Results show per subject, out of 100, graded A1 to F9, with no overall total.', q.waec_mode, { reveal: 'sub-waec' })}
     <div class="sub" id="sub-waec" ${q.waec_mode ? '' : 'hidden'}><div class="hint">Open the Questions tab, pick each subject, and set how many marks (out of 100) the objective part carries. The essay part gets the rest. Leave it empty for 40. With no essay questions, objective carries all 100.</div></div>
+    ${swRow('d-acc', 'Require an access code to start', 'Only people with a code you give them can start. Each code works once, and you can see who used it. Make the codes from the quiz page, under Manage.', q.access_code_required)}
+    ${swRow('d-team', 'Team challenge', 'People join a team, like Boys or Girls. A team leaderboard adds up each team score.', q.team_challenge, { reveal: 'sub-team' })}
+    <div class="sub" id="sub-team" ${q.team_challenge ? '' : 'hidden'}><label class="lbl" for="d-teams">Team names (separate with commas)</label><input class="inp" id="d-teams" value="${esc((q.team_names || ['Boys', 'Girls']).join(', '))}" placeholder="Boys, Girls"><div class="hint">Do not switch on Group challenge as well. Teams use access codes or a team pick instead.</div></div>
     ${swRow('d-shq', 'Shuffle questions', 'Every person gets a different order.', q.shuffle_questions)}
     ${swRow('d-sho', 'Shuffle answer options', 'Options are mixed for each person.', q.shuffle_options)}
     ${swRow('d-multi', 'Allow multiple attempts', 'People can retake the quiz.', q.allow_multiple_attempts, { reveal: 'sub-multi' })}
@@ -1788,6 +1792,7 @@ function edReadDetails() {
   const v = id => $('#' + id).value, c = id => $('#' + id).checked;
   const title = v('d-title').trim(); if (!title) throw new Error('Give your quiz a title');
   const dsec = parseInt(v('d-dursec'), 10) || null; if (dsec && !(dsec >= 5 && dsec <= 600)) throw new Error('Drill duration must be between 5 and 600 seconds');
+  const tnames = (v('d-teams') || '').split(',').map(x => x.trim()).filter(Boolean).slice(0, 6); if (c('d-team') && tnames.length < 2) throw new Error('Add at least two team names, like Boys, Girls');
   const dur = dsec ? Math.max(1, Math.ceil(dsec / 60)) : parseInt(v('d-dur'), 10); if (!(dur >= 1 && dur <= 600)) throw new Error('Duration must be between 1 and 600 minutes');
   const pass = parseInt(v('d-pass'), 10); if (!(pass >= 0 && pass <= 100)) throw new Error('Pass mark must be between 0 and 100');
   const negMode = v('d-negmode'), negFrac = parseFloat(v('d-negfrac'));
@@ -1816,7 +1821,7 @@ function edReadDetails() {
     fifty_fifty: c('d-fifty'), fifty_count: clamp(parseInt(v('d-fc'), 10) || 2, 1, 50), auto_advance: c('d-auto'), exam_mode: c('d-exam'), group_challenge: c('d-group'), intake_form: intake, visibility: E.vis,
     is_paid: c('d-paid'), price_amount: c('d-paid') ? (parseFloat(v('d-price')) || 0) : null, price_currency: v('d-curr'),
     prize_enabled: c('d-prize'), prize_mode: (($('#pz-seg .on') || {}).dataset || {}).v || 'top3', prize_text: { desc: $('#d-ptext') ? $('#d-ptext').value.trim() : '' },
-    time_decay_enabled: c('d-decay'), waec_mode: c('d-waec'), negative_marking_mode: negMode, negative_marking_fraction: negMode === 'custom' ? negFrac : 0.25
+    time_decay_enabled: c('d-decay'), waec_mode: c('d-waec'), access_code_required: c('d-acc'), team_challenge: c('d-team'), team_names: tnames, negative_marking_mode: negMode, negative_marking_fraction: negMode === 'custom' ? negFrac : 0.25
   };
 }
 async function edSaveDetails(silent) {
@@ -2228,7 +2233,8 @@ const GUIDE = [
  { h: 'Leaderboards', l: ['- Quiz leaderboard: lists people who passed, ranked by score, then faster time, then who started first. Only each person first attempt counts. It can show overall and per-subject views.', '- Global leaderboard: ranks registered users (not guests) across public quizzes whose results are released. Views: best score, average score (needs 2 or more quizzes) and top scores per category.', '- Group challenge: groups share one code. Each member answers one whole subject, and scores add up to a group total shown on the group ranking page.'] },
  { h: 'Creating a quiz: step by step', l: ['- 1. Tap the + button, then fill Details: title, category, description, instructions.', '- 2. Time: set Duration in minutes, or type seconds under Quick drill. Set the pass mark (%).', '- 3. Questions: make question sets (sections such as Maths or English), then add questions by hand or with Bulk import. Set marks per question, or for a whole set.', '- 4. Publish tab: choose settings, visibility, sharing and results rules. Preview the quiz, then publish.', '- Your quiz gets a share link and a quiz code. Invite people by username if it is private.', '- Later you can edit, duplicate, export the questions, unpublish or delete. Your Results page lets you grade essays, release results, and export results to Excel or PDF.'] },
  { h: 'Quiz settings explained', l: ['- Make this a challenge: a competition. The leaderboard is always shown.', '- Shuffle questions / Shuffle answer options: every person gets a different order.', '- Allow multiple attempts and Maximum attempts: people can retake. Only the first attempt counts on the leaderboard.', '- Allow resuming an unfinished attempt: not available with anti-cheat.', '- Auto-advance, Mock exam layout, Group challenge (needs 2 or more subjects), 50:50 lifeline with a count per attempt, Show a calculator.', '- Enable per-question timer and mark decay: then open each question to set its time limit, deduction start and deduction per second. Questions with no time limit are unaffected.', '- Negative marking: Off, 1/4, 1/2, full, or a custom fraction of the question marks.', '- Anti-cheat and voice listening: see the anti-cheat section.', '- Public quizzes are listed in Explore. Private quizzes are not listed and only invited people can open them.', '- Ask people to sign in first, or Let people take it without an account (guests). Guests are limited to one attempt per browser, so use sign-in for important quizzes.', '- Schedule the quiz: set when it opens and closes.', '- Show results after an attempt, and Let people see the correct answers.', '- Release results: immediately after submitting, when you release them, or at a date and time you choose.', '- Score quotes: show a different message depending on the score.', '- Questions before the quiz starts: yes/no, choose one, number or short answer.', '- Allow likes, comments and sharing.', '- Require payment (Paystack): set a price. Guests cannot take paid quizzes. You set one payout bank account that receives your share of every payment.', '- Offer a prize: winners submit bank details to claim it, and you pay them yourself.'] },
-{ h: 'WAEC exam mode', l: ['Use this to build a WAEC-style exam with several subjects. Switch on "WAEC exam mode" in the quiz settings.', '- Each question set is one subject (for example Mathematics, English, Physics). A candidate can take up to 9 subjects in one quiz.', '- In every subject, objective questions (multiple choice, true/false, fill-in) come first, then the essay questions. Then the next subject starts.', '- In the Questions tab, open a subject and set "WAEC mode: objective marks (out of 100)". Example: 40 means objective carries 40 marks and essay carries 60. Leave it empty for 40.', '- No essay questions in a subject: objective carries all 100. No objective questions: essay carries all 100.', '- A candidate may leave the essay questions unanswered and still finish the objective ones.', '- Each subject is scored separately out of 100. Subjects are never added together, and there is no overall total or pass mark on the result.', '- Results for every subject appear together when the candidate submits (or when you release results). Essay marks you enter later update the subject score.', '- Grades: A1 75 and above, B2 70-74, B3 65-69, C4 60-64, C5 55-59, C6 50-54, D7 45-49, E8 40-44, F9 below 40.', '- The candidate can download a result slip (PDF) showing their name, each subject score and grade.'] },
+{ h: 'Access codes and team challenge', l: ['Use these when you do not want anyone with the link to just start the quiz, or when you want a Boys vs Girls (or any team) contest.', '- Switch on "Require an access code to start" in the quiz settings. Save the quiz.', '- Open the quiz page, tap "Access codes & teams" under Manage, and make codes. Choose how many, an optional team, an optional subject, and a label.', '- A code made for a subject opens only that subject, so each person takes only their own part.', '- Copy the codes and send one to each person. Each code works for one person only. After someone uses it, you see their name and score next to it.', '- Everyone must be signed in. Guests cannot use access codes.', '- Switch on "Team challenge" and type the team names, for example Boys, Girls. Teams can come from the code (you choose when making codes) or people can pick their own team.', '- Once someone starts, their team and subject cannot be changed.', '- Team leaderboard: teams are ranked by their average score, so a smaller team is not at a disadvantage. It also shows each team total marks and each player score.', '- Tip: set the quiz to private so it does not appear in Explore, and keep Group challenge off for team challenges.'] },
+ { h: 'WAEC exam mode', l: ['Use this to build a WAEC-style exam with several subjects. Switch on "WAEC exam mode" in the quiz settings.', '- Each question set is one subject (for example Mathematics, English, Physics). A candidate can take up to 9 subjects in one quiz.', '- In every subject, objective questions (multiple choice, true/false, fill-in) come first, then the essay questions. Then the next subject starts.', '- In the Questions tab, open a subject and set "WAEC mode: objective marks (out of 100)". Example: 40 means objective carries 40 marks and essay carries 60. Leave it empty for 40.', '- No essay questions in a subject: objective carries all 100. No objective questions: essay carries all 100.', '- A candidate may leave the essay questions unanswered and still finish the objective ones.', '- Each subject is scored separately out of 100. Subjects are never added together, and there is no overall total or pass mark on the result.', '- Results for every subject appear together when the candidate submits (or when you release results). Essay marks you enter later update the subject score.', '- Grades: A1 75 and above, B2 70-74, B3 65-69, C4 60-64, C5 55-59, C6 50-54, D7 45-49, E8 40-44, F9 below 40.', '- The candidate can download a result slip (PDF) showing their name, each subject score and grade.'] },
  { h: 'Bulk import: the basic format', l: ['Paste questions, or upload a .txt, .docx or .pdf file. Tap Read questions, fix anything, then add them.', '`1. Which planet is closest to the sun?', '`A. Venus', '`B. Mercury', '`C. Mars', '`Answer: B', '`Explanation: Mercury orbits closest.', '`', '`2. Name the capital of Nigeria.', '`Answer: Abuja', '`', '`3. Explain photosynthesis.', '`Marks: 10', '- Put a blank line between questions.', '- No Answer line and no options means an essay question. An answer with no options means fill-in.', '- Two options True and False make a true/false question.'] },
  { h: 'Bulk import: what it understands', l: ['- Numbers: 1.  1)  (1)  Q1)  Question 1:  No. 1, or no numbers at all with blank lines between questions.', '- Options: A.  A)  (A)  a.  and all options on one line (A. bat B. beat C. boot).', '- Correct answer: Answer:  Ans:  Correct option:  Right answer:  or the option text. Several letters (A, C) make a multi-answer question.', '- Mark the correct option with a star: *B. Mercury, or put a tick after it.', '- Answer key at the end: write Answers: on its own line, then 1. B  2. C ...', '- Explanation:  Solution:  Reason:  Working:', '- Passage: write [Passage] then the text, then the numbered questions. Close with [End passage].'] },
  { h: 'Bulk import: marks, time and sections', l: ['`[Section: Physics | 2 marks | 30s]   (new section, marks and time for all its questions)', '`Each question: 2 marks', '`1. What is speed? [Marks: 3] [Time: 20s] [Decay: 5s, 0.5]', '`Marks: 4        (on its own line under a question)', '- Decay: first number is the second deduction starts, second number is marks lost per second.', '- After reading, use the fill tool to set marks and/or seconds for all questions, MCQ only, True/False only, Fill-in only, Essay only, or one section.', '- Times only work if the per-question timer is switched on in the quiz settings.'] },
@@ -2382,10 +2388,11 @@ function drawQuiz() {
     ${q.allow_comments ? `<button class="btn sm" data-act="q-jump-c">${ic('msg', 16)} ${q.comments_count || 0}</button>` : ''}
     ${q.allow_sharing || mgr ? `<button class="btn sm" data-act="q-share">${ic('share', 16)} Share</button>` : ''}
     <span class="mut sm" style="margin-left:auto">${ic('users', 14)} ${q.attempts_count || 0} attempt${q.attempts_count === 1 ? '' : 's'}</span></div>`;
+  if (q.team_challenge) startBtn += `<a class="btn block gap0" href="#/team/${q.share_code}">${ic('trophy', 16)} Team leaderboard</a>`;
   const lbOn = q.leaderboard_enabled || q.is_challenge;
   const tools = mgr ? `<div class="card gap"><div class="b">${ic('gear' in ICONS ? 'gear' : 'edit', 16)} Manage this quiz</div><div class="tiles gap0">
       <a class="tile" href="#/edit/${q.id}/details">${ic('edit', 20)}Edit</a><a class="tile" href="#/results/${q.id}">${ic('chart', 20)}Results & export</a>
-      <button class="tile" data-act="q-exportq">${ic('download', 20)}Export questions</button><button class="tile" data-act="q-dup">${ic('copy', 20)}Duplicate</button>
+      ${q.access_code_required || q.team_challenge ? `<a class="tile" href="#/access/${q.id}">${ic('users', 20)}Access codes & teams</a>` : ''}<button class="tile" data-act="q-exportq">${ic('download', 20)}Export questions</button><button class="tile" data-act="q-dup">${ic('copy', 20)}Duplicate</button>
       ${q.show_results && q.release_mode === 'manual' ? `<button class="tile" data-act="q-release">${ic(q.results_released ? 'eyeoff' : 'eye', 20)}${q.results_released ? 'Hide results' : 'Release results'}</button>` : ''}
       <button class="tile" data-act="q-pub">${ic('globe', 20)}${q.status === 'published' ? 'Unpublish' : 'Publish'}</button>
       ${isAdmin() ? `<button class="tile" data-act="q-feature">${ic('star', 20)}${q.featured ? 'Unfeature' : 'Feature'}</button>` : ''}
@@ -2454,6 +2461,79 @@ async function vGroupStatusRender(code, joined, tok) {
     <a class="btn block gap0" href="#/grouprank/${esc(st.quiz_key)}">${ic('trophy', 18)} Group leaderboard</a>
   </div>`);
 }
+/* ---------- access codes + team challenge (owner page, team leaderboard) ---------- */
+const ACC = { quiz: null, sets: [], d: null };
+async function accQuiz(key) {
+  const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(key); if (!isId && /^[a-f0-9]{8}$/i.test(key)) key = key.toLowerCase();
+  return db(sb.from('quizzes').select('*').eq(isId ? 'id' : 'share_code', key).maybeSingle());
+}
+async function vAccess([key], query, tok) {
+  setView(`<div class="wrap"><div class="spin"></div></div>`);
+  const quiz = await accQuiz(key); if (stale(tok)) return;
+  if (!quiz) { setView(`<div class="wrap">${emptyBox('lock', 'Quiz not found')}</div>`); return; }
+  ACC.quiz = quiz; ACC.sets = await db(sb.from('question_sets').select('id,name,position').eq('quiz_id', quiz.id).order('position')) || [];
+  await accLoad(tok);
+}
+async function accLoad(tok) {
+  let d; try { d = await rpc('get_access_roster', { p_quiz_id: ACC.quiz.id }); } catch (e) { setView(`<div class="wrap"><div class="hint bad">${esc(cleanErr(e))}</div></div>`); return; }
+  if (tok && stale(tok)) return; ACC.d = d; accDraw();
+}
+function accDraw() {
+  const q = ACC.quiz, d = ACC.d, teams = q.team_names || [], used = d.codes.filter(c => c.used_name).length;
+  const st = c => c.status === 'ongoing' ? 'in progress' : c.score != null ? `${num(c.score)}/${num(c.total)}` : c.status ? 'done' : 'not started';
+  setView(`<div class="wrap narrow"><div class="row"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><h1 class="h2 grow">Access codes and teams</h1></div>
+    <div class="mut sm gap0">${esc(q.title)}</div>
+    <div class="card gap"><div class="b">Make codes</div><div class="hint">Each code works for one person only. Pick a subject to make a code that opens only that subject.</div>
+      <label class="lbl" for="ac-n">How many codes</label><input class="inp" id="ac-n" type="number" inputmode="numeric" min="1" max="200" value="10">
+      ${q.team_challenge ? `<label class="lbl" for="ac-team">Team</label><select class="inp" id="ac-team"><option value="">No team (they pick)</option>${teams.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('')}</select>` : ''}
+      <label class="lbl" for="ac-set">Subject</label><select class="inp" id="ac-set"><option value="">Whole quiz</option>${ACC.sets.map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('')}</select>
+      <label class="lbl" for="ac-label">Label (optional)</label><input class="inp" id="ac-label" maxlength="30" placeholder="e.g. Boys Physics">
+      <button class="btn brass block gap" data-act="ac-make">Create codes</button></div>
+    <div class="row between gap"><b>Codes</b><span class="xs mut">${used} of ${d.codes.length} used</span></div>
+    <div class="row gap0"><button class="btn sm grow" data-act="ac-copy" data-m="unused">Copy unused codes</button><button class="btn sm grow" data-act="ac-copy" data-m="all">Copy all codes</button></div>
+    <div class="gap0">${d.codes.map(c => `<div class="person"><div class="grow"><div class="b">${esc(c.code)}${c.label ? ` <span class="xs mut">· ${esc(c.label)}</span>` : ''}</div>
+      <div class="xs mut">${[c.team, c.set_name].filter(Boolean).map(esc).join(' · ') || 'Any team · whole quiz'}</div>
+      ${c.used_name ? `<div class="xs">Used by <b>${esc(c.used_name)}</b> · ${st(c)}</div>` : ''}</div>
+      <span class="badge ${c.used_name ? 'ok' : ''}">${c.used_name ? 'Used' : 'Free'}</span><button class="iconbtn" data-act="ac-del" data-id="${esc(c.id)}" aria-label="Remove this code">${ic('trash', 16)}</button></div>`).join('') || emptyBox('lock', 'No codes yet', 'Make some above and share one with each person.')}</div>
+    <div class="b gap">Who has joined</div>
+    <div class="gap0">${d.participants.map(p => `<div class="person"><div class="grow"><div class="b">${esc(p.name || 'Player')}</div><div class="xs mut">${[p.team, p.set_name].filter(Boolean).map(esc).join(' · ') || 'Whole quiz'}</div></div><span class="badge ${p.status === 'ongoing' ? '' : p.status ? 'ok' : 'warn'}">${st(p)}</span></div>`).join('') || `<div class="mut sm">Nobody has joined yet.</div>`}</div>
+    ${q.team_challenge ? `<a class="btn block gap" href="#/team/${esc(q.share_code)}">${ic('trophy', 18)} Team leaderboard</a>` : ''}
+  </div>`);
+}
+ACT['ac-make'] = async btn => {
+  const n = parseInt($('#ac-n').value, 10);
+  if (!(n >= 1 && n <= 200)) { toast('Pick a number from 1 to 200', 'bad'); return; }
+  busy(btn, true);
+  try {
+    await rpc('generate_access_codes', { p_quiz_id: ACC.quiz.id, p_count: n, p_team: ($('#ac-team') || {}).value || null, p_set_id: $('#ac-set').value || null, p_label: $('#ac-label').value.trim() || null });
+    toast(n + ' code' + (n === 1 ? '' : 's') + ' made', 'ok'); await accLoad();
+  } catch (e) { busy(btn, false); toast(cleanErr(e), 'bad'); }
+};
+ACT['ac-del'] = async btn => {
+  if (!await ask({ title: 'Remove this code?', text: 'If someone already used it and has not started, they will need a new code.', ok: 'Remove', danger: true })) return;
+  try { await rpc('remove_access_code', { p_code_id: btn.dataset.id }); await accLoad(); } catch (e) { toast(cleanErr(e), 'bad'); }
+};
+ACT['ac-copy'] = btn => {
+  const rows = (ACC.d.codes || []).filter(c => btn.dataset.m === 'all' || !c.used_name);
+  if (!rows.length) { toast('Nothing to copy', 'bad'); return; }
+  const txt = rows.map(c => `${c.label ? c.label + ': ' : ''}${c.code}${c.team ? ' (' + c.team + ')' : ''}${c.set_name ? ' - ' + c.set_name : ''}`).join('\n');
+  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast('Copied ' + rows.length + ' code' + (rows.length === 1 ? '' : 's'), 'ok')).catch(() => toast('Could not copy', 'bad'));
+};
+async function vTeamRank([key], query, tok) {
+  setView(`<div class="wrap"><div class="spin"></div></div>`);
+  const quiz = await accQuiz(key); if (stale(tok)) return;
+  if (!quiz) { setView(`<div class="wrap">${emptyBox('lock', 'Quiz not found')}</div>`); return; }
+  let d; try { d = await rpc('get_team_leaderboard', { p_quiz_id: quiz.id }); } catch (e) { setView(`<div class="wrap"><div class="hint bad">${esc(cleanErr(e))}</div></div>`); return; }
+  if (stale(tok)) return;
+  const teams = d.teams || [];
+  setView(`<div class="wrap"><div class="row"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back', 18)}</button><h1 class="h2 grow">Team leaderboard</h1></div>
+    <div class="mut sm gap0">${esc(quiz.title)}</div>
+    <div class="gap">${!d.visible ? emptyBox('lock', 'Results are not available now', 'Check back later. The creator has not released results yet.') : (teams.length ? `<div class="hint">Teams are ranked by their average score, so a smaller team is not at a disadvantage.</div>` + teams.map((t, i) => `<div class="card gap0" style="margin-bottom:10px">
+      <div class="row between"><div class="row" style="gap:10px"><span class="badge ${i === 0 && t.finished ? 'gold' : ''}">#${i + 1}</span><b>${esc(t.team)}</b></div><span class="badge ${t.average_pct >= 50 ? 'ok' : 'bad'}">${pctSmart(t.average_pct)}% average</span></div>
+      <div class="xs mut" style="margin:6px 0 8px">${num(t.total_score)} of ${num(t.total_possible)} marks · ${t.finished} of ${t.members} finished</div>
+      ${(t.players || []).map(p => `<div class="row between" style="padding:6px 0;border-top:1px solid var(--line)"><span class="sm">${esc(p.name)}${p.set_name ? ` <span class="xs mut">· ${esc(p.set_name)}</span>` : ''}</span><span class="xs">${p.score != null ? `${num(p.score)}/${num(p.total)}` : '—'}</span></div>`).join('')}</div>`).join('') : emptyBox('users', 'No teams yet'))}</div></div>`);
+}
+
 /* ---------- group leaderboard ---------- */
 async function vGroupRank([key], query, tok) {
   setView(`<div class="wrap"><div class="spin"></div></div>`);
@@ -2555,12 +2635,16 @@ function preStart(q) {
   if (!q.anticheat && q.allow_resume) rules.push('If you leave, you can come back and continue while time has not run out.');
   if (q.calculator !== 'none') rules.push(`A ${q.calculator} calculator is available.`);
   const intake = (q.intake_form || []);
+  const gated = (q.access_code_required || q.team_challenge) && !(S.me && (S.me.id === q.owner_id || isAdmin()));
+  const gateHtml = gated ? `<div class="b gap">Your entry</div>
+    ${q.access_code_required ? `<label class="lbl" for="ps-code">Access code</label><input class="inp" id="ps-code" autocomplete="off" autocapitalize="characters" placeholder="e.g. 3F9A-72C1" style="text-transform:uppercase"><div class="hint">Your organiser gave you this code. Already joined? Just tap Start.</div>` : ''}
+    ${q.team_challenge ? `<label class="lbl" for="ps-team">Your team</label><select class="inp" id="ps-team"><option value="">${q.access_code_required ? 'The team on my code' : 'Choose a team'}</option>${(q.team_names || []).map(tn => `<option value="${esc(tn)}">${esc(tn)}</option>`).join('')}</select><div class="hint">You cannot change your team after you start.</div>` : ''}` : '';
   openSheet(`<h3 class="h2">${esc(q.title)}</h3>
     ${q.instructions ? `<div class="card tight gap0" style="line-height:1.6">${nl2br(q.instructions)}</div>` : ''}
     <ul class="sm gap0" style="padding-left:18px;line-height:1.7">${rules.map(r => `<li>${r}</li>`).join('')}</ul>
     ${q.anticheat && q.anticheat_voice ? `<div class="card tight gap0"><button class="btn sm" data-act="mic-test">${ic('mic', 14)} Test my microphone</button><div id="mic-test-out" class="hint" style="margin-top:8px">Tap to check your microphone works before you start.</div></div>` : ''}
     ${intake.length ? `<div class="b gap">Before you start</div>${intake.map(intakeField).join('')}` : ''}
-    <div class="err" id="ps-err"></div>
+    ${gateHtml}<div class="err" id="ps-err"></div>
     <div class="row gap"><button class="btn grow ghost" data-act="close">Cancel</button><button class="btn grow brass" id="ps-go" data-act="q-go">${ic('play', 18)} Start exam</button></div>`);
 }
 ACT['mic-test'] = async btn => {
@@ -2596,6 +2680,7 @@ ACT['q-go'] = async btn => {
   try {
     if (q.is_paid && S.me && S.me.anon) throw new Error('Paid quizzes require an account. Please sign in.');
     if (q.anticheat && q.anticheat_voice) { try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach(t => t.stop()); } catch (e) { throw new Error('This quiz needs microphone permission. Allow the microphone for this site, then tap Start again.'); } }
+    if ((q.access_code_required || q.team_challenge) && !(S.me && (S.me.id === q.owner_id || isAdmin()))) { const cd = $('#ps-code'), tm = $('#ps-team'); await rpc('claim_access', { p_quiz_id: q.id, p_code: cd ? cd.value : '', p_team: tm ? tm.value : '' }); }
     await ensurePaid(q);
     if (q.anticheat) { const de = document.documentElement; try { (de.requestFullscreen || de.webkitRequestFullscreen || (() => { })).call(de); } catch (e) { } }
     const res = await rpc('start_attempt', { p_quiz_id: q.id, p_guest_name: S.me && S.me.anon ? (Q.guestName || 'Anonymous') : null, p_intake: intake, p_guest_device_id: S.me && S.me.anon ? deviceId() : null });
