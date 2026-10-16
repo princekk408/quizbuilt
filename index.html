@@ -890,7 +890,7 @@ function parseQuestions(text, opt = {}) {
     out.push({
       section: c.section, _p: c.pid, type, body: T(c.body).replace(/\n/g, '<br>'), options, correct, multi,
       explanation: T(c.exp).replace(/\n/g, '<br>'), marks: c.marks ?? x.marks ?? defMarks,
-      time_limit_sec: c.time ?? x.time ?? null, decay_start_sec: c.dstart ?? x.dstart ?? 5, decay_per_sec: c.dper ?? x.dper ?? 0.25
+      set_min: x.setmin ?? null, time_limit_sec: c.time ?? x.time ?? null, decay_start_sec: c.dstart ?? x.dstart ?? 5, decay_per_sec: c.dper ?? x.dper ?? 0.25
     });
     cur = null; mode = 'body';
   };
@@ -905,7 +905,7 @@ function parseQuestions(text, opt = {}) {
     if ((m = line.match(SEC))) {
       finish(); if (inPassage) { flushPassage(); inPassage = false; } passage = null;
       const sp = (m[1] || m[2]).trim().split('|'); section = sp[0].trim(); ctx = {};
-      sp.slice(1).forEach(s => { takeTags('[' + (/mark|mks|pts|point/i.test(s) ? 'marks' : /\d\s*(s|sec)/i.test(s) ? 'time' : 'x') + ':' + s + ']', ctx); });
+      sp.slice(1).forEach(s => { const mm = s.match(/(\d+(?:\.\d+)?)\s*(?:mins?|minutes?)\b/i); if (mm) { ctx.setmin = +mm[1]; return; } takeTags('[' + (/mark|mks|pts|point/i.test(s) ? 'marks' : /\d\s*(s|sec)/i.test(s) ? 'time' : 'x') + ':' + s + ']', ctx); });
       return;
     }
     if ((m = line.match(MEACH))) { finish(); ctx.marks = +m[1]; return; }
@@ -1565,7 +1565,7 @@ async function edLoad(id) {
   ]);
   const km = {}; keys.forEach(k => km[k.question_id] = k);
   E.quiz = quiz; E.vis = quiz.visibility; E.deleted = []; E.delSets = []; E.dirty = false;
-  E.sets = sets.map(s => ({ id: s.id, name: s.name, position: s.position, obj_marks: s.obj_marks }));
+  E.sets = sets.map(s => ({ id: s.id, name: s.name, position: s.position, obj_marks: s.obj_marks, time_limit_min: s.time_limit_min }));
   E.qs = qs.map(q => ({
     id: q.id, set_id: q.set_id, parent_id: q.parent_id, type: q.type, body: q.body || '', options: q.options || [], multi: !!q.multi,
     marks: +q.marks, time_limit_sec: q.time_limit_sec == null ? null : +q.time_limit_sec,
@@ -1889,6 +1889,7 @@ function edRenderQs() {
     <div class="card gap"><label class="lbl" style="margin-top:0" for="set-name">Question set name</label><input class="inp" id="set-name" data-inp="setname" value="${esc(aset.name)}" maxlength="60">
       <label class="lbl" for="set-marks">Marks for every question in this set</label><div class="row"><input class="inp" id="set-marks" type="number" inputmode="decimal" min="0" step="0.5" placeholder="e.g. 2"><button class="btn" data-act="set-marks">Apply to all</button></div><div class="hint">Change one question's marks in the box on its card.</div>
       <label class="lbl" for="set-obj">WAEC mode: objective marks (out of 100)</label><input class="inp" id="set-obj" data-inp="setobj" type="number" inputmode="decimal" min="0" max="100" step="1" placeholder="40" value="${aset.obj_marks == null ? '' : aset.obj_marks}"><div class="hint">Only used when WAEC exam mode is on. The essay part carries the rest. With no essay questions, objective carries all 100.</div>
+      <label class="lbl" for="set-time">Time for this subject (minutes)</label><input class="inp" id="set-time" data-inp="settime" type="number" inputmode="decimal" min="0.5" max="600" step="0.5" placeholder="Uses the quiz time" value="${aset.time_limit_min == null ? '' : aset.time_limit_min}"><div class="hint">Example: 3, 4, 5 or 6. Used when someone takes only this subject. If every subject has a time, a person taking all subjects gets the total.</div>
       <button class="btn danger sm gap0" data-act="set-del">${ic('trash', 14)} Delete this set</button></div>
     <div class="sec-t"><h2 class="h2" style="font-size:17px" id="set-total">${cnt} question${cnt === 1 ? '' : 's'} · ${num(marks)} marks</h2></div>
     <div id="qlist">${setQs.map(q => qGroup(q)).join('') || emptyBox('help', 'No questions in this set yet', 'Add one below, or use Bulk import to paste many at once.')}</div>
@@ -1993,6 +1994,7 @@ CHG['q-set'] = el => {
   E.qs = E.qs.filter(x => !ids.has(x.id)); E.qs.push(...group);
   E.active = target; edDirty(); edRenderQs();
 };
+INP.settime = el => { const st = E.sets.find(x => x.id === E.active); if (st) { st.time_limit_min = el.value === '' ? null : Math.max(0.5, Math.min(600, +el.value)); edDirty(); } };
 INP.setobj = el => { const st = E.sets.find(x => x.id === E.active); if (st) { st.obj_marks = el.value === '' ? null : Math.max(0, Math.min(100, +el.value)); edDirty(); } };
 INP.setname = el => { const s = E.sets.find(x => x.id === E.active); if (s) { s.name = el.value; const c = $(`.chip[data-id="${s.id}"]`); if (c) c.textContent = `${s.name || 'Untitled'} (${E.qs.filter(q => q.set_id === s.id && q.type !== 'passage').length})`; edDirty(); } };
 ACT['set-sel'] = el => { E.active = el.dataset.id; edRenderQs(); };
@@ -2065,7 +2067,7 @@ async function edSave(manual) {
   try {
     const qid = E.quiz.id;
     E.sets.forEach((s, i) => s.position = i);
-    await db(sb.from('question_sets').upsert(E.sets.map(s => ({ id: s.id, quiz_id: qid, name: (s.name || '').trim() || 'Section', position: s.position, obj_marks: s.obj_marks == null || s.obj_marks === '' ? null : +s.obj_marks }))));
+    await db(sb.from('question_sets').upsert(E.sets.map(s => ({ id: s.id, quiz_id: qid, name: (s.name || '').trim() || 'Section', position: s.position, obj_marks: s.obj_marks == null || s.obj_marks === '' ? null : +s.obj_marks, time_limit_min: s.time_limit_min == null || s.time_limit_min === '' ? null : +s.time_limit_min }))));
     if (E.delSets.length) { await db(sb.from('question_sets').delete().in('id', E.delSets)); E.delSets = []; }
     if (E.deleted.length) { await db(sb.from('questions').delete().in('id', E.deleted)); E.deleted = []; }
     const hasImg = h => /<img/i.test(h || '');
@@ -2131,7 +2133,7 @@ Mark the correct option with * (like *B. Mercury) or with an Answer line.
 [Passage] text… then numbered questions after it.
 
 Per question: [Marks: 2] [Time: 30s] [Decay: 10s, 0.5]
-Per section: [Section: Physics | 2 marks | 30s]
+Per section: [Section: Physics | 2 marks | 30s | 5 min]   (5 min = time for that subject)
 Answer key at the end: Answers: 1.B 2.C
 Symbols: \\alpha \\beta \\pi \\theta \\Delta \\deg \\pm
 English sounds: \\ae \\schwa \\sh \\zh \\ng \\eth \\ipai \\ipau
@@ -2204,13 +2206,14 @@ ACT['bulk-add'] = () => {
   const target = $('#bk-set').value; const marksEach = parseFloat($('#bk-marks').value) || 1; E.lastMarks = marksEach;
   const setByName = {}; E.sets.forEach(s => setByName[s.name.trim().toLowerCase()] = s.id);
   const pmap = {}; let lastSet = target;
-  const setFor = name => {
+  const setFor = (name, mins) => {
     if (!name) return target; const k = name.trim().toLowerCase();
-    if (!setByName[k]) { const s = { id: uid(), name: name.trim().slice(0, 60), position: E.sets.length }; E.sets.push(s); setByName[k] = s.id; }
+    if (!setByName[k]) { const s = { id: uid(), name: name.trim().slice(0, 60), position: E.sets.length, time_limit_min: mins ?? null }; E.sets.push(s); setByName[k] = s.id; }
+    else if (mins != null) { const ex = E.sets.find(z => z.id === setByName[k]); if (ex && ex.time_limit_min == null) ex.time_limit_min = mins; }
     return setByName[k];
   };
   BK.items.forEach(it => {
-    const set_id = setFor(it.section); lastSet = set_id;
+    const set_id = setFor(it.section, it.set_min); lastSet = set_id;
     const q = { id: uid(), set_id, parent_id: null, type: it.type, body: it.body, options: it.options, multi: it.multi, marks: it.marks, correct: it.correct, explanation: it.explanation, time_limit_sec: it.time_limit_sec ?? null, decay_start_sec: it.decay_start_sec ?? 5, decay_per_sec: it.decay_per_sec ?? 0.25, _open: false };
     if (it.type === 'passage') { pmap[it._pid] = q.id; q.marks = 0; }
     if (it._p && pmap[it._p]) q.parent_id = pmap[it._p];
@@ -2234,6 +2237,7 @@ const GUIDE = [
  { h: 'Creating a quiz: step by step', l: ['- 1. Tap the + button, then fill Details: title, category, description, instructions.', '- 2. Time: set Duration in minutes, or type seconds under Quick drill. Set the pass mark (%).', '- 3. Questions: make question sets (sections such as Maths or English), then add questions by hand or with Bulk import. Set marks per question, or for a whole set.', '- 4. Publish tab: choose settings, visibility, sharing and results rules. Preview the quiz, then publish.', '- Your quiz gets a share link and a quiz code. Invite people by username if it is private.', '- Later you can edit, duplicate, export the questions, unpublish or delete. Your Results page lets you grade essays, release results, and export results to Excel or PDF.'] },
  { h: 'Quiz settings explained', l: ['- Make this a challenge: a competition. The leaderboard is always shown.', '- Shuffle questions / Shuffle answer options: every person gets a different order.', '- Allow multiple attempts and Maximum attempts: people can retake. Only the first attempt counts on the leaderboard.', '- Allow resuming an unfinished attempt: not available with anti-cheat.', '- Auto-advance, Mock exam layout, Group challenge (needs 2 or more subjects), 50:50 lifeline with a count per attempt, Show a calculator.', '- Enable per-question timer and mark decay: then open each question to set its time limit, deduction start and deduction per second. Questions with no time limit are unaffected.', '- Negative marking: Off, 1/4, 1/2, full, or a custom fraction of the question marks.', '- Anti-cheat and voice listening: see the anti-cheat section.', '- Public quizzes are listed in Explore. Private quizzes are not listed and only invited people can open them.', '- Ask people to sign in first, or Let people take it without an account (guests). Guests are limited to one attempt per browser, so use sign-in for important quizzes.', '- Schedule the quiz: set when it opens and closes.', '- Show results after an attempt, and Let people see the correct answers.', '- Release results: immediately after submitting, when you release them, or at a date and time you choose.', '- Score quotes: show a different message depending on the score.', '- Questions before the quiz starts: yes/no, choose one, number or short answer.', '- Allow likes, comments and sharing.', '- Require payment (Paystack): set a price. Guests cannot take paid quizzes. You set one payout bank account that receives your share of every payment.', '- Offer a prize: winners submit bank details to claim it, and you pay them yourself.'] },
 { h: 'Access codes and team challenge', l: ['Use these when you do not want anyone with the link to just start the quiz, or when you want a Boys vs Girls (or any team) contest.', '- Switch on "Require an access code to start" in the quiz settings. Save the quiz.', '- Open the quiz page, tap "Access codes & teams" under Manage, and make codes. Choose how many, an optional team, an optional subject, and a label.', '- A code made for a subject opens only that subject, so each person takes only their own part.', '- Copy the codes and send one to each person. Each code works for one person only. After someone uses it, you see their name and score next to it.', '- Everyone must be signed in. Guests cannot use access codes.', '- Switch on "Team challenge" and type the team names, for example Boys, Girls. Teams can come from the code (you choose when making codes) or people can pick their own team.', '- Once someone starts, their team and subject cannot be changed.', '- Team leaderboard: teams are ranked by their average score, so a smaller team is not at a disadvantage. It also shows each team total marks and each player score.', '- Tip: set the quiz to private so it does not appear in Explore, and keep Group challenge off for team challenges.'] },
+ { h: 'Time for each subject', l: ['By default a quiz has one timer for everything (the Duration). You can also give each subject its own time.', '- In the Questions tab, open a subject and fill in "Time for this subject (minutes)". Example: English 4, Physics 5, Maths 6, Government 3.', '- When a person takes one subject only (with a subject access code, or in a Group challenge), their timer is that subject time.', '- When a person takes all subjects in one sitting, the timer is the total of the subject times, as long as every subject has a time. If any subject has no time, the quiz Duration is used instead.', '- The total timer runs for the whole sitting. It does not lock a subject when that subject time is over.', '- In Bulk import you can set it in the text: `[Section: Physics Set 1 | 5 min]`. You can combine it with marks and seconds, for example `[Section: Physics | 2 marks | 30s | 5 min]`.'] },
  { h: 'WAEC exam mode', l: ['Use this to build a WAEC-style exam with several subjects. Switch on "WAEC exam mode" in the quiz settings.', '- Each question set is one subject (for example Mathematics, English, Physics). A candidate can take up to 9 subjects in one quiz.', '- In every subject, objective questions (multiple choice, true/false, fill-in) come first, then the essay questions. Then the next subject starts.', '- In the Questions tab, open a subject and set "WAEC mode: objective marks (out of 100)". Example: 40 means objective carries 40 marks and essay carries 60. Leave it empty for 40.', '- No essay questions in a subject: objective carries all 100. No objective questions: essay carries all 100.', '- A candidate may leave the essay questions unanswered and still finish the objective ones.', '- Each subject is scored separately out of 100. Subjects are never added together, and there is no overall total or pass mark on the result.', '- Results for every subject appear together when the candidate submits (or when you release results). Essay marks you enter later update the subject score.', '- Grades: A1 75 and above, B2 70-74, B3 65-69, C4 60-64, C5 55-59, C6 50-54, D7 45-49, E8 40-44, F9 below 40.', '- The candidate can download a result slip (PDF) showing their name, each subject score and grade.'] },
  { h: 'Bulk import: the basic format', l: ['Paste questions, or upload a .txt, .docx or .pdf file. Tap Read questions, fix anything, then add them.', '`1. Which planet is closest to the sun?', '`A. Venus', '`B. Mercury', '`C. Mars', '`Answer: B', '`Explanation: Mercury orbits closest.', '`', '`2. Name the capital of Nigeria.', '`Answer: Abuja', '`', '`3. Explain photosynthesis.', '`Marks: 10', '- Put a blank line between questions.', '- No Answer line and no options means an essay question. An answer with no options means fill-in.', '- Two options True and False make a true/false question.'] },
  { h: 'Bulk import: what it understands', l: ['- Numbers: 1.  1)  (1)  Q1)  Question 1:  No. 1, or no numbers at all with blank lines between questions.', '- Options: A.  A)  (A)  a.  and all options on one line (A. bat B. beat C. boot).', '- Correct answer: Answer:  Ans:  Correct option:  Right answer:  or the option text. Several letters (A, C) make a multi-answer question.', '- Mark the correct option with a star: *B. Mercury, or put a tick after it.', '- Answer key at the end: write Answers: on its own line, then 1. B  2. C ...', '- Explanation:  Solution:  Reason:  Working:', '- Passage: write [Passage] then the text, then the numbered questions. Close with [End passage].'] },
