@@ -1639,7 +1639,7 @@ function edRenderDetails() {
     <div class="sub" id="sub-waec" ${q.waec_mode ? '' : 'hidden'}><div class="hint">Open the Questions tab, pick each subject, and set how many marks (out of 100) the objective part carries. The essay part gets the rest. Leave it empty for 40. With no essay questions, objective carries all 100.</div></div>
     ${swRow('d-acc', 'Require an access code to start', 'Only people with a code you give them can start. Each code works once, and you can see who used it. Make the codes from the quiz page, under Manage.', q.access_code_required)}
     ${swRow('d-team', 'Team challenge', 'People join a team, like Boys or Girls. A team leaderboard adds up each team score.', q.team_challenge, { reveal: 'sub-team' })}
-    <div class="sub" id="sub-team" ${q.team_challenge ? '' : 'hidden'}><label class="lbl" for="d-teams">Team names (separate with commas)</label><input class="inp" id="d-teams" value="${esc((q.team_names || ['Boys', 'Girls']).join(', '))}" placeholder="Boys, Girls"><div class="hint">Do not switch on Group challenge as well. Teams use access codes or a team pick instead.</div></div>
+    <div class="sub" id="sub-team" ${q.team_challenge ? '' : 'hidden'}><label class="lbl" for="d-teams">Team names (separate with commas)</label><input class="inp" id="d-teams" value="${esc((q.team_names || ['Boys', 'Girls']).join(', '))}" placeholder="Boys, Girls"><div class="hint">Group challenge is switched off automatically when you use teams. After you save, open the quiz page and tap Make and manage codes.</div></div>
     ${swRow('d-shq', 'Shuffle questions', 'Every person gets a different order.', q.shuffle_questions)}
     ${swRow('d-sho', 'Shuffle answer options', 'Options are mixed for each person.', q.shuffle_options)}
     ${swRow('d-multi', 'Allow multiple attempts', 'People can retake the quiz.', q.allow_multiple_attempts, { reveal: 'sub-multi' })}
@@ -1647,7 +1647,7 @@ function edRenderDetails() {
     ${swRow('d-resume', 'Allow resuming an unfinished attempt', 'If someone leaves, they can come back and continue while time has not run out. Not available with anti-cheat.', q.anticheat ? false : q.allow_resume, { dis: q.anticheat })}
     ${swRow('d-auto', 'Auto-advance', 'Tapping an answer moves to the next question. People can still go back.', q.auto_advance)}
     ${swRow('d-exam', 'Mock exam layout', 'JAMB CBT style: an always-visible numbered question grid so people can jump around, same as the real exam interface.', q.exam_mode)}
-    ${swRow('d-group', 'Group challenge', 'Needs 2+ subjects. Groups of people share one code — each person answers one whole subject, and scores add up into a group total.', q.group_challenge)}
+    ${swRow('d-group', 'Group challenge', 'Needs 2+ subjects. Groups of people share one code — each person answers one whole subject, and scores add up into a group total. It is switched off automatically if you use Team challenge or Access codes.', q.group_challenge)}
     ${swRow('d-fifty', '50:50 lifeline', 'Removes two wrong options on a question.', q.fifty_fifty, { reveal: 'sub-fifty' })}
     <div class="sub" id="sub-fifty" ${q.fifty_fifty ? '' : 'hidden'}><label class="lbl" for="d-fc">Lifelines per attempt</label><input class="inp" id="d-fc" type="number" min="1" max="50" value="${q.fifty_count}"></div>
     ${swRow('d-calc', 'Show a calculator', 'A calculator button appears during the quiz.', q.calculator !== 'none', { reveal: 'sub-calc' })}
@@ -1818,7 +1818,7 @@ function edReadDetails() {
     release_mode: rel, release_at: rel === 'scheduled' ? fromLocalInput(v('d-relat')) : null,
     calculator: c('d-calc') ? v('d-calctype') : 'none', score_quotes: quotes, allow_likes: c('d-likes'), allow_comments: c('d-comm'),
     allow_sharing: c('d-shr'), leaderboard_enabled: c('d-lb'), schedule_enabled: sched, starts_at: sched ? st : null, ends_at: sched ? en : null,
-    fifty_fifty: c('d-fifty'), fifty_count: clamp(parseInt(v('d-fc'), 10) || 2, 1, 50), auto_advance: c('d-auto'), exam_mode: c('d-exam'), group_challenge: c('d-group'), intake_form: intake, visibility: E.vis,
+    fifty_fifty: c('d-fifty'), fifty_count: clamp(parseInt(v('d-fc'), 10) || 2, 1, 50), auto_advance: c('d-auto'), exam_mode: c('d-exam'), group_challenge: c('d-group') && !c('d-team') && !c('d-acc'), intake_form: intake, visibility: E.vis,
     is_paid: c('d-paid'), price_amount: c('d-paid') ? (parseFloat(v('d-price')) || 0) : null, price_currency: v('d-curr'),
     prize_enabled: c('d-prize'), prize_mode: (($('#pz-seg .on') || {}).dataset || {}).v || 'top3', prize_text: { desc: $('#d-ptext') ? $('#d-ptext').value.trim() : '' },
     time_decay_enabled: c('d-decay'), waec_mode: c('d-waec'), access_code_required: c('d-acc'), team_challenge: c('d-team'), team_names: tnames, negative_marking_mode: negMode, negative_marking_fraction: negMode === 'custom' ? negFrac : 0.25
@@ -2376,7 +2376,7 @@ function drawQuiz() {
   ].filter(Boolean).join(' ');
   let startBtn = '';
   const resVis = resultsAreVisible(q);
-  if (q.group_challenge) {
+  if (q.group_challenge && !q.team_challenge && !q.access_code_required) {
     startBtn = `<div class="card gap"><div class="b">${ic('users' in ICONS ? 'users' : 'zap', 16)} Group challenge</div><div class="hint">Each person answers one whole subject — scores add up into a group total. Needs an account, no guests.</div>
       <div class="row gap"><button class="btn brass grow" data-act="grp-create" data-id="${q.id}">Create a group</button><button class="btn grow" data-act="grp-join-open">Join with a code</button></div>
       ${resVis || mgr ? `<a class="btn block gap0" href="#/grouprank/${q.share_code}">${ic('trophy', 16)} Group leaderboard</a>` : ''}</div>`;
@@ -2388,6 +2388,7 @@ function drawQuiz() {
     ${q.allow_comments ? `<button class="btn sm" data-act="q-jump-c">${ic('msg', 16)} ${q.comments_count || 0}</button>` : ''}
     ${q.allow_sharing || mgr ? `<button class="btn sm" data-act="q-share">${ic('share', 16)} Share</button>` : ''}
     <span class="mut sm" style="margin-left:auto">${ic('users', 14)} ${q.attempts_count || 0} attempt${q.attempts_count === 1 ? '' : 's'}</span></div>`;
+  if (mgr && (q.access_code_required || q.team_challenge)) startBtn = `<div class="card gap"><div class="b">${ic('users', 16)} ${q.team_challenge ? 'Team challenge' : 'Access codes'} setup</div><div class="hint">1. Make codes and send one to each person. 2. People enter their code on the start screen${q.team_challenge ? ' and join their team' : ''}. 3. ${q.team_challenge ? 'Watch the team leaderboard.' : 'See who used each code.'}</div><a class="btn brass block gap0" href="#/access/${q.id}">${ic('users', 16)} Make and manage codes</a></div>` + startBtn;
   if (q.team_challenge) startBtn += `<a class="btn block gap0" href="#/team/${q.share_code}">${ic('trophy', 16)} Team leaderboard</a>`;
   const lbOn = q.leaderboard_enabled || q.is_challenge;
   const tools = mgr ? `<div class="card gap"><div class="b">${ic('gear' in ICONS ? 'gear' : 'edit', 16)} Manage this quiz</div><div class="tiles gap0">
