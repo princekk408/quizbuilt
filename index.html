@@ -2652,7 +2652,32 @@ function intakeField(f) {
   else inp = `<input class="inp" id="${id}" ${f.type === 'number' ? 'type="number" inputmode="decimal"' : ''} maxlength="200">`;
   return `<label class="lbl" for="${id}">${esc(f.label)}${req}</label>${inp}`;
 }
-function preStart(q) {
+/* ---------- WhatsApp channel gate: shown for the first 3 different quizzes a person tries to start ---------- */
+const WA_GATE_MAX = 3;
+const waGateKey = () => 'qb_wa_gate_' + (S.me && !S.me.anon ? S.me.id : 'guest_' + deviceId());
+const waGateRead = () => { try { const v = JSON.parse(localStorage.getItem(waGateKey()) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
+function waGateNeeded(q) {
+  if (S.me && (S.me.id === q.owner_id || isAdmin())) return false;
+  const seen = waGateRead(); return !seen.includes(q.id) && seen.length < WA_GATE_MAX;
+}
+function waGate(q, go) {
+  if (!waGateNeeded(q)) { go(); return; }
+  openSheet(`<div class="center"><div style="font-size:44px;line-height:1.2">📢</div><h3 class="h2">Follow our WhatsApp channel to continue</h3>
+    <p class="mut sm">Get new quizzes, giveaways and results first. Tap the button, follow the channel, then come back here to start your quiz.</p>
+    <a class="btn wa block gap" id="wa-follow" href="${WA_CHANNEL}" target="_blank" rel="noopener">${ic('users', 18)} Follow the channel</a>
+    <button class="btn brass block gap0" id="wa-go" disabled style="opacity:.5">Continue to quiz</button>
+    <div class="hint" id="wa-hint">Tap "Follow the channel" first to unlock the quiz.</div>
+    <button class="btn ghost block gap0" data-act="close">Not now</button></div>`);
+  let clicked = false;
+  $('#wa-follow').addEventListener('click', () => { clicked = true; const b = $('#wa-go'); b.disabled = false; b.style.opacity = '1'; $('#wa-hint').textContent = 'Thanks! You can continue now.'; });
+  $('#wa-go').addEventListener('click', () => {
+    if (!clicked) return;
+    const seen = waGateRead(); if (!seen.includes(q.id)) { seen.push(q.id); try { localStorage.setItem(waGateKey(), JSON.stringify(seen)); } catch (e) {} }
+    go();
+  });
+}
+function preStart(q) { waGate(q, () => preStartInner(q)); }
+function preStartInner(q) {
   const rules = [(q.duration_sec ? `You have <b>${q.duration_sec} seconds</b> once you start. Faster finishes rank higher.` : `You have <b>${q.duration_min} minute${q.duration_min === 1 ? '' : 's'}</b> once you start.`), `Pass mark is <b>${q.pass_mark}%</b>.`];
   if (q.anticheat) rules.push(`<b class="bad">Anti-cheat is ON.</b> Leaving this screen, switching apps, or the screen turning off gives a ${AC.GRACE_SEC}-second warning and then submits your quiz. ${AC.MAX_STRIKES} warnings submit it at once. Do not touch anything else while you take it.`);
   if (q.anticheat_voice) rules.push('Your <b>microphone</b> will be used to detect talking. Stay quiet during the quiz.');
