@@ -435,6 +435,26 @@ select.inp option{background:var(--s1);color:var(--tx)}
 .lb-you{font-size:8px;color:var(--qb-accent);font-weight:900}
 @media(max-width:480px){.lb-summary{grid-template-columns:repeat(3,1fr)}.lb-row{grid-template-columns:28px 34px minmax(0,1fr) auto;gap:8px}.lb-avatar2{width:34px;height:34px}.lb-score2{min-width:48px}.lb-top3{gap:5px}.lb-card3{padding-left:5px;padding-right:5px}}
 .ceab{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.1;margin:0 .3em}.ceab small{font-size:.7em}
+/* desktop layout */
+@media(min-width:1024px){
+  .top .in{max-width:none;padding:12px 28px}
+  .nav{left:0;top:0;bottom:0;transform:none;width:228px;border-radius:0;border:0;border-right:1px solid var(--line);box-shadow:none;z-index:20;flex-direction:column;justify-content:flex-start;align-items:stretch;gap:6px;padding:84px 14px 20px}
+  .nav a{flex-direction:row;gap:12px;font-size:15px;padding:12px 14px;border-radius:12px;min-width:0;justify-content:flex-start}
+  .nav a:hover{background:color-mix(in srgb,var(--brass) 8%,transparent)}
+  .nav a.on{background:color-mix(in srgb,var(--brass) 14%,transparent)}
+  .nav a.mk{order:-1;width:auto;height:auto;min-width:0;margin:0 0 10px;border-radius:14px;padding:13px 14px;box-shadow:none}
+  .nav a.mk::after{content:"Create a quiz";font-size:15px;font-weight:700}
+  #view,#wa-banner{margin-left:228px}
+  .wrap{max-width:980px;padding:24px 28px 56px}
+  .wrap.narrow{max-width:560px}
+  body.taking #view,body.taking #wa-banner{margin-left:0}
+  body.taking .wrap{max-width:780px}
+  .slist{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+  .slist .slip{margin-bottom:0}
+  .tiles{grid-template-columns:repeat(4,1fr)}
+  .h1{font-size:34px}
+}
+@media(min-width:640px){.sheet{max-width:620px;margin-left:auto;margin-right:auto}}
 </style>
 
 <style>
@@ -1137,7 +1157,7 @@ ACT.reload = () => render();
 /* ============================================================
    SHARED LIST PIECES
    ============================================================ */
-const QCOLS = 'id,share_code,title,description,category,owner_id,owner_name,is_challenge,featured,visibility,status,duration_min,duration_sec,question_count,attempts_count,likes_count,comments_count,published_at,created_at';
+const QCOLS = 'id,share_code,title,description,category,owner_id,owner_name,is_challenge,featured,visibility,status,duration_min,duration_sec,question_count,attempts_count,views_count,likes_count,comments_count,published_at,created_at';
 function slip(q, extra = '') {
   const b = [
     q.status === 'draft' ? '<span class="badge warn">Draft</span>' : '',
@@ -1148,7 +1168,7 @@ function slip(q, extra = '') {
   ].join(' ');
   return `<div class="slip"><a href="#/quiz/${esc(q.share_code)}" style="display:block"><div class="row wrapf" style="gap:6px">${b}</div>
     <h3>${esc(q.title)}</h3><div class="mut sm">by @${esc(q.owner_name || 'user')}</div>
-    <div class="meta"><span>${ic('help', 14)} ${q.question_count || 0} questions</span><span>${ic('clock', 14)} ${q.duration_sec ? q.duration_sec + 's' : q.duration_min + ' min'}</span><span>${ic('users', 14)} ${q.attempts_count || 0}</span><span>${ic('heart', 14)} ${q.likes_count || 0}</span></div></a>${extra}</div>`;
+    <div class="meta"><span>${ic('help', 14)} ${q.question_count || 0} questions</span><span>${ic('clock', 14)} ${q.duration_sec ? q.duration_sec + 's' : q.duration_min + ' min'}</span>${S.me && q.owner_id === S.me.id && q.views_count != null ? `<span>${ic('eye', 14)} ${q.views_count}</span>` : ''}<span>${ic('users', 14)} ${q.attempts_count || 0}</span><span>${ic('heart', 14)} ${q.likes_count || 0}</span></div></a>${extra}</div>`;
 }
 const keyChip = code => `<button class="keychip" data-act="copy" data-v="${esc(code)}" aria-label="Copy quiz key">${ic('key', 13)}<span>${esc(String(code || '').toUpperCase())}</span>${ic('copy', 12)}</button>`;
 const emptyBox = (icon, title, sub = '') => `<div class="empty">${ic(icon, 32)}<div class="b" style="color:var(--tx)">${esc(title)}</div>${sub ? `<div class="sm gap0">${sub}</div>` : ''}</div>`;
@@ -1397,10 +1417,10 @@ async function vHome(a, q, tok) {
   if (cont.length) $('#home-cont').innerHTML = secT('Continue where you stopped') + cont.map(x => `<a class="slip" href="#/take/${x.id}"><span class="badge ok">In progress</span><h3>${esc(x.quizzes.title)}</h3><div class="meta"><span>${ic('clock', 14)} ${fmtClock((new Date(x.expires_at) - Date.now()) / 1000)} left</span></div></a>`).join('');
   const inv = (invites || []).map(x => x.quizzes).filter(Boolean).filter(z => z.status === 'published');
   let h = '';
-  if (inv.length) h += secT('Invited to you') + inv.map(z => slip(z)).join('');
-  if (feat.length) h += secT('Featured') + feat.map(z => slip(z)).join('');
-  if (pop.length) h += secT('Popular') + pop.map(z => slip(z)).join('');
-  if (latest.length) h += secT('Latest', `<a class="link sm" href="#/explore">See all</a>`) + latest.map(z => slip(z)).join('');
+  if (inv.length) h += secT('Invited to you') + '<div class="slist">' + inv.map(z => slip(z)).join('') + '</div>';
+  if (feat.length) h += secT('Featured') + '<div class="slist">' + feat.map(z => slip(z)).join('') + '</div>';
+  if (pop.length) h += secT('Popular') + '<div class="slist">' + pop.map(z => slip(z)).join('') + '</div>';
+  if (latest.length) h += secT('Latest', `<a class="link sm" href="#/explore">See all</a>`) + '<div class="slist">' + latest.map(z => slip(z)).join('') + '</div>';
   if (!h) h = emptyBox('book', 'No quizzes yet', 'Be the first to <a class="link" href="#/create">create one</a>.');
   $('#home-lists').innerHTML = h;
 }
@@ -1435,7 +1455,7 @@ async function exLoad(more, tok) {
   qy = EX.sort === 'popular' ? qy.order('attempts_count', { ascending: false }) : qy.order('published_at', { ascending: false });
   const rows = await db(qy.range(EX.page * PS, EX.page * PS + PS - 1));
   if (stale(t) || !$('#ex-list')) return;
-  const h = rows.map(z => slip(z)).join('');
+  const h = '<div class="slist">' + rows.map(z => slip(z)).join('') + '</div>';
   if (more) list.insertAdjacentHTML('beforeend', h); else list.innerHTML = h || emptyBox('search', 'Nothing found', 'Try a different word or category.');
   $('#ex-more').innerHTML = rows.length === PS ? `<button class="btn" data-act="exmore">Load more</button>` : '';
 }
@@ -1476,7 +1496,7 @@ async function vMe([tab], q, tok) {
   if (tab === 'quizzes') {
     const rows = await db(sb.from('quizzes').select(QCOLS).eq('owner_id', me.id).order('created_at', { ascending: false }));
     if (stale(tok)) return;
-    body.innerHTML = `<a class="btn brass block" href="#/create">${ic('plus', 18)} Create a new quiz</a><div class="gap">` + (rows.length ? rows.map(z => slip(z, `<div class="row wrapf" style="gap:8px;margin-top:10px">${keyChip(z.share_code)}<span class="grow"></span><a class="btn sm" href="#/edit/${z.id}">${ic('edit', 14)} Edit</a><a class="btn sm" href="#/results/${z.id}">${ic('chart', 14)} Results</a><button class="btn sm danger" data-act="mq-del" data-id="${z.id}" aria-label="Delete quiz">${ic('trash', 14)}</button></div>`)).join('') : emptyBox('layers', 'You have not created a quiz yet', 'Tap the + button to start.')) + '</div>';
+    body.innerHTML = `<a class="btn brass block" href="#/create">${ic('plus', 18)} Create a new quiz</a><div class="gap slist">` + (rows.length ? rows.map(z => slip(z, `<div class="row wrapf" style="gap:8px;margin-top:10px">${keyChip(z.share_code)}<span class="grow"></span><a class="btn sm" href="#/edit/${z.id}">${ic('edit', 14)} Edit</a><a class="btn sm" href="#/results/${z.id}">${ic('chart', 14)} Results</a><button class="btn sm danger" data-act="mq-del" data-id="${z.id}" aria-label="Delete quiz">${ic('trash', 14)}</button></div>`)).join('') : emptyBox('layers', 'You have not created a quiz yet', 'Tap the + button to start.')) + '</div>';
   } else if (tab === 'attempts') {
     const rows = await db(sb.from('attempts').select('id,status,started_at,submit_reason,attempt_no,quizzes(title,share_code),attempt_results(score,total,percentage,passed)').eq('user_id', me.id).order('started_at', { ascending: false }).limit(60));
     if (stale(tok)) return;
@@ -2340,6 +2360,7 @@ async function vQuiz([key], query, tok) {
     return;
   }
   Q.quiz = quiz; Q.isMgr = !!(S.me && (quiz.owner_id === S.me.id || isAdmin()));
+  if (!(S.me && quiz.owner_id === S.me.id)) rpc('record_quiz_view', { p_quiz_id: quiz.id, p_viewer: S.me && !S.me.anon ? S.me.id : deviceId() }).catch(() => {});
   const jobs = [db(sb.from('question_sets').select('id,name,position').eq('quiz_id', quiz.id).order('position'))];
   if (S.me) {
     jobs.push(db(sb.from('attempts').select('id,status,attempt_no,started_at,submitted_at,expires_at,submit_reason,attempt_results(score,total,percentage,passed)').eq('quiz_id', quiz.id).eq('user_id', S.me.id).order('started_at', { ascending: false })));
@@ -2391,7 +2412,7 @@ function drawQuiz() {
   const engage = `<div class="row wrapf gap">${q.allow_likes ? `<button class="btn sm ${Q.liked ? 'brass' : ''}" data-act="q-like" id="like-b">${ic('heart', 16)} <span id="like-n">${q.likes_count || 0}</span></button>` : ''}
     ${q.allow_comments ? `<button class="btn sm" data-act="q-jump-c">${ic('msg', 16)} ${q.comments_count || 0}</button>` : ''}
     ${q.allow_sharing || mgr ? `<button class="btn sm" data-act="q-share">${ic('share', 16)} Share</button>` : ''}
-    <span class="mut sm" style="margin-left:auto">${ic('users', 14)} ${q.attempts_count || 0} attempt${q.attempts_count === 1 ? '' : 's'}</span></div>`;
+    <span class="mut sm" style="margin-left:auto">${q.views_count != null ? `${ic('eye', 14)} ${q.views_count} view${q.views_count === 1 ? '' : 's'} · ` : ''}${ic('users', 14)} ${q.attempts_count || 0} attempt${q.attempts_count === 1 ? '' : 's'}</span></div>`;
   if (mgr && (q.access_code_required || q.team_challenge)) startBtn = `<div class="card gap"><div class="b">${ic('users', 16)} ${q.team_challenge ? 'Team challenge' : 'Access codes'} setup</div><div class="hint">1. Make codes and send one to each person. 2. People enter their code on the start screen${q.team_challenge ? ' and join their team' : ''}. 3. ${q.team_challenge ? 'Watch the team leaderboard.' : 'See who used each code.'}</div><a class="btn brass block gap0" href="#/access/${q.id}">${ic('users', 16)} Make and manage codes</a></div>` + startBtn;
   if (q.team_challenge) startBtn += `<a class="btn block gap0" href="#/team/${q.share_code}">${ic('trophy', 16)} Team leaderboard</a>`;
   const lbOn = q.leaderboard_enabled || q.is_challenge;
@@ -2721,7 +2742,7 @@ ACT['q-dup'] = async btn => {
   const id = await duplicateQuiz(Q.quiz); toast('Copy created', 'ok'); nav('/edit/' + id + '/details');
 };
 async function duplicateQuiz(src) {
-  const { id, share_code, owner_id, owner_name, attempts_count, likes_count, comments_count, created_at, updated_at, published_at, featured, ...rest } = src;
+  const { id, share_code, owner_id, owner_name, attempts_count, views_count, likes_count, comments_count, created_at, updated_at, published_at, featured, ...rest } = src;
   const copy = await db(sb.from('quizzes').insert(Object.assign({}, rest, { title: (src.title + ' (copy)').slice(0, 120), status: 'draft', results_released: false, owner_id: S.me.id })).select().single());
   const [sets, qs, keys] = await Promise.all([
     db(sb.from('question_sets').select('*').eq('quiz_id', id).order('position')), db(sb.from('questions').select('*').eq('quiz_id', id).order('position')), db(sb.from('question_keys').select('*').eq('quiz_id', id))]);
