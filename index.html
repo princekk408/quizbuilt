@@ -4349,7 +4349,6 @@ ACT['qb2-profile-save']=()=>{const p=QB2.data.profile;p.university=$('#q2-uni').
 ACT['qb2-export']=()=>download('quizbuilt-academic-data.json',JSON.stringify(QB2.data,null,2),'application/json');
 ACT['qb2-close']=()=>closeSheet();
 
-async function vQB2Compete(){qb2Require();const body=`<div class="qb2-arena-hero"><div><span class="qb2-live"><i></i> THE QUIZBUILT ARENA</span><h2>Knowledge is your advantage.</h2><p>Challenge yourself, climb the rankings and compete with your community.</p><a class="btn brass" href="#/explore">Find a quiz ${ic('arrow-up-right',16)}</a></div><div class="qb2-arena-art">${ic('trophy',64)}<span>TOP<br>THE<br>BOARD</span></div></div><div class="qb2-section-head"><div><span class="qb2-eyebrow">AVAILABLE COMPETITIONS</span><h2>Choose your arena</h2></div></div><div class="qb2-feature-grid">${qb2Card('Daily & public challenges','Explore timed quizzes and challenge sets','zap','#/explore','amber','LIVE')}${qb2Card('Global leaderboard','All-time and cross-quiz rankings','trophy','#/global-leaderboard','gold')}${qb2Card('Team battles','Use existing team-challenge quizzes','users','#/explore','teal')}${qb2Card('Group competitions','Join a group with a quiz code','users-round','#/','violet')}${qb2Card('Fastest Finger','Speed-focused quiz practice','timer','#/explore','pink')}${qb2Card('Tournament mode','Organise a bracket with your community','medal','#/explore','blue','PLANNING')}${qb2Card('Survival & knockout','Progress through increasingly difficult rounds','swords','#/explore','violet','PLANNING')}${qb2Card('Ghost challenge','Try to beat your previous best score','ghost','#/me/attempts','teal')}</div><div class="qb2-info-banner">Team challenges, group access codes, quiz timers, anti-cheat settings and leaderboards already exist in your current quiz engine. New real-time duel rooms, bracket automation and cross-device live matches need the accompanying database functions and realtime policies before they can be safely enabled.</div>`;qb2Shell('Competition arena','COMPETE & CONNECT','A home for daily challenges, teams, rankings and future university championships.',body);}
 
 async function qb2LoadGroups(){if(!sb||!loggedIn())return [];const r=await sb.from('qb2_study_groups').select('id,name,description,course_code,university,department,visibility,owner_id,created_at').order('created_at',{ascending:false}).limit(50);if(r.error)throw r.error;return r.data||[];}
 async function vQB2Community(){qb2Require();let groups=[],myIds=[];let loadError='';if(sb&&loggedIn()){try{groups=await qb2LoadGroups();const m=await sb.from('qb2_study_group_members').select('group_id').eq('user_id',S.me.id);if(m.error)throw m.error;myIds=(m.data||[]).map(x=>x.group_id);}catch(e){loadError=cleanErr(e);}}const mine=groups.filter(g=>myIds.includes(g.id)||g.owner_id===S.me.id),discover=groups.filter(g=>g.visibility==='public'&&!myIds.includes(g.id)&&g.owner_id!==S.me.id);const card=g=>`<article class="qb2-group-card"><div class="qb2-group-mark">${ic('users-round',23)}</div><div class="qb2-group-info"><b>${esc(g.name)}</b><small>${esc(g.course_code||'General study')} · ${esc(g.university||'Open community')}</small><p>${esc(g.description||'A space to learn and revise together.')}</p><span class="qb2-tag">${g.owner_id===S.me.id?'OWNER':myIds.includes(g.id)?'MEMBER':'PUBLIC GROUP'}</span></div><button class="btn sm ${myIds.includes(g.id)||g.owner_id===S.me.id?'':'brass'}" data-act="${myIds.includes(g.id)||g.owner_id===S.me.id?'qb2-group-open':'qb2-group-join'}" data-id="${g.id}">${myIds.includes(g.id)||g.owner_id===S.me.id?'Open':'Join'}</button></article>`;const body=`<div class="qb2-arena-hero community"><div><span class="qb2-eyebrow">STUDY TOGETHER</span><h2>Better learning happens together.</h2><p>Create a focused room for your course, share explanations and keep useful academic discussions in one place.</p><button class="btn brass" data-act="qb2-group-create">${ic('plus',16)} Create a study group</button></div><div class="qb2-arena-art">${ic('users-round',60)}</div></div>${loadError?`<div class="qb2-info-banner">Study groups need the latest QuizBuilt 2.0 SQL migration. Sign in is required to create, join or post. ${esc(loadError)}</div>`:''}<div class="qb2-panel gap"><div class="qb2-panel-head"><div><span class="qb2-eyebrow">YOUR ROOMS</span><h3>My study groups</h3></div><span class="qb2-tag">${mine.length} joined</span></div>${mine.map(card).join('')||qb2Empty('users','No study groups yet','Create your first course room or join a public group.')}</div><div class="qb2-panel gap"><div class="qb2-panel-head"><div><span class="qb2-eyebrow">DISCOVER</span><h3>Public study groups</h3></div></div>${discover.map(card).join('')||'<div class="qb2-empty-inline">No public groups to show yet. Create one and invite classmates.</div>'}</div><div class="qb2-feature-grid">${qb2Card('Share a quiz','Create and share a practice quiz','share-2','#/create','violet')}${qb2Card('Find study resources','Browse public quizzes and notes','library','#/explore','teal')}${qb2Card('Global leaderboard','Friendly competition across QuizBuilt','trophy','#/global-leaderboard','gold')}</div>`;qb2Shell('Student community','COMMUNITY','Build a focused learning circle around your courses.',body);}
@@ -4357,7 +4356,7 @@ ACT['qb2-group-create']=()=>qb2Modal('Create a study group',`${qb2Field('q2-name
 ACT['qb2-group-create-save']=async btn=>{if(!sb||!loggedIn())return toast('Sign in to create a study group','bad');const name=$('#q2-name').value.trim();if(name.length<2)return toast('Enter a group name','bad');busy(btn,true);try{const {data,error}=await sb.rpc('qb2_create_study_group',{p_name:name,p_description:$('#q2-desc').value.trim(),p_course_code:$('#q2-course').value.trim(),p_university:$('#q2-uni').value.trim(),p_department:$('#q2-dept').value.trim(),p_visibility:$('#q2-visibility').value});if(error)throw error;closeSheet();toast('Study group created','ok');await vQB2Community();}catch(e){toast(cleanErr(e),'bad');}finally{busy(btn,false);}};
 ACT['qb2-group-join']=async el=>{try{const {error}=await sb.rpc('qb2_join_study_group',{p_group_id:el.dataset.id});if(error)throw error;toast('You joined the study group','ok');vQB2Community();}catch(e){toast(cleanErr(e),'bad');}};
 ACT['qb2-group-open']=el=>nav('/qb2/group/'+el.dataset.id);
-async function vQB2Group(){qb2Require();const id=parseHash().path.split('/').pop();if(!sb||!loggedIn())return qb2Shell('Study group','COMMUNITY','Sign in to access study group discussions.',qb2Empty('lock','Sign in required','Your group discussions are private.'));try{const [g,m,p]=await Promise.all([sb.from('qb2_study_groups').select('*').eq('id',id).single(),sb.from('qb2_study_group_members').select('user_id,role').eq('group_id',id),sb.from('qb2_group_posts').select('id,author_id,body,created_at').eq('group_id',id).order('created_at',{ascending:false}).limit(60)]);if(g.error)throw g.error;if(m.error)throw m.error;if(p.error)throw p.error;const isMember=(m.data||[]).some(x=>x.user_id===S.me.id)||g.data.owner_id===S.me.id;if(!isMember)throw new Error('Join this group before viewing its discussion.');const names={};(m.data||[]).forEach(x=>names[x.user_id]=x.user_id===S.me.id?'You':'Member');const body=`<div class="qb2-toolbar"><div><span class="qb2-eyebrow">${esc(g.data.course_code||'STUDY GROUP')}</span><h2>${esc(g.data.name)}</h2></div><a class="btn" href="#/qb2/community">Back to groups</a></div><div class="qb2-info-banner">${esc(g.data.description||'A shared space for learning and revision.')} · ${m.data.length} members · ${esc(g.data.visibility)}</div><div class="qb2-panel gap"><h3>Group discussion</h3><textarea class="inp" id="qb2-group-post" rows="3" maxlength="5000" placeholder="Share a question, explanation or study update..."></textarea><button class="btn brass" data-act="qb2-group-post" data-id="${id}">Post to group</button>${(p.data||[]).map(x=>`<article class="qb2-post"><div class="qb2-post-head"><b>${esc(names[x.author_id]||'Group member')}</b><small>${fmtDate(x.created_at)}</small></div><p>${esc(x.body)}</p></article>`).join('')||'<div class="qb2-empty-inline">No posts yet. Start the conversation.</div>'}</div>`;qb2Shell('Study group','COURSE COMMUNITY','Share knowledge respectfully and keep discussions useful.',body);}catch(e){qb2Shell('Study group','COMMUNITY','Group details and discussions.',qb2Empty('users','Could not open this group',esc(cleanErr(e)),'<a class="btn" href="#/qb2/community">Back to groups</a>'));}}
+async function vQB2Group(){qb2Require();const id=parseHash().path.split('/').pop();if(!sb||!loggedIn())return qb2Shell('Study group','COMMUNITY','Sign in to access study group discussions.',qb2Empty('lock','Sign in required','Your group discussions are private.'));try{const [g,m,p]=await Promise.all([sb.from('qb2_study_groups').select('*').eq('id',id).single(),sb.from('qb2_study_group_members').select('user_id,role').eq('group_id',id),sb.from('qb2_group_posts').select('id,author_id,body,created_at').eq('group_id',id).order('created_at',{ascending:false}).limit(60)]);if(g.error)throw g.error;if(m.error)throw m.error;if(p.error)throw p.error;const isMember=(m.data||[]).some(x=>x.user_id===S.me.id)||g.data.owner_id===S.me.id;if(!isMember)throw new Error('Join this group before viewing its discussion.');const names={};(m.data||[]).forEach(x=>names[x.user_id]=x.user_id===S.me.id?'You':'Member');try{const ids=[...new Set([...(m.data||[]).map(x=>x.user_id),...(p.data||[]).map(x=>x.author_id)])].filter(x=>x!==S.me.id);if(ids.length){const pr=await sb.from('public_profiles').select('id,username').in('id',ids);(pr.data||[]).forEach(x=>{if(x.username)names[x.id]=x.username;});}}catch(_){}const body=`<div class="qb2-toolbar"><div><span class="qb2-eyebrow">${esc(g.data.course_code||'STUDY GROUP')}</span><h2>${esc(g.data.name)}</h2></div><a class="btn" href="#/qb2/community">Back to groups</a></div><div class="qb2-info-banner">${esc(g.data.description||'A shared space for learning and revision.')} · ${m.data.length} members · ${esc(g.data.visibility)}</div><div class="qb2-panel gap"><h3>Group discussion</h3><textarea class="inp" id="qb2-group-post" rows="3" maxlength="5000" placeholder="Share a question, explanation or study update..."></textarea><button class="btn brass" data-act="qb2-group-post" data-id="${id}">Post to group</button>${(p.data||[]).map(x=>`<article class="qb2-post"><div class="qb2-post-head"><b>${esc(names[x.author_id]||'Group member')}</b><small>${fmtDate(x.created_at)}</small></div><p>${esc(x.body)}</p></article>`).join('')||'<div class="qb2-empty-inline">No posts yet. Start the conversation.</div>'}</div>`;qb2Shell('Study group','COURSE COMMUNITY','Share knowledge respectfully and keep discussions useful.',body);}catch(e){qb2Shell('Study group','COMMUNITY','Group details and discussions.',qb2Empty('users','Could not open this group',esc(cleanErr(e)),'<a class="btn" href="#/qb2/community">Back to groups</a>'));}}
 ACT['qb2-group-post']=async el=>{const body=$('#qb2-group-post')?.value.trim();if(!body)return toast('Write a message first','bad');try{const {error}=await sb.from('qb2_group_posts').insert({group_id:el.dataset.id,author_id:S.me.id,body});if(error)throw error;toast('Post published','ok');vQB2Group();}catch(e){toast(cleanErr(e),'bad');}};
 function qb2AchievementCatalog(){const d=QB2.data;const sessions=d.sessions.length,completed=d.tasks.filter(x=>x.done).length;return [{key:'first_card',title:'First Recall',desc:'Create your first flashcard',icon:'layers',points:10,ok:d.cards.length>=1},{key:'ten_cards',title:'Memory Builder',desc:'Build a deck of 10 flashcards',icon:'brain',points:25,ok:d.cards.length>=10},{key:'first_review',title:'Recall in Action',desc:'Review your first flashcard',icon:'check-circle',points:15,ok:d.cards.some(c=>(c.reps||0)>0)},{key:'study_hour',title:'Deep Work',desc:'Log 60 minutes of focused study',icon:'timer',points:25,ok:d.sessions.reduce((a,x)=>a+(+x.minutes||0),0)>=60},{key:'five_sessions',title:'Consistency',desc:'Complete five focus sessions',icon:'flame',points:30,ok:sessions>=5},{key:'task_finisher',title:'Task Finisher',desc:'Complete five academic tasks',icon:'list-checks',points:25,ok:completed>=5},{key:'course_starter',title:'Campus Ready',desc:'Register your first course',icon:'graduation-cap',points:10,ok:d.courses.length>=1}];}
 async function vQB2Achievements(){qb2Require();const all=qb2AchievementCatalog();const earned=all.filter(x=>x.ok);const points=earned.reduce((a,x)=>a+x.points,0);const body=`<div class="qb2-arena-hero"><div><span class="qb2-eyebrow">YOUR PROGRESS, RECOGNISED</span><h2>Every small win counts.</h2><p>Earn milestones by learning consistently, reviewing your cards and completing your academic goals.</p><div class="qb2-hero-meta">${earned.length} of ${all.length} achievements unlocked</div></div><div class="qb2-arena-art">${ic('award',60)}<span>${points}<br>XP</span></div></div><div class="qb2-kpis gap">${qb2Kpi('TOTAL XP',points,'From unlocked milestones','sparkles','gold')}${qb2Kpi('UNLOCKED',earned.length,'Achievements earned','award','violet')}${qb2Kpi('TO UNLOCK',all.length-earned.length,'Milestones remaining','target','teal')}</div><div class="qb2-achievement-grid">${all.map(a=>`<article class="qb2-achievement ${a.ok?'earned':''}"><div class="qb2-achievement-icon">${ic(a.icon,24)}</div><div><b>${esc(a.title)}</b><p>${esc(a.desc)}</p><small>${a.points} XP · ${a.ok?'UNLOCKED':'LOCKED'}</small></div>${a.ok?`<span class="qb2-tag">${ic('check',12)} EARNED</span>`:''}</article>`).join('')}</div><div class="qb2-info-banner">Achievements are calculated from your academic workspace on this account. XP is a motivational progress score, not a grade or official university record.</div>`;qb2Shell('Achievements','MILESTONES & REWARDS','Celebrate progress without losing sight of the learning itself.',body);}
@@ -4377,6 +4376,8 @@ function qb2RouteInit(){
     [/^\/qb2\/timer$/,vQB2Timer],
     [/^\/qb2\/profile$/,vQB2Profile],
     [/^\/qb2\/compete$/,vQB2Compete],
+    [/^\/qb2\/room\/([\w-]+)$/,vQB2Room],
+    [/^\/qb2\/bank$/,vQB2Bank],
     [/^\/qb2\/community$/,vQB2Community],
     [/^\/qb2\/group\/[^/]+$/,vQB2Group],
     [/^\/qb2\/achievements$/,vQB2Achievements],
@@ -4385,7 +4386,7 @@ function qb2RouteInit(){
   const oldChrome=renderChrome;
   renderChrome=function(){oldChrome();const navEl=$('#nav');if(navEl){navEl.innerHTML=`<a href="#/" data-n="home">${ic('home',21)}<span>Home</span></a><a href="#/qb2/compete" data-n="compete">${ic('swords',21)}<span>Compete</span></a><a href="#/create" class="mk" data-n="create" aria-label="Create a quiz">${ic('plus',27)}</a><a href="#/qb2" data-n="academics">${ic('graduation-cap',21)}<span>Academics</span></a><a href="#/me" data-n="me">${ic('user',21)}<span>Profile</span></a>`;navHighlight();}};
   const oldHighlight=navHighlight;
-  navHighlight=function(){oldHighlight();const p=parseHash().path;const map=p.startsWith('/qb2/compete')?'compete':p.startsWith('/qb2')?'academics':'';if(map)$$('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.n===map));};
+  navHighlight=function(){oldHighlight();const p=parseHash().path;const map=(p.startsWith('/qb2/compete')||p.startsWith('/qb2/room')||p.startsWith('/qb2/bank'))?'compete':p.startsWith('/qb2')?'academics':'';if(map)$$('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.n===map));};
   ACT['qb2-open']=()=>nav('/qb2');
 }
 
@@ -4393,6 +4394,194 @@ function qb2RouteInit(){
 /* ============================================================
    BOOT
    ============================================================ */
+/* ============================================================
+   QUIZBUILT 2.0 — MILESTONE 3: competition rooms + question bank
+   ============================================================ */
+const QB2C = { timer: null, draw: null, room: null, subject: '', modes: { duel: 'Duel (2 players)', live: 'Live room', fastest_finger: 'Fastest Finger' } };
+function qb2Act(title, desc, icon, tone, act, data, tag) { return `<button class="qb2-feature ${tone}" data-act="${act}" ${data || ''} style="text-align:left;width:100%"><span class="qb2-feature-icon">${ic(icon, 22)}</span><span class="qb2-feature-copy"><b>${title}</b><small>${desc}</small></span>${tag ? `<span class="qb2-tag">${tag}</span>` : `<span class="qb2-arrow">${ic('arrow-up-right', 17)}</span>`}</button>`; }
+function qb2NeedLogin() { if (!sb || !loggedIn() || (S.me && S.me.anon)) { toast('Sign in to use competitions and the question bank', 'bad'); return true; } return false; }
+
+async function vQB2Compete() {
+  qb2Require(); qb2Unsub();
+  const body = `<div class="qb2-arena-hero"><div><span class="qb2-live"><i></i> THE QUIZBUILT ARENA</span><h2>Knowledge is your advantage.</h2><p>Host a room, share the code, and see who finishes on top.</p><div class="qb2-hero-actions"><button class="btn brass" data-act="qb2-join-open">Join with a code</button><button class="btn qb2-glass" data-act="qb2-room-create-open" data-mode="live">Host a room</button></div></div><div class="qb2-arena-art">${ic('trophy', 64)}<span>TOP<br>THE<br>BOARD</span></div></div>
+  <div class="qb2-section-head"><div><span class="qb2-eyebrow">AVAILABLE COMPETITIONS</span><h2>Choose your arena</h2></div></div>
+  <div class="qb2-feature-grid">${qb2Act('Join with a code', 'Enter a room code from a friend', 'users-round', 'violet', 'qb2-join-open', '', 'LIVE')}${qb2Act('Fastest Finger', 'Speed counts: faster correct answers score more', 'timer', 'pink', 'qb2-room-create-open', 'data-mode="fastest_finger"')}${qb2Act('Duel', 'Head to head, 2 players', 'swords', 'blue', 'qb2-room-create-open', 'data-mode="duel"')}${qb2Act('Live room', 'Up to 256 players on one quiz', 'zap', 'amber', 'qb2-room-create-open', 'data-mode="live"')}${qb2Act('Question bank', 'Browse and add shared questions', 'library', 'teal', 'qb2-nav', 'data-to="/qb2/bank"')}${qb2Act('Build a quiz from the bank', 'Pick a subject and we assemble it', 'plus', 'gold', 'qb2-bq-open')}${qb2Card('Global leaderboard', 'All-time and cross-quiz rankings', 'trophy', '#/global-leaderboard', 'gold')}${qb2Card('Ghost challenge', 'Try to beat your previous best score', 'ghost', '#/me/attempts', 'teal')}${qb2Card('Team battles', 'Use existing team-challenge quizzes', 'users', '#/explore', 'teal')}${qb2Card('Tournament mode', 'Organise a bracket with your community', 'medal', '#/qb2/compete', 'blue', 'PLANNING')}${qb2Card('Survival & knockout', 'Progress through harder rounds', 'swords', '#/qb2/compete', 'violet', 'PLANNING')}</div>
+  <div class="qb2-info-banner">${ic('info', 18)} Rooms use your normal quiz engine, so timers, negative marking and anti-cheat all still apply. Scores come from real finished attempts, never from the player's phone.</div>`;
+  qb2Shell('Competition arena', 'COMPETE & CONNECT', 'Rooms, rankings and a shared question bank.', body, 'compete');
+}
+ACT['qb2-nav'] = el => nav(el.dataset.to);
+
+/* ---------- join ---------- */
+ACT['qb2-join-open'] = () => { if (qb2NeedLogin()) return; qb2Modal('Join a competition', `${qb2Field('q2-code', 'Room code', 'text', '', 'placeholder="e.g. 7F3A92BC" maxlength="8" autocapitalize="characters" required')}${qb2Field('q2-dname', 'Display name', 'text', (S.me && S.me.username) || '', 'maxlength="40"')}`, 'qb2-join-save', 'Join room'); };
+ACT['qb2-join-save'] = async btn => {
+  const code = $('#q2-code').value.trim().toUpperCase(), name = $('#q2-dname').value.trim();
+  if (code.length < 4) return toast('Enter the room code', 'bad'); if (name.length < 2) return toast('Enter a display name', 'bad');
+  busy(btn, true);
+  try { const r = await rpc('qb2_join_competition', { p_code: code, p_display_name: name }); closeSheet(); nav('/qb2/room/' + r.code); }
+  catch (e) { toast(e.message, 'bad'); } finally { busy(btn, false); }
+};
+
+/* ---------- host ---------- */
+async function qb2RoomCreateOpen(mode, quizId) {
+  if (qb2NeedLogin()) return;
+  let quizzes = [];
+  try {
+    const base = () => sb.from('quizzes').select('id,title,owner_id').eq('status', 'published').eq('visibility', 'public').order('created_at', { ascending: false });
+    const [mine, others] = await Promise.all([db(base().eq('owner_id', S.me.id).limit(40)), db(base().neq('owner_id', S.me.id).limit(40))]);
+    quizzes = (mine || []).concat(others || []);
+  } catch (e) { return toast(e.message, 'bad'); }
+  if (!quizzes.length) return toast('Rooms need a public, published quiz. Try "Build a quiz from the bank".', 'bad');
+  qb2Modal('Host a room', `${qb2Select('q2-mode', 'Mode', Object.entries(QB2C.modes).map(([v, l]) => ({ v, l })), mode || 'live')}${qb2Select('q2-quiz', 'Quiz', quizzes.map(q => ({ v: q.id, l: q.title + (q.owner_id === S.me.id ? ' (yours)' : '') })), quizId || quizzes[0].id)}${qb2Field('q2-max', 'Player limit (Duel is always 2)', 'number', 20, 'min="2" max="256"')}<div class="hint">Tip: Fastest Finger works best with quizzes built from the bank, which add a per-question timer and speed bonus.</div>`, 'qb2-room-create-save', 'Create room');
+}
+ACT['qb2-room-create-open'] = el => qb2RoomCreateOpen(el.dataset.mode);
+ACT['qb2-room-create-save'] = async btn => {
+  const mode = $('#q2-mode').value; let max = parseInt($('#q2-max').value, 10) || 2; if (mode === 'duel') max = 2; max = Math.min(256, Math.max(2, max));
+  busy(btn, true);
+  try { const r = await rpc('qb2_create_competition', { p_quiz_id: $('#q2-quiz').value, p_mode: mode, p_max_players: max, p_settings: {} }); closeSheet(); nav('/qb2/room/' + r.code); }
+  catch (e) { toast(e.message, 'bad'); } finally { busy(btn, false); }
+};
+
+/* ---------- room lobby + live ranking ---------- */
+function qb2Unsub() { clearInterval(QB2C.timer); if (QB2C.chan && sb) { try { sb.removeChannel(QB2C.chan); } catch (_) { } QB2C.chan = null; } }
+async function vQB2Room([code]) {
+  qb2Require(); qb2Unsub(); QB2C.sig = null;
+  const key = String(code).toUpperCase(); let tick = 0;
+  qb2Shell('Competition room', 'LIVE ROOM', 'Waiting room, live ranking and final results.', '<div id="qb2-room-box"><div class="spin"></div></div>', 'compete');
+  const draw = async fromRt => {
+    if (!location.hash.startsWith('#/qb2/room/')) { qb2Unsub(); return; }
+    if (document.hidden && QB2C.sig) return;
+    let d;
+    try {
+      d = await rpc('qb2_get_room', { p_code: key });
+      if (d.status !== 'waiting' && (!fromRt && tick++ % 2 === 0)) { await rpc('qb2_sync_competition_scores', { p_competition_id: d.id }); d = await rpc('qb2_get_room', { p_code: key }); }
+    } catch (e) {
+      qb2Unsub(); const b = $('#qb2-room-box');
+      if (b) b.innerHTML = qb2Empty('lock', 'Cannot open this room', esc(e.message), '<button class="btn brass" data-act="qb2-join-open">Join with a code</button> <a class="btn" href="#/qb2/compete">Back</a>');
+      return;
+    }
+    QB2C.room = d; const b = $('#qb2-room-box'); if (!b) return;
+    const sig = JSON.stringify(d); if (sig === QB2C.sig) return; QB2C.sig = sig;
+    const live = d.status === 'live', done = d.status === 'completed' || d.status === 'cancelled';
+    const rows = d.members.map((m, i) => `<div class="qb2-taskline"><b style="width:26px">${(live || done) && m.score != null ? i + 1 : '•'}</b><div><b>${esc(m.name)}${m.is_me ? ' (you)' : ''}</b><small>${m.score != null ? `${m.score} pts · ${Math.round(m.percentage || 0)}%` : esc(m.status)}</small></div><span class="qb2-tag ${m.status === 'completed' ? 'success' : ''}">${esc(m.status)}</span></div>`).join('');
+    const actions = d.is_host
+      ? (d.status === 'waiting' ? `<button class="btn brass block" data-act="qb2-room-status" data-s="live" ${d.members.length < 2 ? 'disabled' : ''}>${d.members.length < 2 ? 'Waiting for at least 2 players' : 'Start the competition'}</button>` : live ? `<button class="btn danger block" data-act="qb2-room-status" data-s="completed">End competition</button>` : '')
+      : '';
+    const play = live ? `<a class="btn brass block gap0" href="#/q/${esc(d.quiz_code)}">${ic('zap', 16)} Play now</a>` : '';
+    b.innerHTML = `<div class="qb2-panel"><div class="qb2-panel-head"><div><span class="qb2-eyebrow">${esc(QB2C.modes[d.mode] || d.mode)}</span><h3>${esc(d.quiz_title || 'Quiz')}</h3></div><span class="qb2-tag ${live ? 'success' : ''}">${esc(d.status.toUpperCase())}</span></div><div class="qb2-target-out">Room code: <span style="letter-spacing:.18em;font-size:22px">${esc(d.code)}</span><small>Share this code. ${d.members.length} of ${d.max_players} players joined.</small></div><div class="gap0">${actions}${play}</div></div><div class="qb2-panel gap"><div class="qb2-panel-head"><h3>${live || done ? 'Live ranking' : 'Players'}</h3></div>${rows || '<div class="qb2-empty-inline">No players yet.</div>'}${live ? '<div class="hint">Scores appear after each player finishes the quiz.</div>' : ''}</div>`;
+  };
+  QB2C.draw = draw; await draw(); QB2C.timer = setInterval(() => draw(), 8000);
+  if (QB2C.room && sb && sb.channel) {
+    let t = null; const kick = () => { clearTimeout(t); t = setTimeout(() => draw(true), 500); };
+    try { QB2C.chan = sb.channel('qb2-room-' + QB2C.room.id).on('postgres_changes', { event: '*', schema: 'public', table: 'qb2_competition_members', filter: 'competition_id=eq.' + QB2C.room.id }, kick).on('postgres_changes', { event: '*', schema: 'public', table: 'qb2_competitions', filter: 'id=eq.' + QB2C.room.id }, kick).subscribe(); } catch (_) { }
+  }
+}
+ACT['qb2-room-status'] = async el => {
+  const d = QB2C.room; if (!d) return;
+  if (el.dataset.s === 'completed' && !await ask({ title: 'End this competition?', ok: 'End', danger: true })) return;
+  try { await rpc('qb2_set_competition_status', { p_competition_id: d.id, p_status: el.dataset.s }); toast(el.dataset.s === 'live' ? 'Competition started' : 'Competition ended', 'ok'); if (QB2C.draw) QB2C.draw(); } catch (e) { toast(e.message, 'bad'); }
+};
+
+/* ---------- question bank ---------- */
+async function vQB2Bank() {
+  qb2Require(); qb2Unsub(); let rows = [], err = '';
+  try { let q = sb.from('qb2_bank_questions').select('id,subject,topic,difficulty,type,body,marks,owner_id').order('created_at', { ascending: false }).limit(100); if (QB2C.subject) q = q.ilike('subject', `%${QB2C.subject}%`); rows = await db(q) || []; } catch (e) { err = e.message; }
+  const mine = S.me && S.me.id;
+  const body = `<div class="qb2-toolbar"><div><span class="qb2-eyebrow">SHARED KNOWLEDGE</span><h2>Question bank</h2></div><div class="row gap"><button class="btn" data-act="qb2-bank-import">Import</button><button class="btn brass" data-act="qb2-bank-add">${ic('plus', 16)} Add</button></div></div>${err ? `<div class="qb2-info-banner">Run the Milestone 3 SQL first. ${esc(err)}</div>` : ''}<div class="row gap"><input class="inp grow" id="q2-bs" placeholder="Filter by subject, e.g. Physics" value="${esc(QB2C.subject)}"><button class="btn" data-act="qb2-bank-filter">Filter</button></div><div class="qb2-list gap">${rows.map(r => `<div class="qb2-task"><div class="qb2-task-main"><b>${esc(r.body)}</b><small>${esc(r.subject)}${r.topic ? ' · ' + esc(r.topic) : ''} · ${esc(r.difficulty)} · ${esc(r.type.toUpperCase())}</small></div>${r.owner_id === mine ? `<button class="iconbtn" data-act="qb2-bank-del" data-id="${r.id}">${ic('trash', 15)}</button>` : `<button class="iconbtn" data-act="qb2-bank-flag" data-id="${r.id}" aria-label="Report this question">${ic('flag', 15)}</button>`}</div>`).join('') || qb2Empty('library', 'No questions yet', 'Add the first question for a subject.', '<button class="btn brass" data-act="qb2-bank-import">Import many at once</button> <button class="btn" data-act="qb2-bank-add">Add one</button>')}</div><button class="btn block gap" data-act="qb2-bq-open">Build a quiz from the bank</button>`;
+  qb2Shell('Question bank', 'COMMUNITY LIBRARY', 'Questions anyone can add and every quiz can draw from.', body, 'compete');
+}
+ACT['qb2-bank-flag'] = async el => {
+  if (qb2NeedLogin()) return;
+  if (!await ask({ title: 'Report this question?', text: 'Report it if the answer is wrong or the wording is unclear. Three reports hide it from the bank.', ok: 'Report' })) return;
+  try { const r = await rpc('qb2_flag_bank_question', { p_question_id: el.dataset.id, p_reason: 'wrong or unclear' }); toast(r.hidden ? 'Reported. The question is now hidden.' : 'Thanks, your report was recorded', 'ok'); if (r.hidden) vQB2Bank(); } catch (e) { toast(e.message, 'bad'); }
+};
+ACT['qb2-bank-filter'] = () => { QB2C.subject = $('#q2-bs').value.trim(); vQB2Bank(); };
+ACT['qb2-bank-del'] = async el => { if (!await ask({ title: 'Delete this question?', ok: 'Delete', danger: true })) return; try { await db(sb.from('qb2_bank_questions').delete().eq('id', el.dataset.id)); vQB2Bank(); } catch (e) { toast(e.message, 'bad'); } };
+ACT['qb2-bank-add'] = () => {
+  if (qb2NeedLogin()) return;
+  qb2Modal('Add a question', `${qb2Field('q2-subj', 'Subject', 'text', QB2C.subject, 'placeholder="e.g. Physics" required')}${qb2Field('q2-topic', 'Topic (optional)', 'text', '', 'placeholder="e.g. Motion"')}${qb2Select('q2-diff', 'Difficulty', [{ v: 'easy', l: 'Easy' }, { v: 'medium', l: 'Medium' }, { v: 'hard', l: 'Hard' }], 'medium')}${qb2Select('q2-type', 'Type', [{ v: 'mcq', l: 'Multiple choice (A to D)' }, { v: 'tf', l: 'True / False' }], 'mcq')}<label class="lbl" for="q2-body">Question</label><textarea class="inp" id="q2-body" rows="3"></textarea>${['a', 'b', 'c', 'd'].map(k => qb2Field('q2-o' + k, 'Option ' + k.toUpperCase(), 'text', '')).join('')}${qb2Select('q2-ans', 'Correct answer', [{ v: 'a', l: 'A' }, { v: 'b', l: 'B' }, { v: 'c', l: 'C' }, { v: 'd', l: 'D' }, { v: 'T', l: 'True (True/False only)' }, { v: 'F', l: 'False (True/False only)' }], 'a')}${qb2Field('q2-expl', 'Explanation (optional)', 'text', '')}${qb2Select('q2-vis', 'Who can use it', [{ v: 'public', l: 'Everyone' }, { v: 'private', l: 'Only me' }], 'public')}`, 'qb2-bank-save', 'Save question');
+};
+ACT['qb2-bank-save'] = async btn => {
+  const type = $('#q2-type').value, ans = $('#q2-ans').value, subj = $('#q2-subj').value.trim(), body = $('#q2-body').value.trim();
+  if (subj.length < 2 || body.length < 3) return toast('Enter a subject and a question', 'bad');
+  let options = [];
+  if (type === 'mcq') { options = ['a', 'b', 'c', 'd'].map(k => ({ id: k, text: $('#q2-o' + k).value.trim() })).filter(o => o.text); if (options.length < 2) return toast('Give at least two options', 'bad'); if (!options.some(o => o.id === ans)) return toast('The correct answer must be one of your filled options', 'bad'); }
+  else if (ans !== 'T' && ans !== 'F') return toast('For True / False choose True or False as the answer', 'bad');
+  busy(btn, true);
+  try { await rpc('qb2_add_bank_question', { p_subject: subj, p_topic: $('#q2-topic').value.trim(), p_difficulty: $('#q2-diff').value, p_type: type, p_body: body, p_options: options, p_correct: [ans], p_explanation: $('#q2-expl').value.trim(), p_visibility: $('#q2-vis').value }); QB2C.subject = subj; closeSheet(); toast('Question added', 'ok'); vQB2Bank(); }
+  catch (e) { toast(e.message, 'bad'); } finally { busy(btn, false); }
+};
+
+/* ---------- build a quiz from the bank ---------- */
+ACT['qb2-bq-open'] = () => {
+  if (qb2NeedLogin()) return;
+  qb2Modal('Build a quiz from the bank', `${qb2Field('q2-btitle', 'Quiz title', 'text', '', 'placeholder="e.g. Physics speed round" required')}${qb2Field('q2-bsubj', 'Subject', 'text', QB2C.subject, 'placeholder="Must match bank subject" required')}${qb2Field('q2-btopic', 'Topic (optional)', 'text', '')}${qb2Select('q2-bdiff', 'Difficulty', [{ v: '', l: 'Any' }, { v: 'easy', l: 'Easy' }, { v: 'medium', l: 'Medium' }, { v: 'hard', l: 'Hard' }], '')}${qb2Field('q2-bcount', 'Number of questions', 'number', 10, 'min="1" max="100"')}${qb2Field('q2-bmin', 'Total minutes (normal mode)', 'number', 15, 'min="1" max="300"')}${qb2Select('q2-bmode', 'Style', [{ v: 'normal', l: 'Normal quiz' }, { v: 'fast', l: 'Fastest Finger (20s per question + speed bonus)' }], 'normal')}`, 'qb2-bq-save', 'Build quiz');
+};
+ACT['qb2-bq-save'] = async btn => {
+  const title = $('#q2-btitle').value.trim(), subj = $('#q2-bsubj').value.trim(), count = Math.min(100, Math.max(1, parseInt($('#q2-bcount').value, 10) || 10)), fast = $('#q2-bmode').value === 'fast';
+  if (title.length < 3 || subj.length < 2) return toast('Enter a title and a subject', 'bad');
+  busy(btn, true); let quiz = null;
+  try {
+    const ids = await rpc('qb2_random_bank_ids', { p_subject: subj, p_topic: $('#q2-btopic').value.trim(), p_difficulty: $('#q2-bdiff').value, p_count: count });
+    if (!ids || !ids.length) throw new Error('No bank questions match. Add some first or change the subject.');
+    const dur = fast ? Math.max(1, Math.ceil(ids.length * 20 / 60)) : Math.max(1, parseInt($('#q2-bmin').value, 10) || 15);
+    quiz = await db(sb.from('quizzes').insert(Object.assign({}, DEF, { title, description: 'Built from the QuizBuilt question bank', category: 'general', duration_min: dur, duration_sec: null, visibility: 'public', shuffle_questions: true, shuffle_options: true, is_challenge: fast, time_decay_enabled: fast, owner_id: S.me.id })).select().single());
+    const setId = uid();
+    await db(sb.from('question_sets').insert({ id: setId, quiz_id: quiz.id, name: subj.slice(0, 60), position: 0 }));
+    await rpc('qb2_add_bank_to_quiz', { p_quiz_id: quiz.id, p_set_id: setId, p_ids: ids, p_time_limit: fast ? 20 : null, p_decay: fast });
+    await db(sb.from('quizzes').update({ status: 'published', published_at: new Date().toISOString() }).eq('id', quiz.id));
+    closeSheet(); toast(`Quiz ready with ${ids.length} questions`, 'ok'); qb2RoomCreateOpen(fast ? 'fastest_finger' : 'live', quiz.id);
+  } catch (e) { if (quiz) { try { await sb.from('quizzes').delete().eq('id', quiz.id); } catch (_) { } } toast(e.message, 'bad'); }
+  finally { busy(btn, false); }
+};
+
+
+/* ---------- bulk import into the bank (paste text) ---------- */
+function qb2ParseBank(text) {
+  const out = [], errs = []; let subject = '', topic = '', difficulty = 'medium';
+  text.replace(/\r/g, '').split(/\n\s*\n/).forEach((blk, bi) => {
+    const lines = blk.split('\n').map(l => l.trim()).filter(Boolean); if (!lines.length) return;
+    const q = { body: '', opts: {}, ans: '', expl: '' }; let any = false;
+    lines.forEach(l => {
+      let m;
+      if ((m = l.match(/^subject\s*:\s*(.+)$/i))) subject = m[1].trim();
+      else if ((m = l.match(/^topic\s*:\s*(.*)$/i))) topic = m[1].trim();
+      else if ((m = l.match(/^difficulty\s*:\s*(easy|medium|hard)$/i))) difficulty = m[1].toLowerCase();
+      else if ((m = l.match(/^q(?:uestion)?\s*\d*\s*[:.)]\s*(.+)$/i))) { q.body = m[1].trim(); any = true; }
+      else if ((m = l.match(/^\(?([a-d])[).:]\s*(.+)$/i))) { q.opts[m[1].toLowerCase()] = m[2].trim(); any = true; }
+      else if ((m = l.match(/^(?:answer|ans)\s*[:=]\s*(.+)$/i))) { q.ans = m[1].trim(); any = true; }
+      else if ((m = l.match(/^(?:explanation|expl)\s*:\s*(.+)$/i))) q.expl = m[1].trim();
+      else if (!Object.keys(q.opts).length && !q.ans) q.body = q.body ? q.body + ' ' + l : l.replace(/^\d+\s*[.)]\s*/, '');
+    });
+    if (!any) return;
+    const n = out.length + errs.length + 1, a = q.ans.toLowerCase();
+    if (!subject) return errs.push(`Question ${n}: add a "Subject: ..." line above it`);
+    if (q.body.length < 3) return errs.push(`Question ${n}: missing question text`);
+    if (a === 'true' || a === 'false' || a === 't' || a === 'f') out.push({ subject, topic, difficulty, type: 'tf', body: q.body, options: [], correct: [a[0] === 't' ? 'T' : 'F'], expl: q.expl });
+    else {
+      const options = Object.keys(q.opts).sort().map(k => ({ id: k, text: q.opts[k] }));
+      if (options.length < 2) return errs.push(`Question ${n}: needs at least options A and B`);
+      if (!q.opts[a]) return errs.push(`Question ${n}: answer must be A, B, C or D and match an option`);
+      out.push({ subject, topic, difficulty, type: 'mcq', body: q.body, options, correct: [a], expl: q.expl });
+    }
+  });
+  return { out, errs };
+}
+ACT['qb2-bank-import'] = () => {
+  if (qb2NeedLogin()) return;
+  qb2Modal('Import questions', `<div class="hint">Paste questions. Put "Subject: Physics" (and optionally "Topic:" and "Difficulty:") above them, then leave a blank line between questions.<br><br>Q: What is the SI unit of force?<br>A) Joule<br>B) Newton<br>C) Watt<br>D) Pascal<br>Answer: B</div><textarea class="inp" id="q2-imp" rows="10" placeholder="Paste here..."></textarea>${qb2Select('q2-impvis', 'Who can use them', [{ v: 'public', l: 'Everyone' }, { v: 'private', l: 'Only me' }], 'public')}`, 'qb2-bank-import-save', 'Import');
+};
+ACT['qb2-bank-import-save'] = async btn => {
+  const { out, errs } = qb2ParseBank($('#q2-imp').value || '');
+  if (errs.length) return toast(errs[0] + (errs.length > 1 ? ` (+${errs.length - 1} more)` : ''), 'bad');
+  if (!out.length) return toast('No questions found. Check the format.', 'bad');
+  if (out.length > 100) return toast('Import at most 100 questions at a time', 'bad');
+  busy(btn, true); let ok = 0;
+  try {
+    for (const q of out) { await rpc('qb2_add_bank_question', { p_subject: q.subject, p_topic: q.topic, p_difficulty: q.difficulty, p_type: q.type, p_body: q.body, p_options: q.options, p_correct: q.correct, p_explanation: q.expl, p_visibility: $('#q2-impvis').value }); ok++; }
+    QB2C.subject = out[0].subject; closeSheet(); toast(`${ok} questions imported`, 'ok'); vQB2Bank();
+  } catch (e) { toast(`Imported ${ok} of ${out.length}, then: ${e.message}`, 'bad'); if (ok) vQB2Bank(); } finally { busy(btn, false); }
+};
+
 qb2RouteInit();
 
 async function boot() {
