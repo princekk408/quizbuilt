@@ -1814,6 +1814,161 @@ function edRenderDetails() {
   ${E.quiz ? `<button class="btn danger block gap2" data-act="ed-delete">${ic('trash', 16)} Delete this quiz</button>` : `<button class="btn ghost block gap" data-act="ed-discard">Discard and go back</button>`}`;
   edInitPayout();
 }
+/* ============================================================
+   QUIZBUILT 2.0 — CHOOSE YOUR SUBJECTS (normal quiz integration)
+   ============================================================ */
+const _qb2OriginalEdRenderDetails = edRenderDetails;
+edRenderDetails = function () {
+  _qb2OriginalEdRenderDetails();
+  const body = $('#ed-body');
+  if (!body) return;
+  body.insertAdjacentHTML('beforeend', `<details class="acc" id="pk-acc"><summary>${ic('list-checks',20)}<span>Choose-your-subjects mode</span><span class="chev">${ic('down',18)}</span></summary><div class="accb"><div id="pk-box"><div class="spin"></div></div></div></details>`);
+  qb2PkLoad();
+};
+async function qb2PkLoad() {
+  const box = $('#pk-box'); if (!box) return;
+  if (!E.quiz || !E.quiz.id) { box.innerHTML = '<div class="hint">Save this quiz and add its question sets first. You can then configure compulsory and optional subjects here.</div>'; return; }
+  try {
+    const c = await db(sb.from('qb2_pick_config').select('enabled').eq('quiz_id', E.quiz.id).maybeSingle());
+    QB2C.pk = { on: !!(c && c.enabled), cfg: c ? await rpc('qb2_pick_get', { p_quiz_id: E.quiz.id }) : null };
+  } catch (e) {
+    box.innerHTML = `<div class="hint">Run the choose-your-subjects SQL migration in Supabase first. ${esc(cleanErr(e))}</div>`;
+    return;
+  }
+  qb2PkDraw();
+}
+function qb2PkDraw() {
+  const box = $('#pk-box'); if (!box) return;
+  const p = QB2C.pk || { on:false, cfg:null }, c = p.cfg;
+  if (!p.on) {
+    box.innerHTML = `<div class="hint">Some sets can be compulsory (for example, English), while students choose exactly N from the optional sets. Each selected set is standardized to 100 marks, and unselected sets do not count.</div><button class="btn brass block gap0" data-act="qb2-pk-on">Turn on subject choice</button>`;
+    return;
+  }
+  if (!E.sets || E.sets.length < 2) { box.innerHTML = '<div class="hint">Add at least two question sets in the Questions tab first. Each question set represents one subject.</div>'; return; }
+  const locked = !!(c && c.entered > 0), dis = locked ? 'disabled' : '';
+  const modeOf = (id, i) => { if (c) { const x = (c.sets || []).find(y => y.set_id === id); return x ? (x.compulsory ? 'compulsory' : 'optional') : 'none'; } return i === 0 ? 'compulsory' : 'optional'; };
+  const rows = E.sets.map((set, i) => { const m = modeOf(set.id, i); return `<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><div class="grow b">${esc(set.name)}</div><select class="inp pk-mode" data-s="${esc(set.id)}" style="width:auto" ${dis}><option value="compulsory" ${m==='compulsory'?'selected':''}>Compulsory</option><option value="optional" ${m==='optional'?'selected':''}>Students can choose</option><option value="none" ${m==='none'?'selected':''}>Not included</option></select></div>`; }).join('');
+  box.innerHTML = `${locked ? `<div class="hint"><b>${c.entered}</b> student${c.entered===1?' has':'s have'} already entered. The subject-set configuration is locked; you can still update departments or turn the feature off.</div>` : ''}<div class="b">Question sets</div>${rows}<label class="lbl" for="pk-pick">How many optional sets must each student choose?</label><input class="inp" id="pk-pick" type="number" min="1" max="20" value="${c ? c.pick_count : 3}" ${dis}><label class="lbl" for="pk-depts">Departments (comma-separated; optional)</label><input class="inp" id="pk-depts" value="${esc(((c && c.departments) || []).join(', '))}" placeholder="Medicine, Nursing, Law, Engineering"><div class="hint">Leave departments empty if everyone uses the same subject-choice rules. Turn on Show results so scores can be counted. Avoid WAEC mode and keep essay marking complete before students are ranked.</div><button class="btn brass block gap" data-act="qb2-pk-save">Save subject-choice settings</button><button class="btn block gap0" data-act="qb2-pk-off" style="color:var(--bad)">Turn off subject choice</button>`;
+}
+ACT['qb2-pk-on'] = () => { QB2C.pk = QB2C.pk || {cfg:null}; QB2C.pk.on = true; qb2PkDraw(); };
+ACT['qb2-pk-save'] = async btn => {
+  const modes = [...document.querySelectorAll('.pk-mode')].map(x => ({id:x.dataset.s, mode:x.value}));
+  const compulsory = modes.filter(x=>x.mode==='compulsory').map(x=>x.id), optional = modes.filter(x=>x.mode==='optional').map(x=>x.id);
+  const pickCount = parseInt(($('#pk-pick')||{}).value,10) || 0;
+  const departments = ((($('#pk-depts')||{}).value)||'').split(',').map(x=>x.trim()).filter(Boolean);
+  const locked = !!(QB2C.pk && QB2C.pk.cfg && QB2C.pk.cfg.entered > 0);
+  if (!locked) {
+    if (pickCount < 1 || pickCount > 20) return toast('Choose between 1 and 20 optional subjects', 'bad');
+    if (optional.length < pickCount) return toast(`Students must choose ${pickCount}; make at least ${pickCount} sets optional`, 'bad');
+    if (!compulsory.length && optional.length === pickCount) { /* valid: all selected sets may be optional */ }
+    if (!compulsory.length && optional.length < 2) return toast('Add more question sets to give students a choice', 'bad');
+  }
+  busy(btn,true);
+  try {
+    await rpc('qb2_pick_save',{p_quiz_id:E.quiz.id,p_enabled:true,p_pick_count:pickCount || (QB2C.pk.cfg||{}).pick_count || 1,p_departments:departments,p_compulsory:compulsory,p_optional:optional});
+    toast('Subject-choice settings saved','ok'); await qb2PkLoad();
+  } catch(e) { toast(cleanErr(e),'bad'); } finally { busy(btn,false); }
+};
+ACT['qb2-pk-off'] = async () => {
+  if (!await ask({title:'Turn off subject choice?',text:'Students who already entered keep their recorded selections and results. New students will take the normal whole quiz.',ok:'Turn off',danger:true})) return;
+  try { await rpc('qb2_pick_save',{p_quiz_id:E.quiz.id,p_enabled:false,p_pick_count:1,p_departments:[],p_compulsory:[],p_optional:[]}); toast('Subject choice is off','ok'); await qb2PkLoad(); }
+  catch(e) { toast(cleanErr(e),'bad'); }
+};
+
+/* ---- student selection and leaderboard ---- */
+async function qb2PickLoad(quiz) {
+  try {
+    const cfg = await db(sb.from('qb2_pick_config').select('enabled').eq('quiz_id',quiz.id).maybeSingle());
+    if (!cfg) return null;
+    if (!cfg.enabled) {
+      if (!S.me || S.me.anon) return null;
+      return await rpc('qb2_pick_get',{p_quiz_id:quiz.id});
+    }
+    if (!S.me || S.me.anon) return {guest:true,enabled:true,sets:[],pick_count:0,departments:[]};
+    let data = await rpc('qb2_pick_get',{p_quiz_id:quiz.id});
+    if (data.entry && !data.entry.completed_at) {
+      try { await rpc('qb2_pick_refresh',{p_quiz_id:quiz.id}); data = await rpc('qb2_pick_get',{p_quiz_id:quiz.id}); } catch (_) {}
+    }
+    return data;
+  } catch (_) { return null; }
+}
+function qb2PickPanel(state, original) {
+  const m = Q.pick, quiz = Q.quiz;
+  if (!m) return original;
+  if (m.guest) return `<div class="card"><div class="b">Choose your subjects</div><div class="hint">Sign in with a normal account to select your department and subjects. Guest accounts cannot use this feature because selections and scores are attached to your account.</div><a class="btn brass block gap0" href="#/auth/login">Sign in to continue</a></div>`;
+  if (!m.entry) {
+    if (state.kind !== 'start' || !m.enabled) return original;
+    const compulsory = (m.sets||[]).filter(x=>x.compulsory), optional = (m.sets||[]).filter(x=>!x.compulsory);
+    return `<button class="btn brass block big" data-act="qb2-pick-start">${ic('list-checks',19)} Choose subjects & start</button><div class="hint center">${compulsory.length ? compulsory.map(x=>esc(x.name)).join(', ')+' compulsory. ' : ''}Choose exactly ${m.pick_count} of the optional subjects${(m.departments||[]).length?' and your department':''}.</div><a class="btn block gap0" href="#/qb2/pick/${esc(quiz.share_code)}">${ic('trophy',16)} Subject-choice leaderboard</a>`;
+  }
+  const entry = m.entry, completed = !!entry.completed_at;
+  const rows = (m.sets||[]).filter(x=>(entry.chosen||[]).includes(x.set_id)).map(x=>{
+    const score = entry.scores && entry.scores[x.set_id];
+    return `<div class="person"><div class="grow"><div class="b">${esc(x.name)}${x.compulsory?' <span class="badge">Compulsory</span>':''}</div><div class="xs mut">${x.question_count||0} questions</div></div>${score!=null?`<span class="badge ok">${score} / 100</span>`:'<span class="badge">Selected</span>'}</div>`;
+  }).join('');
+  return `<div class="card"><div class="xs mut">${completed?'FINAL SUBJECT-CHOICE SCORE':'YOUR LOCKED SUBJECTS'}${entry.department?' · '+esc(entry.department):''}</div>${completed?`<div class="h1" style="font-size:30px">${entry.total} / ${entry.max_total}</div>`:''}<div class="gap0">${rows}</div><div class="hint">${completed?'Your subject-choice result is final.':'Your selection is locked. You will only be shown questions from these subjects.'}</div></div>${completed?'':original}<a class="btn block gap0" href="#/qb2/pick/${esc(quiz.share_code)}">${ic('trophy',16)} Subject-choice leaderboard</a>`;
+}
+ACT['qb2-pick-start'] = () => {
+  const m=Q.pick; if(!m || !m.enabled) return;
+  QB2C.pickSel=new Set(); QB2C.pickNeed=m.pick_count; QB2C.deptNeeded=(m.departments||[]).length>0;
+  const compulsory=(m.sets||[]).filter(x=>x.compulsory), optional=(m.sets||[]).filter(x=>!x.compulsory);
+  openSheet(`<h3 class="h2">Choose your subjects</h3>${QB2C.deptNeeded?`<label class="lbl" for="q2-dept">Your department</label><select class="inp" id="q2-dept"><option value="">Select your department</option>${m.departments.map(d=>`<option value="${esc(d)}">${esc(d)}</option>`).join('')}</select>`:''}<div class="gap0"><small>Compulsory subjects (included automatically)</small>${compulsory.map(x=>`<div class="person"><div class="grow b">${esc(x.name)}</div><span class="badge ok">COMPULSORY</span></div>`).join('')||'<div class="hint">No compulsory subjects.</div>'}</div><div class="gap0"><small>Choose exactly ${m.pick_count} more: <b id="q2-pcount">0 of ${m.pick_count}</b></small></div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">${optional.map(x=>`<button type="button" class="btn" style="border:1px solid var(--line2)" data-act="qb2-pick-toggle" data-q="${esc(x.set_id)}" aria-pressed="false">${esc(x.name)}</button>`).join('')}</div><div class="hint">You cannot change your department or subjects after locking. Each selected subject counts up to 100 marks.</div><div class="row gap"><button class="btn ghost grow" data-act="close">Cancel</button><button class="btn brass grow" id="q2-pgo" data-act="qb2-pick-enter" disabled>Lock selection</button></div>`);
+  qb2PickSync();
+};
+function qb2PickSync(){const n=QB2C.pickSel?QB2C.pickSel.size:0,need=QB2C.pickNeed,el=$('#q2-pcount'),go=$('#q2-pgo');if(el)el.textContent=n+' of '+need;if(go)go.disabled=n!==need||(QB2C.deptNeeded&&!((($('#q2-dept')||{}).value)||''));}
+ACT['qb2-pick-toggle'] = el => {
+  const id=el.dataset.q, selected=QB2C.pickSel;
+  if(selected.has(id)) selected.delete(id); else {if(selected.size>=QB2C.pickNeed)return toast(`Choose only ${QB2C.pickNeed} optional subjects`,'bad');selected.add(id);}
+  const on=selected.has(id);el.style.borderColor=on?'var(--brass)':'var(--line2)';el.style.background=on?'var(--brass)':'transparent';el.style.color=on?'var(--onb)':'var(--tx)';el.setAttribute('aria-pressed',on?'true':'false');qb2PickSync();
+};
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='q2-dept')qb2PickSync();});
+ACT['qb2-pick-enter'] = async btn => {
+  const department=(($('#q2-dept')||{}).value)||'';
+  if(!QB2C.pickSel||QB2C.pickSel.size!==QB2C.pickNeed)return toast(`Choose exactly ${QB2C.pickNeed} optional subjects`,'bad');
+  if(QB2C.deptNeeded&&!department)return toast('Choose your department','bad');
+  busy(btn,true);
+  try {
+    await rpc('qb2_pick_enter',{p_quiz_id:Q.quiz.id,p_set_ids:[...QB2C.pickSel],p_display_name:(S.me&&S.me.username)||'',p_department:department});
+    closeSheet();Q.pick=await qb2PickLoad(Q.quiz);drawQuiz();toast('Subjects locked. You can now start the quiz.','ok');
+  } catch(e){toast(cleanErr(e),'bad');} finally{busy(btn,false);}
+};
+async function qb2PickChosen(quizId){
+  try {const row=await db(sb.from('qb2_pick_entries').select('chosen').eq('quiz_id',quizId).eq('user_id',S.me.id).maybeSingle());return row&&Array.isArray(row.chosen)&&row.chosen.length?new Set(row.chosen.map(String)):null;}catch(_){return null;}
+}
+async function qb2PickAdjust(quiz,summary){
+  try {
+    if(!S.me||!summary||!summary.visible||!summary.result||summary.result.pending_review)return false;
+    const row=await db(sb.from('qb2_pick_entries').select('chosen').eq('quiz_id',quiz.id).eq('user_id',S.me.id).maybeSingle());
+    if(!row||!Array.isArray(row.chosen)||!row.chosen.length)return false;
+    try{await rpc('qb2_pick_refresh',{p_quiz_id:quiz.id});}catch(_){}
+    const chosen=new Set(row.chosen.map(String)), result=summary.result;
+    const selected=(result.subject_scores||[]).filter(x=>chosen.has(String(x.set_id)));
+    if(!selected.length)return false;
+    const scaled=selected.map(x=>Object.assign({},x,{score:x.total>0?Math.round(Math.max(0,Math.min(100,x.score/x.total*100))*10)/10:0,total:100}));
+    const score=Math.round(scaled.reduce((a,x)=>a+x.score,0)*10)/10,total=scaled.length*100;
+    result.subject_scores=scaled;result.score=score;result.total=total;result.percentage=total?Math.round(score/total*10000)/100:0;result.passed=result.percentage>=(quiz.pass_mark||0);
+    return true;
+  }catch(_){return false;}
+}
+async function vQB2Pick([code],query,tok){
+  code=String(code); if(QB2C.pkCode!==code){QB2C.pkCode=code;QB2C.pkDept='';}
+  if(!S.me||S.me.anon){S.returnTo='/qb2/pick/'+code;nav('/auth/login');return;}
+  setView(`<div class="wrap"><div class="spin"></div></div>`);
+  let quiz,board;
+  try{
+    quiz=await db(sb.from('quizzes').select('id,title,share_code').eq('share_code',String(code).toLowerCase()).maybeSingle());
+    if(!quiz)throw new Error('Quiz not found');
+    try{await rpc('qb2_pick_refresh',{p_quiz_id:quiz.id});}catch(_){}
+    board=await rpc('qb2_pick_leaderboard',{p_quiz_id:quiz.id,p_limit:100,p_department:QB2C.pkDept||''});
+  }catch(e){setView(`<div class="wrap"><div class="hint bad">${esc(cleanErr(e))}</div><a class="btn block gap" href="#/">Home</a></div>`);return;}
+  if(tok && stale(tok))return;
+  const names={};(board.sets||[]).forEach(x=>names[x.set_id]=x.name);
+  const rows=(board.rows||[]).map(x=>`<div class="qb2-taskline"><b style="width:30px">${x.rank}</b><div class="grow"><b>${esc(x.name)}${x.is_me?' (you)':''}</b><small>${x.department?'<b>'+esc(x.department)+'</b> · ':''}${(x.chosen||[]).map(id=>esc(names[id]||'Subject')+' '+((x.scores||{})[id]??'-')).join(' · ')}</small></div><span class="qb2-tag success">${x.total}</span></div>`).join('');
+  const depts=(board.departments||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">${['',...board.departments].map(d=>`<button class="btn sm ${(QB2C.pkDept||'')===d?'brass':''}" data-act="qb2-pk-dept" data-d="${esc(d)}">${d?esc(d):'All departments'}</button>`).join('')}</div>`:'';
+  qb2Shell('Subject-choice leaderboard','COMBINED SCORES',`Students ranked by the subjects they selected · ${quiz.title}`,`<div class="qb2-panel"><span class="qb2-eyebrow">MAXIMUM SCORE</span><h3>${board.max_total}</h3>${board.me?`<div class="hint">Your rank: <b>${board.me.rank}</b> · Score: <b>${board.me.total}</b></div>`:''}<small>${board.completed} completed · ${board.entered} entered</small></div><div class="qb2-panel gap"><div class="qb2-panel-head"><h3>Leaderboard</h3></div>${depts}${rows||'<div class="qb2-empty-inline">No students have completed their selected subjects yet.</div>'}</div><a class="btn block gap" href="#/q/${esc(quiz.share_code)}">Back to quiz</a>`,'compete');
+}
+ACT['qb2-pk-dept']=el=>{QB2C.pkDept=el.dataset.d||'';const code=parseHash().path.split('/').pop();QB2C.pkCode=code;vQB2Pick([code],null,null);};
+
 async function edInitPayout() {
   const st = $('#payout-status'), sel = $('#po-bank'); if (!st || !sel) return;
   try {
@@ -2420,7 +2575,7 @@ ACT['ed-delete'] = async () => {
 /* ============================================================
    QUIZ PAGE
    ============================================================ */
-const Q = { quiz: null, sets: [], attempts: [], liked: false, guestName: '', isMgr: false };
+const Q = { quiz: null, sets: [], attempts: [], liked: false, guestName: '', isMgr: false, pick: null };
 
 async function vQuiz([key], query, tok) {
   setView(`<div class="wrap">${skel(4)}</div>`);
@@ -2442,6 +2597,7 @@ async function vQuiz([key], query, tok) {
   const [sets, atts, likes] = await Promise.all(jobs.map(p => p.catch(() => [])));
   if (stale(tok)) return;
   Q.sets = sets || []; Q.attempts = atts || []; Q.liked = !!(likes && likes.length);
+  Q.pick = await qb2PickLoad(quiz); if (stale(tok)) return;
   drawQuiz();
 }
 function quizState() {
@@ -2488,6 +2644,7 @@ function drawQuiz() {
     <span class="mut sm" style="margin-left:auto">${q.views_count != null ? `${ic('eye', 14)} ${q.views_count} view${q.views_count === 1 ? '' : 's'} · ` : ''}${ic('users', 14)} ${q.attempts_count || 0} attempt${q.attempts_count === 1 ? '' : 's'}</span></div>`;
   if (mgr && (q.access_code_required || q.team_challenge)) startBtn = `<div class="card gap"><div class="b">${ic('users', 16)} ${q.team_challenge ? 'Team challenge' : 'Access codes'} setup</div><div class="hint">1. Make codes and send one to each person. 2. People enter their code on the start screen${q.team_challenge ? ' and join their team' : ''}. 3. ${q.team_challenge ? 'Watch the team leaderboard.' : 'See who used each code.'}</div><a class="btn brass block gap0" href="#/access/${q.id}">${ic('users', 16)} Make and manage codes</a></div>` + startBtn;
   if (q.team_challenge) startBtn += `<a class="btn block gap0" href="#/team/${q.share_code}">${ic('trophy', 16)} Team leaderboard</a>`;
+  if (Q.pick) startBtn = qb2PickPanel(st, startBtn);
   const lbOn = q.leaderboard_enabled || q.is_challenge;
   const tools = mgr ? `<div class="card gap"><div class="b">${ic('gear' in ICONS ? 'gear' : 'edit', 16)} Manage this quiz</div><div class="tiles gap0">
       <a class="tile" href="#/edit/${q.id}/details">${ic('edit', 20)}Edit</a><a class="tile" href="#/results/${q.id}">${ic('chart', 20)}Results & export</a>
@@ -3191,6 +3348,8 @@ async function vTake([aid], query, tok) {
   const quiz = await db(sb.from('quizzes').select('*').eq('id', att.quiz_id).single());
   const [srv, data] = await Promise.all([rpc('server_time'), rpc('get_attempt_questions', { p_attempt_id: aid })]);
   if (stale(tok)) return;
+  const pickedSets = await qb2PickChosen(quiz.id);
+  if (pickedSets) { data.sets = (data.sets || []).filter(x => pickedSets.has(String(x.id))); data.questions = (data.questions || []).filter(x => pickedSets.has(String(x.set_id))); }
   const offset = Date.parse(srv) - Date.now();
   const bk = (() => { try { return JSON.parse(localStorage.getItem('qb_bk_' + aid) || 'null'); } catch (e) { return null; } })();
   const prog = att.progress || {};
@@ -3739,7 +3898,8 @@ async function vResult([aid], query, tok) {
   if (summary.attempt.status === 'ongoing') { location.replace('#/take/' + aid); return; }
   const quiz = await db(sb.from('quizzes').select('*').eq('id', summary.attempt.quiz_id).single());
   if (stale(tok)) return;
-  resultScreen({ quiz, summary, aid });
+  const pickResult = await qb2PickAdjust(quiz, summary);
+  resultScreen({ quiz, summary, aid, pickLeaderboard: pickResult });
 }
 function pickQuote(q, pct) {
   const list = (q.score_quotes || []).slice().sort((a, b) => b.min - a.min);
@@ -3773,6 +3933,7 @@ function resultScreen(d) {
       ${canRev ? `<button class="btn block" data-act="${d.preview ? 'pv-review' : 'res-review'}" data-id="${esc(att.id)}">${ic('eye', 18)} Review answers</button>` : ''}
       ${canRev && !d.preview && pct < 100 ? `<button class="btn brass block" data-act="practice-weak" data-id="${esc(att.id)}">${ic('zap', 18)} Practice what I got wrong</button>` : ''}
       ${!d.preview && (q.leaderboard_enabled || q.is_challenge) ? `<a class="btn block" href="#/leaderboard/${esc(q.share_code)}">${ic('trophy', 18)} See the leaderboard</a>` : ''}
+      ${!d.preview && d.pickLeaderboard ? `<a class="btn block" href="#/qb2/pick/${esc(q.share_code)}">${ic('list-checks', 18)} Subject-choice leaderboard</a>` : ''}
       ${!d.preview && q.group_challenge ? `<a class="btn block" href="#/grouprank/${esc(q.share_code)}">${ic('users' in ICONS ? 'users' : 'trophy', 18)} See the group leaderboard</a>` : ''}
       ${!d.preview && !other ? `<button class="btn block" data-act="res-share">${ic('share', 18)} Share my result</button>` : ''}
       ${!d.preview && !other ? `<button class="btn brass block" data-act="res-cert">${ic('download', 18)} Get shareable certificate</button>` : ''}
@@ -4385,6 +4546,7 @@ function qb2RouteInit(){
     [/^\/qb2\/compete$/,vQB2Compete],
     [/^\/qb2\/room\/([\w-]+)$/,vQB2Room],
     [/^\/qb2\/bank$/,vQB2Bank],
+    [/^\/qb2\/pick\/([\w-]+)$/,vQB2Pick],
     [/^\/qb2\/mocks$/,vQB2Mocks],
     [/^\/qb2\/mock\/([\w-]+)$/,vQB2Mock],
     [/^\/qb2\/community$/,vQB2Community],
@@ -4395,7 +4557,7 @@ function qb2RouteInit(){
   const oldChrome=renderChrome;
   renderChrome=function(){oldChrome();const navEl=$('#nav');if(navEl){navEl.innerHTML=`<a href="#/" data-n="home">${ic('home',21)}<span>Home</span></a><a href="#/qb2/compete" data-n="compete">${ic('swords',21)}<span>Compete</span></a><a href="#/create" class="mk" data-n="create" aria-label="Create a quiz">${ic('plus',27)}</a><a href="#/qb2" data-n="academics">${ic('graduation-cap',21)}<span>Academics</span></a><a href="#/me" data-n="me">${ic('user',21)}<span>Profile</span></a>`;navHighlight();}};
   const oldHighlight=navHighlight;
-  navHighlight=function(){oldHighlight();const p=parseHash().path;const map=(p.startsWith('/qb2/compete')||p.startsWith('/qb2/room')||p.startsWith('/qb2/bank')||p.startsWith('/qb2/mock'))?'compete':p.startsWith('/qb2')?'academics':'';if(map)$$('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.n===map));};
+  navHighlight=function(){oldHighlight();const p=parseHash().path;const map=(p.startsWith('/qb2/compete')||p.startsWith('/qb2/room')||p.startsWith('/qb2/bank')||p.startsWith('/qb2/pick')||p.startsWith('/qb2/mock'))?'compete':p.startsWith('/qb2')?'academics':'';if(map)$$('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.n===map));};
   ACT['qb2-open']=()=>nav('/qb2');
 }
 
@@ -4406,7 +4568,7 @@ function qb2RouteInit(){
 /* ============================================================
    QUIZBUILT 2.0 — MILESTONE 3: competition rooms + question bank
    ============================================================ */
-const QB2C = { timer: null, draw: null, room: null, subject: '', modes: { duel: 'Duel (2 players)', live: 'Live room', fastest_finger: 'Fastest Finger' } };
+const QB2C = { timer: null, draw: null, room: null, subject: '', pk: null, pkCode: '', pkDept: '', pickSel: new Set(), pickNeed: 0, deptNeeded: false, modes: { duel: 'Duel (2 players)', live: 'Live room', fastest_finger: 'Fastest Finger' } };
 function qb2Act(title, desc, icon, tone, act, data, tag) { return `<button class="qb2-feature ${tone}" data-act="${act}" ${data || ''} style="text-align:left;width:100%"><span class="qb2-feature-icon">${ic(icon, 22)}</span><span class="qb2-feature-copy"><b>${title}</b><small>${desc}</small></span>${tag ? `<span class="qb2-tag">${tag}</span>` : `<span class="qb2-arrow">${ic('arrow-up-right', 17)}</span>`}</button>`; }
 function qb2NeedLogin() { if (!sb || !loggedIn() || (S.me && S.me.anon)) { toast('Sign in to use competitions and the question bank', 'bad'); return true; } return false; }
 
